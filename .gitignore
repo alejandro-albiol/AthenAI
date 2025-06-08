@@ -1,3 +1,16 @@
+# Environment variables
 .env
-*.env
 .env.*
+!.env.example
+
+# Deno
+.deno/
+
+# VS Code
+.vscode/*
+!.vscode/settings.json
+!.vscode/extensions.json
+
+# OS specific
+.DS_Store
+Thumbs.db
