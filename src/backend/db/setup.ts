@@ -27,6 +27,8 @@ export async function setupDatabase() {
     console.log("PG_PASSWORD is set:", !!Deno.env.get("PG_PASSWORD"));
     await dbConnection.connect();
     await tablesGenerator.createDatabase();
+    await tablesGenerator.dropTables();
+    await tablesGenerator.dropEnums();
     await tablesGenerator.createEnums();
     await tablesGenerator.createTables();
     await dbConnection.close();

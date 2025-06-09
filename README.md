@@ -63,3 +63,21 @@ The app will be available at http://localhost:3000
   ```powershell
   deno task db:setup
   ```
+
+## Testing Setup
+
+1. Create test database:
+```powershell
+deno task db:setup:test
+```
+
+2. Run tests:
+```powershell
+# Run all tests
+deno task test
+
+# Run specific module tests
+deno task test:users
+deno task test:auth
+deno task test:db
+```

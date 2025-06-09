@@ -49,10 +49,54 @@ export class DataBaseGenerator {
         }
     }
 
+    async createEnums() {
+        try {
+            // Enable UUID extension first
+            await this.client.queryArray(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
+            console.log("UUID extension enabled successfully");
+
+            // Create muscle group enum
+            await this.client.queryArray(`
+                CREATE TYPE muscle_group AS ENUM (
+                    'chest', 'back', 'shoulders', 'biceps', 'triceps',
+                    'legs', 'calves', 'abs', 'forearms', 'full_body'
+                );
+            `);
+
+            // Create equipment enum
+            await this.client.queryArray(`
+                CREATE TYPE equipment AS ENUM (
+                    'barbell', 'dumbbell', 'machine', 'cable',
+                    'bodyweight', 'kettlebell', 'resistance_band', 'other'
+                );
+            `);
+
+            // Create training goal enum
+            await this.client.queryArray(`
+                CREATE TYPE training_goal AS ENUM (
+                    'strength', 'hypertrophy', 'endurance', 
+                    'power', 'weight_loss', 'maintenance'
+                );
+            `);
+
+            // Create intensity level enum
+            await this.client.queryArray(`
+                CREATE TYPE intensity_level AS ENUM (
+                    'low', 'medium', 'high', 'very_high'
+                );
+            `);
+
+            console.log("Enums created successfully");
+        } catch (error) {
+            console.error("Error creating enums:", error);
+            throw error;
+        }
+    }
+
     private async createUsersTable() {
         const query = `
             CREATE TABLE IF NOT EXISTS users (
-                id SERIAL PRIMARY KEY,
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 username VARCHAR(50) UNIQUE NOT NULL,
                 email VARCHAR(100) UNIQUE NOT NULL,
                 password_hash VARCHAR(255) NOT NULL,
@@ -68,8 +112,8 @@ export class DataBaseGenerator {
     private async createExercisesTable() {
         const query = `
             CREATE TABLE IF NOT EXISTS exercises (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                user_id UUID REFERENCES users(id) ON DELETE CASCADE,
                 name TEXT NOT NULL,
                 synonyms TEXT[],
                 description TEXT,
@@ -84,8 +128,8 @@ export class DataBaseGenerator {
     private async createTemplatesTable() {
         const query = `
             CREATE TABLE IF NOT EXISTS templates (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                user_id UUID REFERENCES users(id) ON DELETE CASCADE,
                 title TEXT NOT NULL,
                 num_blocks INTEGER NOT NULL,
                 estimated_time_minutes INTEGER,
@@ -100,9 +144,9 @@ export class DataBaseGenerator {
     private async createTrainingsTable() {
         const query = `
             CREATE TABLE IF NOT EXISTS trainings (
-                id SERIAL PRIMARY KEY,
-                user_id INTEGER REFERENCES users(id) ON DELETE CASCADE,
-                template_id INTEGER REFERENCES templates(id),
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                user_id UUID REFERENCES users(id) ON DELETE CASCADE,
+                template_id UUID REFERENCES templates(id),
                 date DATE DEFAULT CURRENT_DATE,
                 notes TEXT,
                 created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
@@ -114,8 +158,8 @@ export class DataBaseGenerator {
     private async createTrainingBlocksTable() {
         const query = `
             CREATE TABLE IF NOT EXISTS training_blocks (
-                id SERIAL PRIMARY KEY,
-                training_id INTEGER REFERENCES trainings(id) ON DELETE CASCADE,
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                training_id UUID REFERENCES trainings(id) ON DELETE CASCADE,
                 block_number INTEGER NOT NULL,
                 description TEXT
             );
@@ -126,9 +170,9 @@ export class DataBaseGenerator {
     private async createTrainingExercisesTable() {
         const query = `
             CREATE TABLE IF NOT EXISTS training_exercises (
-                id SERIAL PRIMARY KEY,
-                training_block_id INTEGER REFERENCES training_blocks(id) ON DELETE CASCADE,
-                exercise_id INTEGER REFERENCES exercises(id),
+                id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+                training_block_id UUID REFERENCES training_blocks(id) ON DELETE CASCADE,
+                exercise_id UUID REFERENCES exercises(id),
                 order_in_block INTEGER NOT NULL,
                 sets INTEGER,
                 reps TEXT,
@@ -138,29 +182,6 @@ export class DataBaseGenerator {
             );
         `;
         await this.client.queryArray(query);
-    }
-
-    async createEnums() {
-        await this.client.queryArray(`
-            CREATE TYPE muscle_group AS ENUM (
-                'Chest', 'Back', 'Legs', 'Shoulders', 'Arms', 'Core', 'Full Body'
-            );
-        `);
-        await this.client.queryArray(`
-            CREATE TYPE equipment AS ENUM (
-                'Barbell', 'Dumbbell', 'Machine', 'Bodyweight', 'Kettlebell', 'Cable'
-            );
-        `);
-        await this.client.queryArray(`
-            CREATE TYPE training_goal AS ENUM (
-                'Hypertrophy', 'Strength', 'Endurance', 'Mobility', 'Fat Loss'
-            );
-        `);
-        await this.client.queryArray(`
-            CREATE TYPE intensity_level AS ENUM (
-                'Low', 'Medium', 'High'
-            );
-        `);
     }
 
     async dropEnums() {
