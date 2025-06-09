@@ -2,7 +2,7 @@
   "tasks": {
     "dev": "DEV_PORT=3000 NODE_ENV=development deno run --allow-net=localhost:3000,localhost:5432 --allow-env --allow-read=.env src/backend/main.ts",
     "start": "PORT=8080 NODE_ENV=production deno run --allow-net=:8080,localhost:5432 --allow-env --allow-read=.env src/backend/main.ts",
-    "test": "deno test --allow-net=localhost:5432",
+    "db:connection": "deno run --allow-net=localhost:5432 src/backend/db/tests/connection.ts",
     "db:setup": "deno run --allow-net=localhost:5432 --allow-env=PG_PASSWORD --allow-read=./.env src/backend/db/setup.ts"
   },
   "imports": {

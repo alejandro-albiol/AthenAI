@@ -29,7 +29,6 @@ export async function setupDatabase() {
     await tablesGenerator.createDatabase();
     await tablesGenerator.createEnums();
     await tablesGenerator.createTables();
-
     await dbConnection.close();
 }
 
