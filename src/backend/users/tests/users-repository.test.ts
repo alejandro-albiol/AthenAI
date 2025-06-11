@@ -1,8 +1,8 @@
-import { assert, assertEquals, assertNotEquals } from "https://deno.land/std@0.208.0/assert/mod.ts";
+import { assert, assertEquals, assertNotEquals } from "std/assert/mod.ts";
+import { beforeAll, afterAll, describe, it } from "testing/bdd.ts";
+import { Client } from "postgres";
 import { UsersRepository } from "../users-repository.ts";
 import { getTestClient, cleanupDatabase } from "../../shared/test/test-utils.ts";
-import { beforeAll, afterAll, describe, it } from "https://deno.land/std@0.208.0/testing/bdd.ts";
-import { Client } from "postgres";
 
 let client: Client;
 let repository: UsersRepository;

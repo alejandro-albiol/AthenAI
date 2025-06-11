@@ -18,6 +18,9 @@
     "oak": "https://deno.land/x/oak@v12.6.1/mod.ts",
     "postgres": "https://deno.land/x/postgres@v0.17.0/mod.ts",
     "dotenv": "https://deno.land/std@0.208.0/dotenv/mod.ts",
-    "bcrypt": "https://deno.land/x/bcrypt@v0.4.1/mod.ts"
+    "bcrypt": "https://deno.land/x/bcrypt@v0.4.1/mod.ts",
+    "std/": "https://deno.land/std@0.208.0/",
+    "testing/": "https://deno.land/std@0.208.0/testing/",
+    "assert/": "https://deno.land/std@0.208.0/assert/"
   }
 }
