@@ -51,11 +51,9 @@ export class DataBaseGenerator {
 
     async createEnums() {
         try {
-            // Enable UUID extension first
             await this.client.queryArray(`CREATE EXTENSION IF NOT EXISTS "uuid-ossp";`);
             console.log("UUID extension enabled successfully");
 
-            // Create muscle group enum
             await this.client.queryArray(`
                 CREATE TYPE muscle_group AS ENUM (
                     'chest', 'back', 'shoulders', 'biceps', 'triceps',
@@ -63,7 +61,6 @@ export class DataBaseGenerator {
                 );
             `);
 
-            // Create equipment enum
             await this.client.queryArray(`
                 CREATE TYPE equipment AS ENUM (
                     'barbell', 'dumbbell', 'machine', 'cable',
@@ -71,7 +68,6 @@ export class DataBaseGenerator {
                 );
             `);
 
-            // Create training goal enum
             await this.client.queryArray(`
                 CREATE TYPE training_goal AS ENUM (
                     'strength', 'hypertrophy', 'endurance', 
@@ -79,7 +75,6 @@ export class DataBaseGenerator {
                 );
             `);
 
-            // Create intensity level enum
             await this.client.queryArray(`
                 CREATE TYPE intensity_level AS ENUM (
                     'low', 'medium', 'high', 'very_high'
@@ -129,12 +124,14 @@ export class DataBaseGenerator {
         const query = `
             CREATE TABLE IF NOT EXISTS templates (
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
-                user_id UUID REFERENCES users(id) ON DELETE CASCADE,
                 title TEXT NOT NULL,
-                num_blocks INTEGER NOT NULL,
-                estimated_time_minutes INTEGER,
+                description TEXT,
                 goal training_goal,
                 intensity intensity_level,
+                num_blocks INTEGER,
+                estimated_time_minutes INTEGER,
+                is_public BOOLEAN DEFAULT FALSE,
+                created_by UUID REFERENCES users(id),
                 created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
             );
         `;
@@ -147,8 +144,9 @@ export class DataBaseGenerator {
                 id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
                 user_id UUID REFERENCES users(id) ON DELETE CASCADE,
                 template_id UUID REFERENCES templates(id),
-                date DATE DEFAULT CURRENT_DATE,
+                title TEXT,
                 notes TEXT,
+                is_public BOOLEAN DEFAULT FALSE,
                 created_at TIMESTAMPTZ DEFAULT CURRENT_TIMESTAMP
             );
         `;

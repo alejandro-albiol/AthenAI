@@ -1,12 +1,14 @@
 import { Client } from "postgres";
+import { envConfig } from "../config/env.config.ts";
 
-export function createClient() {
+export async function createClient() {
+    await envConfig.init();
 
     return new Client({
-        user: Deno.env.get("PG_USER") || "postgres",
-        database: Deno.env.get("PG_DATABASE") || "athenai",
-        hostname: Deno.env.get("PG_HOSTNAME") || "localhost",
-        port: Number(Deno.env.get("PG_PORT")) || 5432,
-        password: Deno.env.get("PG_PASSWORD") || "password",
+        user: envConfig.get("PG_USER") || "postgres",
+        database: envConfig.get("PG_DATABASE") || "athenai",
+        hostname: envConfig.get("PG_HOSTNAME") || "localhost",
+        port: Number(envConfig.get("PG_PORT")) || 5432,
+        password: envConfig.getOrThrow("PG_PASSWORD")
     });
 }

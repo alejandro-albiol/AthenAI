@@ -1,6 +1,7 @@
 import { createClient } from "../config.ts";
 import { DataBaseConnection } from "../db-connection.ts";
-import { load } from "dotenv";
+import { envConfig } from "../../config/env.config.ts";
+import { assert } from "std/assert/mod.ts";
 
 class DatabaseConnectionTest {
     private dbConnection: DataBaseConnection;
@@ -16,16 +17,13 @@ class DatabaseConnectionTest {
 
     private async initializeConnection() {
         try {
-            // Load environment variables first
-            await load({
-                export: true,
-                envPath: ".env",
-                defaultsPath: null
-            });
+            await envConfig.init();
             console.log("Environment variables loaded");
 
-            // Create client after env vars are loaded
-            const client = createClient();
+            // Verify environment variables
+            assert(envConfig.get("PG_PASSWORD"), "Database password is not set");
+            
+            const client = await createClient();
             this.dbConnection = new DataBaseConnection(client);
         } catch (error) {
             console.error("Failed to initialize:", error);
@@ -33,40 +31,68 @@ class DatabaseConnectionTest {
         }
     }
 
+    testDatabaseVariables() {
+        console.log("Testing database environment variables...");
+        
+        assert(envConfig.get("PG_USER") || "postgres", "Database user is not set");
+        assert(envConfig.get("PG_HOSTNAME") || "localhost", "Database hostname is not set");
+        assert(envConfig.get("PG_PORT") || 5432, "Database port is not set");
+        
+        console.log("✓ Database environment variables verified");
+    }
+
     async runTest() {
-        console.log("Starting database connection test...");
+        console.log("\n🚀 Starting database connection test suite...\n");
 
         try {
-            // Initialize connection with proper env vars
+            // Test environment variables
+            this.testDatabaseVariables();
+            await this.delay(this.DELAY_MS);
+
+            // Initialize connection
             await this.initializeConnection();
             await this.delay(this.DELAY_MS);
 
             // Test connection
-            console.log("Attempting to connect...");
+            console.log("\n📡 Testing database connection...");
             await this.dbConnection.connect();
             console.log("✓ Database connection established successfully");
 
-            // Wait before next operation
+            // Test simple query
+            console.log("\n🔍 Testing simple query...");
+            const client = this.dbConnection.getClient();
+            const result = await client.queryArray("SELECT 1 as test");
+            assert(result.rows[0][0] === 1, "Simple query failed");
+            console.log("✓ Query executed successfully");
+
             await this.delay(this.DELAY_MS);
 
             // Test closing
-            console.log("Attempting to close connection...");
+            console.log("\n🔒 Testing connection closure...");
             await this.dbConnection.close();
             console.log("✓ Database connection closed successfully");
 
         } catch (error) {
-            console.error("❌ Test failed:", error);
+            console.error("\n❌ Test failed:", error);
             throw error;
         }
+    }
+
+    private formatResult(success: boolean, message: string): string {
+        return success ? `✓ ${message}` : `❌ ${message}`;
     }
 }
 
 if (import.meta.main) {
     const test = new DatabaseConnectionTest();
     await test.runTest()
-        .then(() => console.log("✓ All tests completed successfully"))
-        .catch(() => {
-            console.error("❌ Test suite failed");
+        .then(() => {
+            console.log("\n✨ All tests completed successfully");
+            console.log("=====================================");
+        })
+        .catch((error) => {
+            console.error("\n❌ Test suite failed");
+            console.error("Error details:", error);
             Deno.exit(1);
         });
 }

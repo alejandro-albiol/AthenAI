@@ -1,15 +1,15 @@
 {
   "tasks": {
-    "dev": "DEV_PORT=3000 NODE_ENV=development deno run --allow-net=localhost:3000,localhost:5432 --allow-env --allow-read=.env src/backend/main.ts",
-    "start": "PORT=8080 NODE_ENV=production deno run --allow-net=:8080,localhost:5432 --allow-env --allow-read=.env src/backend/main.ts",
-    "db:connection": "deno run --allow-net=localhost:5432 src/backend/db/tests/connection.ts",
-    "db:setup": "deno run --allow-net=localhost:5432 --allow-env=PG_PASSWORD --allow-read=./.env src/backend/db/setup.ts",
-    "db:setup:test": "deno run --allow-net=localhost:5432 --allow-env --allow-read=.env src/backend/db/setup-test-db.ts",
+    "dev": "DEV_PORT=3000 NODE_ENV=development deno run --allow-net=localhost:3000,localhost:5432 --allow-env=NODE_ENV,DEV_PORT,PG_USER,PG_DATABASE,PG_HOSTNAME,PG_PORT,PG_PASSWORD --allow-read=.env src/backend/main.ts",
+    "start": "PORT=8080 NODE_ENV=production deno run --allow-net=:8080,localhost:5432 --allow-env=NODE_ENV,PORT,PG_USER,PG_DATABASE,PG_HOSTNAME,PG_PORT,PG_PASSWORD --allow-read=.env src/backend/main.ts",
+    "db:connection": "deno run --allow-net=localhost:5432 --allow-env --allow-read=.env src/backend/db/tests/connection.ts",
+    "db:setup": "deno run --allow-net=localhost:5432 --allow-env --allow-read=.env src/backend/db/db-setup.ts",
+    "db:setup:test": "deno run --allow-net=localhost:5432 --allow-env --allow-read=.env src/backend/db/db-testing-setup.ts",
 
-    "test": "deno test --allow-net=localhost:5432 --allow-env --allow-read=.env --ignore=.env.defaults,.env.example src/backend/**/tests/ --parallel",
-    "test:watch": "deno test --watch --allow-net=localhost:5432 --allow-env --allow-read=.env --ignore=.env.defaults,.env.example src/backend/**/tests/",
-    "test:coverage": "deno test --coverage=coverage --allow-net=localhost:5432 --allow-env --allow-read=.env --ignore=.env.defaults,.env.example src/backend/**/tests/",
-
+    "test": "deno test --allow-net=localhost:5432 --allow-env=NODE_ENV,PG_USER,PG_DATABASE,PG_HOSTNAME,PG_PORT,PG_PASSWORD --allow-read=.env --ignore=.env.defaults,.env.example src/backend/**/tests/ --parallel",
+    "test:watch": "deno test --watch --allow-net=localhost:5432 --allow-env=NODE_ENV,PG_USER,PG_DATABASE,PG_HOSTNAME,PG_PORT,PG_PASSWORD --allow-read=.env --ignore=.env.defaults,.env.example src/backend/**/tests/",
+    "test:coverage": "deno test --coverage=coverage --allow-net=localhost:5432 --allow-env=NODE_ENV,PG_USER,PG_DATABASE,PG_HOSTNAME,PG_PORT,PG_PASSWORD --allow-read=.env --ignore=.env.defaults,.env.example src/backend/**/tests/",
+    
     "test:users": "deno test --allow-net=localhost:5432 --allow-env --allow-read=.env --ignore=.env.defaults,.env.example src/backend/users/tests/",
     "test:auth": "deno test --allow-net=localhost:5432 --allow-env --allow-read=.env --ignore=.env.defaults,.env.example src/backend/auth/tests/",
     "test:db": "deno test --allow-net=localhost:5432 --allow-env --allow-read=.env --ignore=.env.defaults,.env.example src/backend/db/tests/"

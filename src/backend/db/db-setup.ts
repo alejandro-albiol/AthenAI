@@ -1,26 +1,13 @@
 import { DataBaseConnection } from "./db-connection.ts";
 import { DataBaseGenerator } from "./db-generator.ts";
 import { createClient } from "./config.ts";
-import { load } from "dotenv";
+import { envConfig } from "../config/env.config.ts";
 
-async function loadEnv() {
-    try {
-        await load({
-            export: true,
-            envPath: ".env",
-            defaultsPath: null
-        });
-        console.log("Environment variables loaded from .env");
-    } catch (error) {
-        console.error("Error loading .env file:", error);
-        throw error;
-    }
-}
 
 export async function setupDatabase() {
-    await loadEnv();
+    await envConfig.init();
     
-    const client = createClient();
+    const client = await createClient();
     const dbConnection = new DataBaseConnection(client);
     const tablesGenerator = new DataBaseGenerator(client);
     

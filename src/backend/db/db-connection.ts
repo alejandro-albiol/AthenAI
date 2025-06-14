@@ -26,4 +26,8 @@ export class DataBaseConnection {
             throw error;
         }
     }
+
+    getClient(): Client {
+        return this.client;
+    }
 }
