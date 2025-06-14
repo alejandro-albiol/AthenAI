@@ -47,12 +47,12 @@ export class UsersRepository implements IUsersRepository {
         }
     }
 
-    async create(userData: Omit<User, 'id' | 'created_at' | 'updated_at' | 'is_deleted' | 'deleted_at'>): Promise<User> {
+    async create(userData: Omit<User, 'id' | 'created_at' | 'updated_at' | 'is_deleted' | 'deleted_at'>): Promise<Omit<User, 'password_hash'>> {
         try {
             const result = await this.client.queryObject<User>(`
                 INSERT INTO users (username, email, password_hash)
                 VALUES ($1, $2, $3)
-                RETURNING *
+                RETURNING id, username, email, created_at
             `, [userData.username, userData.email, userData.password_hash]);
             
             return result.rows[0];

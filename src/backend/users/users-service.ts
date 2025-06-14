@@ -11,7 +11,7 @@ export class UsersService {
         private readonly authService: AuthService
     ) {}
 
-    async createUser(username: string, email: string, password: string): Promise<User> {
+    async createUser(username: string, email: string, password: string): Promise<Omit<User, 'password_hash' | 'created_at' | 'updated_at' | 'is_deleted' | 'deleted_at'>> {
 
         if (!validateUsername(username)) {
             throw new ValidationError(UserErrorCode.INVALID_USERNAME_FORMAT);
