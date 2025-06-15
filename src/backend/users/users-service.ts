@@ -4,8 +4,9 @@ import { UserErrorCode } from "../shared/enums/error-codes.enum.ts";
 import { ConflictError, NotFoundError, ValidationError } from "../shared/errors/custom-errors.ts";
 import { validateEmail, validatePassword, validateUsername } from "../shared/validators/user.validator.ts";
 import { AuthService } from "../auth/auth-service.ts";
+import { IUsersService } from "./interfaces/users-service.interface.ts";
 
-export class UsersService {
+export class UsersService implements IUsersService {
     constructor(
         private readonly usersRepository: IUsersRepository,
         private readonly authService: AuthService
@@ -50,6 +51,22 @@ export class UsersService {
         return user;
     }
 
+    async getUserByUsername(username: string): Promise<User | null> {
+      const user = await this.usersRepository.findByUsername(username);
+      if (!user) {
+        throw new NotFoundError(UserErrorCode.USER_NOT_FOUND);
+      }
+      return user;
+    }
+
+    async getUserByEmail(email: string): Promise<User | null> {
+      const user = await this.usersRepository.findByEmail(email);
+      if (!user) {
+          throw new NotFoundError(UserErrorCode.USER_NOT_FOUND);
+      }
+      return user;
+    }
+
     async updateUser(id: string, userData: Partial<User>): Promise<User> {
         const user = await this.getUserById(id);
 
@@ -82,6 +99,14 @@ export class UsersService {
             throw new NotFoundError(UserErrorCode.USER_NOT_FOUND);
         }
         await this.usersRepository.softDelete(id);
+    }
+  
+    async listUsers(limit?: number, offset?: number): Promise<Omit<User, "password_hash" | "created_at" | "updated_at" | "is_deleted" | "deleted_at">[]> {
+      const users = await this.usersRepository.list(limit, offset);
+      if (!users || users.length === 0) {
+          throw new NotFoundError(UserErrorCode.USER_NOT_FOUND);
+      }
+      return users;
     }
 
 }

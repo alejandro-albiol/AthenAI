@@ -3,7 +3,23 @@ import { User } from "./interfaces/users.interface.ts";
 import { IUsersRepository } from "./interfaces/users-repository.interface.ts";
 
 export class UsersRepository implements IUsersRepository {
+    
     constructor(private readonly client: Client) {}
+
+    async create(userData: Omit<User, 'id' | 'created_at' | 'updated_at' | 'is_deleted' | 'deleted_at'>): Promise<Omit<User, 'password_hash'>> {
+        try {
+            const result = await this.client.queryObject<User>(`
+                INSERT INTO users (username, email, password_hash)
+                VALUES ($1, $2, $3)
+                RETURNING id, username, email, created_at
+            `, [userData.username, userData.email, userData.password_hash]);
+            
+            return result.rows[0];
+        } catch (error) {
+            console.error('Error in create:', error);
+            throw error;
+        }
+    }
 
     async findById(id: string): Promise<User | null> {
         try {
@@ -43,21 +59,6 @@ export class UsersRepository implements IUsersRepository {
             return result.rows[0] || null;
         } catch (error) {
             console.error('Error in findByEmail:', error);
-            throw error;
-        }
-    }
-
-    async create(userData: Omit<User, 'id' | 'created_at' | 'updated_at' | 'is_deleted' | 'deleted_at'>): Promise<Omit<User, 'password_hash'>> {
-        try {
-            const result = await this.client.queryObject<User>(`
-                INSERT INTO users (username, email, password_hash)
-                VALUES ($1, $2, $3)
-                RETURNING id, username, email, created_at
-            `, [userData.username, userData.email, userData.password_hash]);
-            
-            return result.rows[0];
-        } catch (error) {
-            console.error('Error in create:', error);
             throw error;
         }
     }

@@ -1,21 +1,16 @@
 import { Client } from "postgres";
-import { load } from "dotenv";
+import { envConfig } from "../../config/env.config.ts";
 
 export async function getTestClient(): Promise<Client> {
     try {
-        await load({ 
-            export: true,
-            envPath: ".env",
-            defaultsPath: null,
-            examplePath: null
-        });
+        await envConfig.init();
         
         const client = new Client({
-            user: "postgres",
+            user: envConfig.get("PG_USER") || "postgres",
             database: "athenai_test",
-            hostname: "localhost",
-            port: 5432,
-            password: Deno.env.get("PG_PASSWORD")
+            hostname: envConfig.get("PG_HOSTNAME") || "localhost",
+            port: Number(envConfig.get("PG_PORT")) || 5432,
+            password: envConfig.getOrThrow("PG_PASSWORD")
         });
         return client;
     } catch (error) {
@@ -26,7 +21,7 @@ export async function getTestClient(): Promise<Client> {
 
 export async function cleanupDatabase(client: Client) {
     try {
-        
+        // Clean all tables
         await client.queryArray(`
             TRUNCATE TABLE 
                 users,
