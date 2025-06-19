@@ -5,26 +5,67 @@ import { User } from "./interfaces/users.interface.ts";
 import { UsersService } from "./users-service.ts";
 import { BaseError } from "../shared/errors/custom-errors.ts";
 import { IUserController } from "./interfaces/users-controller.interface.ts";
+import { validateUsername, validateEmail, validatePassword } from "../shared/validators/user.validator.ts";
 
 export class UsersController implements IUserController {
-    constructor(private readonly usersService: UsersService) {}
-
-    async createUser(req: Request): Promise<ApiResponse<Omit<User, 'password_hash' | 'created_at' | 'updated_at' | 'is_deleted' | 'deleted_at'>>> {
-        
-        const dto = req.body as unknown as CreateUserDto;
-        if (!dto.username || !dto.email || !dto.password) {
-            return {
-                success: false,
-                status: 400,
-                error: "Username, email, and password are required"
-            };
-        }
-
+    constructor(private readonly usersService: UsersService) {}    async createUser(req: Request): Promise<ApiResponse<Omit<User, 'password_hash' | 'created_at' | 'updated_at' | 'is_deleted' | 'deleted_at'>>> {
         try {
+            // Parse request body
+            let body;
+            try {
+                body = await req.json();
+            } catch (_error) {
+                return {
+                    success: false,
+                    status: 400,
+                    error: "Invalid JSON in request body"
+                };
+            }
+            
+            // Validate request body structure
+            if (!body || typeof body !== 'object') {
+                return {
+                    success: false,
+                    status: 400,
+                    error: "Request body must be a JSON object"
+                };
+            }
+
+            const dto = body as CreateUserDto;
+            const errors: string[] = [];
+
+            // Check if required fields exist
+            if (!dto.email?.trim()) {
+                errors.push("Email is required");
+            } else if (!validateEmail(dto.email)) {
+                errors.push("Invalid email format");
+            }
+
+            if (!dto.username?.trim()) {
+                errors.push("Username is required");
+            } else if (!validateUsername(dto.username)) {
+                errors.push("Username must be 3-20 characters long and can only contain letters, numbers, and underscores");
+            }
+
+            if (!dto.password?.trim()) {
+                errors.push("Password is required");
+            } else if (!validatePassword(dto.password)) {
+                errors.push("Password must be at least 8 characters long");
+            }
+
+            if (errors.length > 0) {
+                return {
+                    success: false,
+                    status: 400,
+                    error: errors.join(", ")
+                };
+            }
+
+            // Create user with trimmed values
             const user = await this.usersService.createUser(
-                dto.username,
-                dto.email,
-                dto.password
+                dto.username.trim(),
+                dto.email.trim(),
+                dto.password.trim()
             );
 
             return {

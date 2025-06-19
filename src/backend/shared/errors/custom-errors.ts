@@ -1,4 +1,3 @@
-// src/backend/shared/errors/custom-errors.ts
 export class BaseError extends Error {
     constructor(
         public override readonly message: string,
