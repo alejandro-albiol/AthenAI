@@ -71,7 +71,9 @@ router
             params: { id: context.params.id }
         });
         context.response.status = response.status;
-        context.response.body = response;
+        if (response.status !== 204) {
+            context.response.body = response;
+        }
     });
 
 export const userRouter = router;
