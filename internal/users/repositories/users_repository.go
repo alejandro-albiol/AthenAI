@@ -13,9 +13,9 @@ func NewUsersRepository(db dbinterfaces.DBService) *UsersRepository {
 	return &UsersRepository{db: db}
 }
 
-func (r *UsersRepository) CreateUser(username, email, passwordHash string) error {
+func (r *UsersRepository) CreateUser(dto interfaces.UserCreationDTO) error {
 	query := "INSERT INTO users (username, email, password_hash) VALUES (?, ?, ?)"
-	_, err := r.db.Exec(query, username, email, passwordHash)
+	_, err := r.db.Exec(query, dto.Username, dto.Email, dto.Password)
 	return err
 }
 
@@ -40,6 +40,24 @@ func (r *UsersRepository) GetUserByID(id string) (interfaces.User, error) {
 func (r *UsersRepository) GetUserByUsername(username string) (interfaces.User, error) {
 	query := "SELECT id, username, email FROM users WHERE username = ?"
 	rows, err := r.db.Query(query, username)
+	if err != nil {
+		return interfaces.User{}, err
+	}
+	defer rows.Close()
+
+	var user interfaces.User
+	if rows.Next() {
+		err := rows.Scan(&user.ID, &user.Username, &user.Email)
+		if err != nil {
+			return interfaces.User{}, err
+		}
+	}
+	return user, nil
+}
+
+func (r *UsersRepository) GetUserByEmail(email string) (interfaces.User, error) {
+	query := "SELECT id, username, email FROM users WHERE email = ?"
+	rows, err := r.db.Query(query, email)
 	if err != nil {
 		return interfaces.User{}, err
 	}
