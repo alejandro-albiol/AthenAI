@@ -7,7 +7,7 @@ import (
 
 	"github.com/alejandro-albiol/athenai/api"
 	"github.com/alejandro-albiol/athenai/config"
-	"github.com/alejandro-albiol/athenai/internal/databases"
+	"github.com/alejandro-albiol/athenai/internal/database"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -23,8 +23,8 @@ func main() {
 	}
 
 	// Initialize database connection
-	db := databases.NewDBService()
-	if err := db.Connect(); err != nil {
+	db, err := database.NewPostgresDB()
+	if err != nil {
 		log.Fatalf("Failed to connect to database: %v", err)
 	}
 	defer db.Close()
@@ -36,8 +36,5 @@ func main() {
 	rootRouter.Mount("/api/v1", api.NewAPIModule(db))
 
 	log.Printf("Server is running on port: %s", port)
-	err := http.ListenAndServe(":"+port, rootRouter)
-	if err != nil {
-		log.Fatalf("Error starting server: %v", err)
-	}
+	log.Fatal(http.ListenAndServe(":"+port, rootRouter))
 }

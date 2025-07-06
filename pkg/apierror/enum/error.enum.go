@@ -1,4 +1,4 @@
-package errorsconst
+package errorcode_enum
 
 const (
 	CodeNotFound     = "NOT_FOUND"
