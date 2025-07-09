@@ -14,9 +14,6 @@ func NewAPIModule(db *sql.DB) *chi.Mux {
 	// Global middleware
 	r.Use(middleware.RequireGymID)
 
-	// Setup Swagger documentation
-	SetupSwagger(r)
-
 	// Mount routes
 	r.Mount("/users", usermodule.NewUserModule(db))
 	// r.Mount("/exercises", module.NewExercisesModule(db))

@@ -32,6 +32,9 @@ func main() {
 	// Root router
 	rootRouter := chi.NewRouter()
 
+	// Setup Swagger at root level
+	api.SetupSwagger(rootRouter)
+
 	// Mount API under /api/v1
 	rootRouter.Mount("/api/v1", api.NewAPIModule(db))
 
