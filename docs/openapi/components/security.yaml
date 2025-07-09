@@ -1,0 +1,6 @@
+# Security schemes
+GymIdHeader:
+  type: apiKey
+  in: header
+  name: X-Gym-ID
+  description: Gym ID for tenant isolation

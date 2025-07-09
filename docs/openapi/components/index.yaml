@@ -1,0 +1,7 @@
+# Combine all components
+schemas:
+  $ref: './schemas.yaml'
+securitySchemes:
+  $ref: './security.yaml'
+responses:
+  $ref: './responses.yaml'

@@ -1,0 +1,69 @@
+# User related schemas
+UserCreationDTO:
+  type: object
+  required:
+    - username
+    - email
+    - password
+    - role
+  properties:
+    username:
+      type: string
+      example: "john_doe"
+    email:
+      type: string
+      format: email
+      example: "john@example.com"
+    password:
+      type: string
+      format: password
+      example: "securePassword123"
+    role:
+      type: string
+      enum: [user, admin]
+      example: "user"
+
+UserUpdateDTO:
+  type: object
+  properties:
+    username:
+      type: string
+    email:
+      type: string
+      format: email
+    role:
+      type: string
+      enum: [user, admin]
+
+UserResponseDTO:
+  type: object
+  properties:
+    id:
+      type: string
+    username:
+      type: string
+    email:
+      type: string
+    role:
+      type: string
+    gymId:
+      type: string
+    verified:
+      type: boolean
+    isActive:
+      type: boolean
+    createdAt:
+      type: string
+      format: date-time
+    updatedAt:
+      type: string
+      format: date-time
+
+UserActiveDTO:
+  type: object
+  required:
+    - active
+  properties:
+    active:
+      type: boolean
+      example: true

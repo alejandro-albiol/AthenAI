@@ -1,0 +1,21 @@
+parameters:
+  - name: email
+    in: path
+    required: true
+    schema:
+      type: string
+      format: email
+
+get:
+  summary: Get user by email
+  security:
+    - GymIdHeader: []
+  responses:
+    '200':
+      description: User found
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas.yaml#/UserResponseDTO'
+    '404':
+      $ref: '../../components/responses.yaml#/NotFound'

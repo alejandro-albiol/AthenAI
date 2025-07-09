@@ -1,0 +1,29 @@
+openapi: 3.0.0
+info:
+  title: Athenai API
+  description: API documentation for the Athenai system
+  version: 1.0.0
+
+servers:
+  - url: http://localhost:8080/api/v1
+    description: Local development server
+
+# Components (schemas, securitySchemes, etc.)
+components:
+  $ref: './components/index.yaml'
+
+# Paths (endpoints)
+paths:
+  # User routes
+  /users:
+    $ref: './paths/users/users.yaml'
+  /users/{id}:
+    $ref: './paths/users/users-by-id.yaml'
+  /users/username/{username}:
+    $ref: './paths/users/users-by-username.yaml'
+  /users/email/{email}:
+    $ref: './paths/users/users-by-email.yaml'
+  /users/{id}/verify:
+    $ref: './paths/users/users-verify.yaml'
+  /users/{id}/active:
+    $ref: './paths/users/users-active.yaml'
