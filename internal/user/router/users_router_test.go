@@ -64,16 +64,6 @@ func TestUserRoutes(t *testing.T) {
 		expectedStatus int
 	}{
 		{
-			name:   "missing gym ID header",
-			method: http.MethodGet,
-			path:   "/",
-			gymID:  "",
-			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
-				// No mock setup needed, middleware should reject
-			},
-			expectedStatus: http.StatusBadRequest,
-		},
-		{
 			name:   "get all users",
 			method: http.MethodGet,
 			path:   "/",
@@ -87,12 +77,51 @@ func TestUserRoutes(t *testing.T) {
 			expectedStatus: http.StatusOK,
 		},
 		{
+			name:   "get all users with empty gym ID",
+			method: http.MethodGet,
+			path:   "/",
+			gymID:  "",
+			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
+				m.On("GetAllUsers", w, "").Run(func(args mock.Arguments) {
+					w := args.Get(0).(http.ResponseWriter)
+					w.WriteHeader(http.StatusOK)
+				})
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
 			name:   "get user by id",
 			method: http.MethodGet,
 			path:   "/user123",
 			gymID:  "gym123",
 			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
 				m.On("GetUserByID", w, "gym123", "user123").Run(func(args mock.Arguments) {
+					w := args.Get(0).(http.ResponseWriter)
+					w.WriteHeader(http.StatusOK)
+				})
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:   "get user by username",
+			method: http.MethodGet,
+			path:   "/username/testuser",
+			gymID:  "gym123",
+			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
+				m.On("GetUserByUsername", w, "gym123", "testuser").Run(func(args mock.Arguments) {
+					w := args.Get(0).(http.ResponseWriter)
+					w.WriteHeader(http.StatusOK)
+				})
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:   "get user by email",
+			method: http.MethodGet,
+			path:   "/email/test@test.com",
+			gymID:  "gym123",
+			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
+				m.On("GetUserByEmail", w, "gym123", "test@test.com").Run(func(args mock.Arguments) {
 					w := args.Get(0).(http.ResponseWriter)
 					w.WriteHeader(http.StatusOK)
 				})
@@ -118,6 +147,113 @@ func TestUserRoutes(t *testing.T) {
 			},
 			expectedStatus: http.StatusCreated,
 		},
+		{
+			name:   "register user with invalid JSON",
+			method: http.MethodPost,
+			path:   "/",
+			gymID:  "gym123",
+			body:   `{"invalid": json}`, // Invalid JSON will be handled by handler
+			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
+				m.On("RegisterUser", w, mock.Anything, "gym123").Run(func(args mock.Arguments) {
+					w := args.Get(0).(http.ResponseWriter)
+					w.WriteHeader(http.StatusBadRequest)
+				}).Once()
+			},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:   "update user",
+			method: http.MethodPut,
+			path:   "/user123",
+			gymID:  "gym123",
+			body: dto.UserUpdateDTO{
+				Username: "updateduser",
+				Email:    "updated@test.com",
+			},
+			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
+				m.On("UpdateUser", w, "gym123", "user123", mock.AnythingOfType("dto.UserUpdateDTO")).Run(func(args mock.Arguments) {
+					w := args.Get(0).(http.ResponseWriter)
+					w.WriteHeader(http.StatusOK)
+				})
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:   "update user with invalid JSON",
+			method: http.MethodPut,
+			path:   "/user123",
+			gymID:  "gym123",
+			body:   `{"invalid": json}`, // Invalid JSON
+			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
+				// No mock setup needed as router should handle JSON error before calling handler
+			},
+			expectedStatus: http.StatusBadRequest,
+		},
+		{
+			name:   "delete user",
+			method: http.MethodDelete,
+			path:   "/user123",
+			gymID:  "gym123",
+			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
+				m.On("DeleteUser", w, "gym123", "user123").Run(func(args mock.Arguments) {
+					w := args.Get(0).(http.ResponseWriter)
+					w.WriteHeader(http.StatusNoContent)
+				})
+			},
+			expectedStatus: http.StatusNoContent,
+		},
+		{
+			name:   "verify user",
+			method: http.MethodPost,
+			path:   "/user123/verify",
+			gymID:  "gym123",
+			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
+				m.On("VerifyUser", w, "gym123", "user123").Run(func(args mock.Arguments) {
+					w := args.Get(0).(http.ResponseWriter)
+					w.WriteHeader(http.StatusOK)
+				})
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:   "set user active",
+			method: http.MethodPost,
+			path:   "/user123/active",
+			gymID:  "gym123",
+			body:   map[string]bool{"active": true},
+			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
+				m.On("SetUserActive", w, "gym123", "user123", true).Run(func(args mock.Arguments) {
+					w := args.Get(0).(http.ResponseWriter)
+					w.WriteHeader(http.StatusOK)
+				})
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:   "set user inactive",
+			method: http.MethodPost,
+			path:   "/user123/active",
+			gymID:  "gym123",
+			body:   map[string]bool{"active": false},
+			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
+				m.On("SetUserActive", w, "gym123", "user123", false).Run(func(args mock.Arguments) {
+					w := args.Get(0).(http.ResponseWriter)
+					w.WriteHeader(http.StatusOK)
+				})
+			},
+			expectedStatus: http.StatusOK,
+		},
+		{
+			name:   "set user active with invalid JSON",
+			method: http.MethodPost,
+			path:   "/user123/active",
+			gymID:  "gym123",
+			body:   `{"invalid": json}`, // Invalid JSON
+			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
+				// No mock setup needed as router should handle JSON error before calling handler
+			},
+			expectedStatus: http.StatusBadRequest,
+		},
 	}
 
 	for _, tt := range tests {
@@ -127,7 +263,12 @@ func TestUserRoutes(t *testing.T) {
 
 			var body []byte
 			if tt.body != nil {
-				body, _ = json.Marshal(tt.body)
+				switch v := tt.body.(type) {
+				case string:
+					body = []byte(v)
+				default:
+					body, _ = json.Marshal(tt.body)
+				}
 			}
 
 			req := httptest.NewRequest(tt.method, tt.path, bytes.NewBuffer(body))

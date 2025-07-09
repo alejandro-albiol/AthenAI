@@ -1,13 +1,17 @@
 package middleware
 
 import (
+	"context"
 	"encoding/json"
 	"net/http"
 
 	"github.com/alejandro-albiol/athenai/pkg/response"
 )
 
-// RequireGymID middleware ensures X-Gym-ID header is present
+type contextKey string
+
+const GymIDKey contextKey = "gymID"
+
 func RequireGymID(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		gymID := r.Header.Get("X-Gym-ID")
@@ -20,11 +24,18 @@ func RequireGymID(next http.Handler) http.Handler {
 			})
 			return
 		}
-		next.ServeHTTP(w, r)
+
+		// Store gymID in context
+		ctx := context.WithValue(r.Context(), GymIDKey, gymID)
+		next.ServeHTTP(w, r.WithContext(ctx))
 	})
 }
 
-// GetGymID helper to get gym ID from request
+// GetGymID helper to get gym ID from request context
 func GetGymID(r *http.Request) string {
+	if gymID, ok := r.Context().Value(GymIDKey).(string); ok {
+		return gymID
+	}
+	// Fallback to header for backward compatibility
 	return r.Header.Get("X-Gym-ID")
 }
