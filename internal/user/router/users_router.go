@@ -5,60 +5,65 @@ import (
 	"net/http"
 
 	"github.com/alejandro-albiol/athenai/internal/user/dto"
-	"github.com/alejandro-albiol/athenai/internal/user/handler"
+	"github.com/alejandro-albiol/athenai/internal/user/interfaces"
+	"github.com/alejandro-albiol/athenai/pkg/middleware"
 	"github.com/go-chi/chi/v5"
 )
 
-func NewUsersRouter(handler *handler.UsersHandler) http.Handler {
+func NewUsersRouter(handler interfaces.UserHandler) http.Handler {
 	r := chi.NewRouter()
 
-	getGymID := func(r *http.Request) string {
-		return r.Header.Get("X-Gym-ID")
-	}
-
 	r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-		gymID := getGymID(r)
-		handler.RegisterUser(w, r, gymID)
+		handler.RegisterUser(w, r, middleware.GetGymID(r))
 	})
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		gymID := getGymID(r)
-		handler.GetAllUsers(w, gymID)
+		handler.GetAllUsers(w, middleware.GetGymID(r))
 	})
 
 	r.Get("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		gymID := getGymID(r)
 		id := chi.URLParam(r, "id")
-		handler.GetUserByID(w, gymID, id)
+		handler.GetUserByID(w, middleware.GetGymID(r), id)
 	})
 
 	r.Get("/username/{username}", func(w http.ResponseWriter, r *http.Request) {
-		gymID := getGymID(r)
 		username := chi.URLParam(r, "username")
-		handler.GetUserByUsername(w, gymID, username)
+		handler.GetUserByUsername(w, middleware.GetGymID(r), username)
 	})
 
 	r.Get("/email/{email}", func(w http.ResponseWriter, r *http.Request) {
-		gymID := getGymID(r)
 		email := chi.URLParam(r, "email")
-		handler.GetUserByEmail(w, gymID, email)
+		handler.GetUserByEmail(w, middleware.GetGymID(r), email)
 	})
 
 	r.Put("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		gymID := getGymID(r)
 		id := chi.URLParam(r, "id")
 		var userDTO dto.UserUpdateDTO
 		if err := json.NewDecoder(r.Body).Decode(&userDTO); err != nil {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		handler.UpdateUser(w, gymID, id, userDTO)
+		handler.UpdateUser(w, middleware.GetGymID(r), id, userDTO)
 	})
 
 	r.Delete("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		gymID := getGymID(r)
 		id := chi.URLParam(r, "id")
-		handler.DeleteUser(w, gymID, id)
+		handler.DeleteUser(w, middleware.GetGymID(r), id)
+	})
+
+	r.Post("/{id}/verify", func(w http.ResponseWriter, r *http.Request) {
+		id := chi.URLParam(r, "id")
+		handler.VerifyUser(w, middleware.GetGymID(r), id)
+	})
+
+	r.Post("/{id}/active", func(w http.ResponseWriter, r *http.Request) {
+		id := chi.URLParam(r, "id")
+		var active bool
+		if err := json.NewDecoder(r.Body).Decode(&active); err != nil {
+			w.WriteHeader(http.StatusBadRequest)
+			return
+		}
+		handler.SetUserActive(w, middleware.GetGymID(r), id, active)
 	})
 
 	return r

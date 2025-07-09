@@ -4,7 +4,7 @@ import dto "github.com/alejandro-albiol/athenai/internal/user/dto"
 
 type UserRepository interface {
 	// CreateUser creates a new user in the database for a specific gym.
-	CreateUser(dto dto.UserCreationDTO, gymID string) error
+	CreateUser(gymID string, dto dto.UserCreationDTO) error
 	// GetUserByID retrieves a user by their ID and gym.
 	GetUserByID(gymID, id string) (dto.UserResponseDTO, error)
 	// GetUserByUsername retrieves a user by their username and gym.
@@ -21,4 +21,8 @@ type UserRepository interface {
 	UpdatePassword(gymID, id string, newPasswordHash string) error
 	// DeleteUser removes a user from the database for a specific gym.
 	DeleteUser(gymID, id string) error
+	// VerifyUser marks a user as verified in the database for a specific gym.
+	VerifyUser(gymID, userID string) error
+	// SetUserActive sets a user's active status in the database for a specific gym.
+	SetUserActive(gymID, userID string, active bool) error
 }

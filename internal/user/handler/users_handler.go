@@ -3,20 +3,21 @@ package handler
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"net/http"
 
 	"github.com/alejandro-albiol/athenai/internal/user/dto"
-	"github.com/alejandro-albiol/athenai/internal/user/service"
+	"github.com/alejandro-albiol/athenai/internal/user/interfaces"
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
 	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
 	"github.com/alejandro-albiol/athenai/pkg/response"
 )
 
 type UsersHandler struct {
-	service *service.UsersService
+	service interfaces.UserService
 }
 
-func NewUsersHandler(service *service.UsersService) *UsersHandler {
+func NewUsersHandler(service interfaces.UserService) *UsersHandler {
 	return &UsersHandler{service: service}
 }
 
@@ -267,4 +268,76 @@ func (h *UsersHandler) DeleteUser(w http.ResponseWriter, gymID, id string) {
 	}
 
 	w.WriteHeader(http.StatusNoContent)
+}
+
+func (h *UsersHandler) VerifyUser(w http.ResponseWriter, gymID, id string) {
+	err := h.service.VerifyUser(gymID, id)
+	if err != nil {
+		var apiErr apierror.APIError
+		if errors.As(err, &apiErr) {
+			status := http.StatusBadRequest
+			if apiErr.Code == errorcode_enum.CodeNotFound {
+				status = http.StatusNotFound
+			}
+			w.WriteHeader(status)
+			json.NewEncoder(w).Encode(response.APIResponse[apierror.APIError]{
+				Status:  "error",
+				Message: apiErr.Message,
+				Data:    apiErr,
+			})
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response.APIResponse[any]{
+			Status:  "error",
+			Message: "Internal server error",
+			Data:    nil,
+		})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	json.NewEncoder(w).Encode(response.APIResponse[any]{
+		Status:  "success",
+		Message: "User verified successfully",
+		Data:    nil,
+	})
+}
+
+func (h *UsersHandler) SetUserActive(w http.ResponseWriter, gymID, id string, active bool) {
+	err := h.service.SetUserActive(gymID, id, active)
+	if err != nil {
+		var apiErr apierror.APIError
+		if errors.As(err, &apiErr) {
+			status := http.StatusBadRequest
+			if apiErr.Code == errorcode_enum.CodeNotFound {
+				status = http.StatusNotFound
+			}
+			w.WriteHeader(status)
+			json.NewEncoder(w).Encode(response.APIResponse[apierror.APIError]{
+				Status:  "error",
+				Message: apiErr.Message,
+				Data:    apiErr,
+			})
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response.APIResponse[any]{
+			Status:  "error",
+			Message: "Internal server error",
+			Data:    nil,
+		})
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	statusMsg := "deactivated"
+	if active {
+		statusMsg = "activated"
+	}
+	json.NewEncoder(w).Encode(response.APIResponse[any]{
+		Status:  "success",
+		Message: fmt.Sprintf("User %s successfully", statusMsg),
+		Data:    nil,
+	})
 }

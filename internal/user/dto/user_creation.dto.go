@@ -6,5 +6,5 @@ type UserCreationDTO struct {
 	Username string                 `json:"username"`
 	Email    string                 `json:"email"`
 	Password string                 `json:"password"`
-	Role     userrole_enum.UserRole `json:"role"`
+	Role     userrole_enum.UserRole `json:"role,omitempty"`
 }

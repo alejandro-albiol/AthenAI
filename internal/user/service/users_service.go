@@ -34,7 +34,7 @@ func (s *UsersService) RegisterUser(gymID string, user dto.UserCreationDTO) erro
 	}
 	user.Password = string(hashedPassword)
 
-	return s.repository.CreateUser(user, gymID)
+	return s.repository.CreateUser(gymID, user)
 }
 
 func (s *UsersService) GetUserByID(gymID, id string) (dto.UserResponseDTO, error) {
@@ -59,6 +59,14 @@ func (s *UsersService) GetUserByEmail(gymID, email string) (dto.UserResponseDTO,
 		return dto.UserResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, fmt.Sprintf("User with email %s not found", email))
 	}
 	return user, nil
+}
+
+func (s *UsersService) GetPasswordHashByUsername(gymID, username string) (string, error) {
+	passwordHash, err := s.repository.GetPasswordHashByUsername(gymID, username)
+	if err != nil {
+		return "", apierror.New(errorcode_enum.CodeNotFound, fmt.Sprintf("User with username %s not found", username))
+	}
+	return passwordHash, nil
 }
 
 func (s *UsersService) GetAllUsers(gymID string) ([]dto.UserResponseDTO, error) {
@@ -92,10 +100,64 @@ func (s *UsersService) UpdateUser(gymID, id string, user dto.UserUpdateDTO) erro
 	return s.repository.UpdateUser(gymID, id, user)
 }
 
+func (s *UsersService) UpdatePassword(gymID, id, newPassword string) error {
+	existingUser, err := s.repository.GetUserByID(gymID, id)
+	if err != nil || existingUser.ID == "" {
+		return apierror.New(errorcode_enum.CodeNotFound, fmt.Sprintf("User with ID %s not found", id))
+	}
+
+	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(newPassword), bcrypt.DefaultCost)
+	if err != nil {
+		return apierror.New(errorcode_enum.CodeInternal, "Failed to hash password")
+	}
+
+	return s.repository.UpdatePassword(gymID, id, string(hashedPassword))
+}
+
 func (s *UsersService) DeleteUser(gymID, id string) error {
 	existingUser, err := s.repository.GetUserByID(gymID, id)
 	if err != nil || existingUser.ID == "" {
 		return apierror.New(errorcode_enum.CodeNotFound, fmt.Sprintf("User with ID %s not found", id))
 	}
 	return s.repository.DeleteUser(gymID, id)
+}
+
+func (s *UsersService) VerifyUser(gymID, userID string) error {
+	existingUser, err := s.repository.GetUserByID(gymID, userID)
+	if err != nil || existingUser.ID == "" {
+		return apierror.New(errorcode_enum.CodeNotFound, fmt.Sprintf("User with ID %s not found", userID))
+	}
+
+	if existingUser.Verified {
+		return apierror.New(errorcode_enum.CodeConflict, "User is already verified")
+	}
+
+	err = s.repository.VerifyUser(gymID, userID)
+	if err != nil {
+		return apierror.New(errorcode_enum.CodeInternal, "Failed to verify user")
+	}
+
+	return nil
+}
+
+func (s *UsersService) SetUserActive(gymID, userID string, active bool) error {
+	existingUser, err := s.repository.GetUserByID(gymID, userID)
+	if err != nil || existingUser.ID == "" {
+		return apierror.New(errorcode_enum.CodeNotFound, fmt.Sprintf("User with ID %s not found", userID))
+	}
+
+	if existingUser.IsActive == active {
+		status := "active"
+		if !active {
+			status = "inactive"
+		}
+		return apierror.New(errorcode_enum.CodeConflict, fmt.Sprintf("User is already %s", status))
+	}
+
+	err = s.repository.SetUserActive(gymID, userID, active)
+	if err != nil {
+		return apierror.New(errorcode_enum.CodeInternal, "Failed to update user status")
+	}
+
+	return nil
 }

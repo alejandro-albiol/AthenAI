@@ -1,24 +1,28 @@
 package interfaces
 
-import "github.com/alejandro-albiol/athenai/internal/user/dto"
+import (
+	"net/http"
+
+	"github.com/alejandro-albiol/athenai/internal/user/dto"
+)
 
 type UserHandler interface {
 	// RegisterUser handles user registration.
-	RegisterUser(dto dto.UserCreationDTO) (User, error)
+	RegisterUser(w http.ResponseWriter, r *http.Request, gymID string)
 	// GetUserByID handles retrieving a user by ID.
-	GetUserByID(id string) (User, error)
+	GetUserByID(w http.ResponseWriter, gymID, id string)
 	// GetUserByUsername handles retrieving a user by username.
-	GetUserByUsername(username string) (User, error)
+	GetUserByUsername(w http.ResponseWriter, gymID, username string)
 	// GetUserByEmail handles retrieving a user by email.
-	GetUserByEmail(email string) (User, error)
+	GetUserByEmail(w http.ResponseWriter, gymID, email string)
 	// GetAllUsers retrieves all users.
-	GetAllUsers() ([]User, error)
-	// GetPasswordHashByUsername retrieves the password hash for a given username.
-	GetPasswordHashByUsername(username string) (string, error)
+	GetAllUsers(w http.ResponseWriter, gymID string)
 	// UpdateUser handles updating an existing user.
-	UpdateUser(id string, dto dto.UserUpdateDTO) (User, error)
-	// UpdatePassword handles updating the password for a user.
-	UpdatePassword(id string, newPasswordHash string) error
+	UpdateUser(w http.ResponseWriter, gymID, id string, user dto.UserUpdateDTO)
 	// DeleteUser handles removing a user by ID.
-	DeleteUser(id string) error
+	DeleteUser(w http.ResponseWriter, gymID, id string)
+	// VerifyUser marks a user as verified.
+	VerifyUser(w http.ResponseWriter, gymID, id string)
+	// SetUserActive sets a user's active status.
+	SetUserActive(w http.ResponseWriter, gymID, id string, active bool)
 }
