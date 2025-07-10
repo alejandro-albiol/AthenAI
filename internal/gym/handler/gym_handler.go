@@ -6,24 +6,24 @@ import (
 	"fmt"
 	"net/http"
 
-	"github.com/alejandro-albiol/athenai/internal/user/dto"
-	"github.com/alejandro-albiol/athenai/internal/user/interfaces"
+	"github.com/alejandro-albiol/athenai/internal/gym/dto"
+	"github.com/alejandro-albiol/athenai/internal/gym/interfaces"
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
 	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
 	"github.com/alejandro-albiol/athenai/pkg/response"
 )
 
-type UsersHandler struct {
-	service interfaces.UserService
+type GymHandler struct {
+	service interfaces.GymService
 }
 
-func NewUsersHandler(service interfaces.UserService) *UsersHandler {
-	return &UsersHandler{service: service}
+func NewGymHandler(service interfaces.GymService) *GymHandler {
+	return &GymHandler{service: service}
 }
 
-func (h *UsersHandler) RegisterUser(w http.ResponseWriter, r *http.Request, gymID string) {
-	var dto dto.UserCreationDTO
-	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
+func (h *GymHandler) CreateGym(w http.ResponseWriter, r *http.Request) {
+	var creationDTO dto.GymCreationDTO
+	if err := json.NewDecoder(r.Body).Decode(&creationDTO); err != nil {
 		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(response.APIResponse[any]{
 			Status:  "error",
@@ -32,15 +32,12 @@ func (h *UsersHandler) RegisterUser(w http.ResponseWriter, r *http.Request, gymI
 		})
 		return
 	}
-	err := h.service.RegisterUser(gymID, dto)
+	id, err := h.service.CreateGym(creationDTO)
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
 			status := http.StatusBadRequest
-			switch apiErr.Code {
-			case errorcode_enum.CodeNotFound:
-				status = http.StatusNotFound
-			case errorcode_enum.CodeConflict:
+			if apiErr.Code == errorcode_enum.CodeConflict {
 				status = http.StatusConflict
 			}
 			w.WriteHeader(status)
@@ -59,17 +56,16 @@ func (h *UsersHandler) RegisterUser(w http.ResponseWriter, r *http.Request, gymI
 		})
 		return
 	}
-
 	w.WriteHeader(http.StatusCreated)
 	json.NewEncoder(w).Encode(response.APIResponse[any]{
 		Status:  "success",
-		Message: "User registered",
-		Data:    dto,
+		Message: "Gym created successfully",
+		Data:    id,
 	})
 }
 
-func (h *UsersHandler) GetAllUsers(w http.ResponseWriter, gymID string) {
-	users, err := h.service.GetAllUsers(gymID)
+func (h *GymHandler) GetGymByID(w http.ResponseWriter, r *http.Request, id string) {
+	gym, err := h.service.GetGymByID(id)
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
@@ -78,7 +74,7 @@ func (h *UsersHandler) GetAllUsers(w http.ResponseWriter, gymID string) {
 				status = http.StatusNotFound
 			}
 			w.WriteHeader(status)
-			json.NewEncoder(w).Encode(response.APIResponse[*apierror.APIError]{
+			json.NewEncoder(w).Encode(response.APIResponse[any]{
 				Status:  "error",
 				Message: apiErr.Message,
 				Data:    apiErr,
@@ -93,17 +89,16 @@ func (h *UsersHandler) GetAllUsers(w http.ResponseWriter, gymID string) {
 		})
 		return
 	}
-
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response.APIResponse[[]dto.UserResponseDTO]{
+	json.NewEncoder(w).Encode(response.APIResponse[dto.GymResponseDTO]{
 		Status:  "success",
-		Message: "Users retrieved",
-		Data:    users,
+		Message: "Gym found",
+		Data:    gym,
 	})
 }
 
-func (h *UsersHandler) GetUserByID(w http.ResponseWriter, gymID, id string) {
-	user, err := h.service.GetUserByID(gymID, id)
+func (h *GymHandler) GetGymByDomain(w http.ResponseWriter, r *http.Request, domain string) {
+	gym, err := h.service.GetGymByDomain(domain)
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
@@ -112,7 +107,7 @@ func (h *UsersHandler) GetUserByID(w http.ResponseWriter, gymID, id string) {
 				status = http.StatusNotFound
 			}
 			w.WriteHeader(status)
-			json.NewEncoder(w).Encode(response.APIResponse[*apierror.APIError]{
+			json.NewEncoder(w).Encode(response.APIResponse[any]{
 				Status:  "error",
 				Message: apiErr.Message,
 				Data:    apiErr,
@@ -127,32 +122,17 @@ func (h *UsersHandler) GetUserByID(w http.ResponseWriter, gymID, id string) {
 		})
 		return
 	}
-
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response.APIResponse[dto.UserResponseDTO]{
+	json.NewEncoder(w).Encode(response.APIResponse[dto.GymResponseDTO]{
 		Status:  "success",
-		Message: "User found",
-		Data:    user,
+		Message: "Gym found",
+		Data:    gym,
 	})
 }
 
-func (h *UsersHandler) GetUserByUsername(w http.ResponseWriter, gymID, username string) {
-	user, err := h.service.GetUserByUsername(gymID, username)
+func (h *GymHandler) GetAllGyms(w http.ResponseWriter, r *http.Request) {
+	gyms, err := h.service.GetAllGyms()
 	if err != nil {
-		var apiErr *apierror.APIError
-		if errors.As(err, &apiErr) {
-			status := http.StatusBadRequest
-			if apiErr.Code == errorcode_enum.CodeNotFound {
-				status = http.StatusNotFound
-			}
-			w.WriteHeader(status)
-			json.NewEncoder(w).Encode(response.APIResponse[*apierror.APIError]{
-				Status:  "error",
-				Message: apiErr.Message,
-				Data:    apiErr,
-			})
-			return
-		}
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(response.APIResponse[any]{
 			Status:  "error",
@@ -161,51 +141,26 @@ func (h *UsersHandler) GetUserByUsername(w http.ResponseWriter, gymID, username 
 		})
 		return
 	}
-
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response.APIResponse[dto.UserResponseDTO]{
+	json.NewEncoder(w).Encode(response.APIResponse[[]dto.GymResponseDTO]{
 		Status:  "success",
-		Message: "User found",
-		Data:    user,
+		Message: "Gyms retrieved successfully",
+		Data:    gyms,
 	})
 }
 
-func (h *UsersHandler) GetUserByEmail(w http.ResponseWriter, gymID, email string) {
-	user, err := h.service.GetUserByEmail(gymID, email)
-	if err != nil {
-		var apiErr *apierror.APIError
-		if errors.As(err, &apiErr) {
-			status := http.StatusBadRequest
-			if apiErr.Code == errorcode_enum.CodeNotFound {
-				status = http.StatusNotFound
-			}
-			w.WriteHeader(status)
-			json.NewEncoder(w).Encode(response.APIResponse[*apierror.APIError]{
-				Status:  "error",
-				Message: apiErr.Message,
-				Data:    apiErr,
-			})
-			return
-		}
-		w.WriteHeader(http.StatusInternalServerError)
+func (h *GymHandler) UpdateGym(w http.ResponseWriter, r *http.Request, id string) {
+	var updateDTO dto.GymUpdateDTO
+	if err := json.NewDecoder(r.Body).Decode(&updateDTO); err != nil {
+		w.WriteHeader(http.StatusBadRequest)
 		json.NewEncoder(w).Encode(response.APIResponse[any]{
 			Status:  "error",
-			Message: "Internal server error",
+			Message: "Invalid request payload",
 			Data:    nil,
 		})
 		return
 	}
-
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response.APIResponse[dto.UserResponseDTO]{
-		Status:  "success",
-		Message: "User found",
-		Data:    user,
-	})
-}
-
-func (h *UsersHandler) UpdateUser(w http.ResponseWriter, gymID, id string, userDTO dto.UserUpdateDTO) {
-	err := h.service.UpdateUser(gymID, id, userDTO)
+	updatedGym, err := h.service.UpdateGym(id, updateDTO)
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
@@ -232,17 +187,16 @@ func (h *UsersHandler) UpdateUser(w http.ResponseWriter, gymID, id string, userD
 		})
 		return
 	}
-
 	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response.APIResponse[any]{
+	json.NewEncoder(w).Encode(response.APIResponse[dto.GymResponseDTO]{
 		Status:  "success",
-		Message: "User updated",
-		Data:    nil,
+		Message: "Gym updated successfully",
+		Data:    updatedGym,
 	})
 }
 
-func (h *UsersHandler) DeleteUser(w http.ResponseWriter, gymID, id string) {
-	err := h.service.DeleteUser(gymID, id)
+func (h *GymHandler) SetGymActive(w http.ResponseWriter, r *http.Request, id string, active bool) {
+	err := h.service.SetGymActive(id, active)
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
@@ -266,70 +220,6 @@ func (h *UsersHandler) DeleteUser(w http.ResponseWriter, gymID, id string) {
 		})
 		return
 	}
-
-	w.WriteHeader(http.StatusNoContent)
-}
-
-func (h *UsersHandler) VerifyUser(w http.ResponseWriter, gymID, id string) {
-	err := h.service.VerifyUser(gymID, id)
-	if err != nil {
-		var apiErr *apierror.APIError
-		if errors.As(err, &apiErr) {
-			status := http.StatusBadRequest
-			if apiErr.Code == errorcode_enum.CodeNotFound {
-				status = http.StatusNotFound
-			}
-			w.WriteHeader(status)
-			json.NewEncoder(w).Encode(response.APIResponse[*apierror.APIError]{
-				Status:  "error",
-				Message: apiErr.Message,
-				Data:    apiErr,
-			})
-			return
-		}
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(response.APIResponse[any]{
-			Status:  "error",
-			Message: "Internal server error",
-			Data:    nil,
-		})
-		return
-	}
-
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response.APIResponse[any]{
-		Status:  "success",
-		Message: "User verified successfully",
-		Data:    nil,
-	})
-}
-
-func (h *UsersHandler) SetUserActive(w http.ResponseWriter, gymID, id string, active bool) {
-	err := h.service.SetUserActive(gymID, id, active)
-	if err != nil {
-		var apiErr *apierror.APIError
-		if errors.As(err, &apiErr) {
-			status := http.StatusBadRequest
-			if apiErr.Code == errorcode_enum.CodeNotFound {
-				status = http.StatusNotFound
-			}
-			w.WriteHeader(status)
-			json.NewEncoder(w).Encode(response.APIResponse[*apierror.APIError]{
-				Status:  "error",
-				Message: apiErr.Message,
-				Data:    apiErr,
-			})
-			return
-		}
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(response.APIResponse[any]{
-			Status:  "error",
-			Message: "Internal server error",
-			Data:    nil,
-		})
-		return
-	}
-
 	w.WriteHeader(http.StatusOK)
 	statusMsg := "deactivated"
 	if active {
@@ -337,7 +227,35 @@ func (h *UsersHandler) SetUserActive(w http.ResponseWriter, gymID, id string, ac
 	}
 	json.NewEncoder(w).Encode(response.APIResponse[any]{
 		Status:  "success",
-		Message: fmt.Sprintf("User %s successfully", statusMsg),
+		Message: fmt.Sprintf("Gym %s successfully", statusMsg),
 		Data:    nil,
 	})
+}
+
+func (h *GymHandler) DeleteGym(w http.ResponseWriter, r *http.Request, id string) {
+	err := h.service.DeleteGym(id)
+	if err != nil {
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) {
+			status := http.StatusBadRequest
+			if apiErr.Code == errorcode_enum.CodeNotFound {
+				status = http.StatusNotFound
+			}
+			w.WriteHeader(status)
+			json.NewEncoder(w).Encode(response.APIResponse[any]{
+				Status:  "error",
+				Message: apiErr.Message,
+				Data:    apiErr,
+			})
+			return
+		}
+		w.WriteHeader(http.StatusInternalServerError)
+		json.NewEncoder(w).Encode(response.APIResponse[any]{
+			Status:  "error",
+			Message: "Internal server error",
+			Data:    nil,
+		})
+		return
+	}
+	w.WriteHeader(http.StatusNoContent)
 }

@@ -1,13 +1,36 @@
 package interfaces
 
-import "github.com/alejandro-albiol/athenai/internal/gym/dto"
+import "net/http"
 
+// GymHandler defines the interface for handling HTTP requests related to gyms.
+// Each method corresponds to a specific API endpoint and handles the complete
+// request-response cycle including error handling and response formatting.
 type GymHandler interface {
-	CreateGym(gym dto.GymCreationDTO) (string, error)
-	GetGym(id string) (dto.GymResponseDTO, error)
-	GetGymByDomain(domain string) (dto.GymResponseDTO, error)
-	GetAllGyms() ([]dto.GymResponseDTO, error)
-	UpdateGym(id string, gym dto.GymResponseDTO) error
-	SetGymActive(id string, active bool) error
-	DeleteGym(id string) error
+	// CreateGym handles POST requests to create a new gym.
+	// Reads gym data from request body and returns 201 on success.
+	CreateGym(w http.ResponseWriter, r *http.Request)
+
+	// GetGymByID handles GET requests to fetch a gym by its ID.
+	// Returns 200 with gym data on success, 404 if not found.
+	GetGymByID(w http.ResponseWriter, r *http.Request, id string)
+
+	// GetGymByDomain handles GET requests to fetch a gym by its domain.
+	// Returns 200 with gym data on success, 404 if not found.
+	GetGymByDomain(w http.ResponseWriter, r *http.Request, domain string)
+
+	// GetAllGyms handles GET requests to fetch all active gyms.
+	// Returns 200 with array of gyms on success.
+	GetAllGyms(w http.ResponseWriter, r *http.Request)
+
+	// UpdateGym handles PUT/PATCH requests to update an existing gym.
+	// Reads update data from request body and returns 200 on success.
+	UpdateGym(w http.ResponseWriter, r *http.Request, id string)
+
+	// SetGymActive handles PATCH requests to change a gym's active status.
+	// Returns 200 on success, 404 if gym not found.
+	SetGymActive(w http.ResponseWriter, r *http.Request, id string, active bool)
+
+	// DeleteGym handles DELETE requests to remove a gym.
+	// Returns 204 on success, 404 if gym not found.
+	DeleteGym(w http.ResponseWriter, r *http.Request, id string)
 }
