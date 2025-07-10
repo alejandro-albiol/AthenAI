@@ -1,11 +1,6 @@
-parameters:
-  - name: id
-    in: path
-    required: true
-    schema:
-      type: string
-
 post:
+  tags:
+    - Users
   summary: Verify user
   security:
     - GymIdHeader: []
@@ -13,6 +8,6 @@ post:
     '200':
       description: User verified successfully
     '404':
-      $ref: '../../components/responses.yaml#/NotFound'
+      $ref: '/swagger/components/responses.yaml#/NotFound'
     '409':
       description: User already verified

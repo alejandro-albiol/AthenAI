@@ -1,12 +1,6 @@
-parameters:
-  - name: email
-    in: path
-    required: true
-    schema:
-      type: string
-      format: email
-
 get:
+  tags:
+    - Users
   summary: Get user by email
   security:
     - GymIdHeader: []
@@ -16,6 +10,6 @@ get:
       content:
         application/json:
           schema:
-            $ref: '../../components/schemas.yaml#/UserResponseDTO'
+            $ref: '/swagger/components/schemas.yaml#/UserResponseDTO'
     '404':
-      $ref: '../../components/responses.yaml#/NotFound'
+      $ref: '/swagger/components/responses.yaml#/NotFound'

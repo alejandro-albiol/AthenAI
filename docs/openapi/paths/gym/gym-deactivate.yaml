@@ -1,0 +1,19 @@
+put:
+  tags:
+    - Gym
+  summary: Deactivate gym
+  description: Deactivates a gym by its unique ID
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      description: The unique identifier of the gym
+  responses:
+    "200":
+      description: Gym deactivated successfully
+    "400":
+      $ref: "../../components/responses.yaml#/BadRequest"
+    "404":
+      $ref: "../../components/responses.yaml#/NotFound"

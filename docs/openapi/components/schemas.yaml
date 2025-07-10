@@ -67,3 +67,102 @@ UserActiveDTO:
     active:
       type: boolean
       example: true
+
+GymCreationDTO:
+  type: object
+  required:
+    - name
+    - domain
+    - address
+  properties:
+    name:
+      type: string
+      example: "Fitness Plus"
+    domain:
+      type: string
+      example: "fitnessplus"
+    address:
+      type: string
+      example: "123 Main St, City, State 12345"
+    phone:
+      type: string
+      example: "+1-555-123-4567"
+    email:
+      type: string
+      format: email
+      example: "contact@fitnessplus.com"
+    website:
+      type: string
+      format: uri
+      example: "https://fitnessplus.com"
+    description:
+      type: string
+      example: "Premium fitness center with state-of-the-art equipment"
+
+GymUpdateDTO:
+  type: object
+  properties:
+    name:
+      type: string
+    domain:
+      type: string
+    address:
+      type: string
+    phone:
+      type: string
+    email:
+      type: string
+      format: email
+    website:
+      type: string
+      format: uri
+    description:
+      type: string
+
+GymResponseDTO:
+  type: object
+  properties:
+    id:
+      type: string
+      example: "550e8400-e29b-41d4-a716-446655440000"
+    name:
+      type: string
+      example: "Fitness Plus"
+    domain:
+      type: string
+      example: "fitnessplus"
+    address:
+      type: string
+      example: "123 Main St, City, State 12345"
+    phone:
+      type: string
+      example: "+1-555-123-4567"
+    email:
+      type: string
+      example: "contact@fitnessplus.com"
+    website:
+      type: string
+      example: "https://fitnessplus.com"
+    description:
+      type: string
+      example: "Premium fitness center with state-of-the-art equipment"
+    isActive:
+      type: boolean
+      example: true
+    createdAt:
+      type: string
+      format: date-time
+      example: "2024-01-15T10:30:00Z"
+    updatedAt:
+      type: string
+      format: date-time
+      example: "2024-01-15T10:30:00Z"
+
+GymActivateDTO:
+  type: object
+  required:
+    - active
+  properties:
+    active:
+      type: boolean
+      example: true

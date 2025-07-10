@@ -1,0 +1,31 @@
+put:
+  tags:
+    - Gym
+  summary: Update gym
+  description: Updates an existing gym by its unique ID
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      description: The unique identifier of the gym
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../../components/schemas.yaml#/GymUpdateDTO"
+  responses:
+    "200":
+      description: Gym updated successfully
+      content:
+        application/json:
+          schema:
+            $ref: "../../components/schemas.yaml#/GymResponseDTO"
+    "400":
+      $ref: "../../components/responses.yaml#/BadRequest"
+    "404":
+      $ref: "../../components/responses.yaml#/NotFound"
+    "409":
+      $ref: "../../components/responses.yaml#/Conflict"

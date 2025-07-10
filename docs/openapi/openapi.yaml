@@ -8,20 +8,124 @@ servers:
   - url: http://localhost:8080/api/v1
 
 components:
-  $ref: './components/index.yaml'
+  $ref: "./components/index.yaml"
 
-# Paths (endpoints)
 paths:
   # User routes
   /users:
-    $ref: './paths/users/users.yaml'
+    $ref: "./paths/users/users.yaml"
+
   /users/{id}:
-    $ref: './paths/users/users-by-id.yaml'
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The unique identifier of the user
+    $ref: "./paths/users/users-by-id.yaml"
+
   /users/username/{username}:
-    $ref: './paths/users/users-by-username.yaml'
+    parameters:
+      - name: username
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The username of the user
+    $ref: "./paths/users/users-by-username.yaml"
+
   /users/email/{email}:
-    $ref: './paths/users/users-by-email.yaml'
+    parameters:
+      - name: email
+        in: path
+        required: true
+        schema:
+          type: string
+          format: email
+        description: The email address of the user
+    $ref: "./paths/users/users-by-email.yaml"
+
   /users/{id}/verify:
-    $ref: './paths/users/users-verify.yaml'
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The unique identifier of the user
+    $ref: "./paths/users/users-verify.yaml"
+
   /users/{id}/active:
-    $ref: './paths/users/users-active.yaml'
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The unique identifier of the user
+    $ref: "./paths/users/users-active.yaml"
+
+  # Gym routes
+  /gym:
+    $ref: "./paths/gym/gym.yaml"
+
+  /gym/{id}:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The unique identifier of the gym
+    $ref: "./paths/gym/gym-by-id.yaml"
+
+  /gym/{id}/update:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The unique identifier of the gym
+    $ref: "./paths/gym/gym-update.yaml"
+
+  /gym/domain/{domain}:
+    parameters:
+      - name: domain
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The unique domain of the gym
+    $ref: "./paths/gym/gym-by-domain.yaml"
+
+  /gym/{id}/activate:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The unique identifier of the gym
+    $ref: "./paths/gym/gym-activate.yaml"
+
+  /gym/{id}/deactivate:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The unique identifier of the gym
+    $ref: "./paths/gym/gym-deactivate.yaml"
+
+  /gym/{id}/delete:
+    parameters:
+      - name: id
+        in: path
+        required: true
+        schema:
+          type: string
+        description: The unique identifier of the gym
+    $ref: "./paths/gym/gym-delete.yaml"

@@ -10,20 +10,19 @@ import (
 
 // SetupSwagger configures and adds Swagger documentation routes
 func SetupSwagger(r chi.Router) {
-	// Serve Swagger UI
-	r.Get("/swagger", http.RedirectHandler("/swagger/", http.StatusMovedPermanently).ServeHTTP)
-	r.Get("/swagger/*", httpSwagger.Handler(
-		httpSwagger.URL("../swagger/doc.json"), // Use relative path
-	))
-
-	// Serve OpenAPI specification and its dependencies
-	r.Get("/swagger/doc.json", func(w http.ResponseWriter, r *http.Request) {
-		w.Header().Set("Content-Type", "application/json")
+	// Serve OpenAPI specification (YAML)
+	r.Get("/swagger/openapi.yaml", func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Content-Type", "application/x-yaml")
 		http.ServeFile(w, r, filepath.Join("docs", "openapi", "openapi.yaml"))
 	})
 
-	// Serve component files
+	// Serve all OpenAPI files (components, paths, etc.)
 	fileServer := http.FileServer(http.Dir("docs/openapi"))
-	r.Get("/swagger/components/*", http.StripPrefix("/swagger", fileServer).ServeHTTP)
-	r.Get("/swagger/paths/*", http.StripPrefix("/swagger", fileServer).ServeHTTP)
+	r.Get("/swagger/*", http.StripPrefix("/swagger", fileServer).ServeHTTP)
+
+	// Serve Swagger UI
+	r.Get("/swagger", http.RedirectHandler("/swagger-ui/", http.StatusMovedPermanently).ServeHTTP)
+	r.Get("/swagger-ui/*", httpSwagger.Handler(
+		httpSwagger.URL("/swagger/openapi.yaml"),
+	))
 }

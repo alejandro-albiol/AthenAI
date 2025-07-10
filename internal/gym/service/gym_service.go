@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"errors"
 
+	"github.com/alejandro-albiol/athenai/internal/database"
 	"github.com/alejandro-albiol/athenai/internal/gym/dto"
 	"github.com/alejandro-albiol/athenai/internal/gym/interfaces"
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
@@ -31,6 +32,14 @@ func (s *GymService) CreateGym(createDTO dto.GymCreationDTO) (string, error) {
 	if err != nil {
 		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to create gym")
 	}
+
+	db, err := database.NewPostgresDB()
+	if err != nil {
+		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to connect to database")
+	}
+	defer db.Close()
+	
+	database.CreateTenantSchema(db, domain)
 
 	return domain, nil
 }

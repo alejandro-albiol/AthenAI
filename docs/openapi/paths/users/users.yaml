@@ -1,21 +1,25 @@
 get:
+  tags:
+    - Users
   summary: Get all users
   description: Retrieves all users for the given gym
   security:
     - GymIdHeader: []
   responses:
-    '200':
+    "200":
       description: List of users retrieved successfully
       content:
         application/json:
           schema:
             type: array
             items:
-              $ref: '../../components/schemas.yaml#/UserResponseDTO'
-    '400':
-      $ref: '../../components/responses.yaml#/BadRequest'
+              $ref: "/swagger/components/schemas.yaml#/UserResponseDTO"
+    "400":
+      $ref: "/swagger/components/responses.yaml#/BadRequest"
 
 post:
+  tags:
+    - Users
   summary: Register a new user
   description: Creates a new user in the system
   security:
@@ -25,11 +29,11 @@ post:
     content:
       application/json:
         schema:
-          $ref: '../../components/schemas.yaml#/UserCreationDTO'
+          $ref: "/swagger/components/schemas.yaml#/UserCreationDTO"
   responses:
-    '201':
-      description: User created successfully
-    '400':
-      $ref: '../../components/responses.yaml#/BadRequest'
-    '409':
-      $ref: '../../components/responses.yaml#/Conflict'
+    "201":
+      $ref: "/swagger/components/responses.yaml#/Created"
+    "400":
+      $ref: "/swagger/components/responses.yaml#/BadRequest"
+    "409":
+      $ref: "/swagger/components/responses.yaml#/Conflict"

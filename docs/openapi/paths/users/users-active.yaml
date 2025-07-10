@@ -1,11 +1,6 @@
-parameters:
-  - name: id
-    in: path
-    required: true
-    schema:
-      type: string
-
 post:
+  tags:
+    - Users
   summary: Set user active status
   security:
     - GymIdHeader: []
@@ -14,11 +9,11 @@ post:
     content:
       application/json:
         schema:
-          $ref: '../../components/schemas.yaml#/UserActiveDTO'
+          $ref: "/swagger/components/schemas.yaml#/UserActiveDTO"
   responses:
-    '200':
+    "200":
       description: User active status updated successfully
-    '400':
-      $ref: '../../components/responses.yaml#/BadRequest'
-    '404':
-      $ref: '../../components/responses.yaml#/NotFound'
+    "400":
+      $ref: "/swagger/components/responses.yaml#/BadRequest"
+    "404":
+      $ref: "/swagger/components/responses.yaml#/NotFound"

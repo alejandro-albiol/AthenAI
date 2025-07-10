@@ -1,0 +1,23 @@
+get:
+  tags:
+    - Gym
+  summary: Get gym by ID
+  description: Retrieves a gym by its unique ID
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      description: The unique identifier of the gym
+  responses:
+    "200":
+      description: Gym found
+      content:
+        application/json:
+          schema:
+            $ref: "../../components/schemas.yaml#/GymResponseDTO"
+    "400":
+      $ref: "../../components/responses.yaml#/BadRequest"
+    "404":
+      $ref: "../../components/responses.yaml#/NotFound"
