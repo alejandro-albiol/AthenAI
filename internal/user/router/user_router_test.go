@@ -1,4 +1,4 @@
-package router
+package router_test
 
 import (
 	"bytes"
@@ -8,6 +8,7 @@ import (
 	"testing"
 
 	"github.com/alejandro-albiol/athenai/internal/user/dto"
+	"github.com/alejandro-albiol/athenai/internal/user/router"
 	userrole_enum "github.com/alejandro-albiol/athenai/internal/user/enum"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
@@ -259,7 +260,7 @@ func TestUserRoutes(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			mockHandler := new(MockUserHandler)
-			router := NewUsersRouter(mockHandler)
+			router := router.NewUsersRouter(mockHandler)
 
 			var body []byte
 			if tt.body != nil {

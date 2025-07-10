@@ -1,4 +1,4 @@
-package handler
+package handler_test
 
 import (
 	"bytes"
@@ -9,6 +9,7 @@ import (
 
 	"github.com/alejandro-albiol/athenai/internal/user/dto"
 	userrole_enum "github.com/alejandro-albiol/athenai/internal/user/enum"
+	"github.com/alejandro-albiol/athenai/internal/user/handler"
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
 	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
 	"github.com/stretchr/testify/assert"
@@ -124,7 +125,7 @@ func TestRegisterUser(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockService := new(MockUserService)
-			handler := NewUsersHandler(mockService)
+			handler := handler.NewUsersHandler(mockService)
 			tc.setupMock(mockService)
 
 			var body []byte
@@ -191,7 +192,7 @@ func TestVerifyUser(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockService := new(MockUserService)
-			handler := NewUsersHandler(mockService)
+			handler := handler.NewUsersHandler(mockService)
 			tc.setupMock(mockService)
 
 			w := httptest.NewRecorder()
@@ -254,7 +255,7 @@ func TestGetAllUsers(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockService := new(MockUserService)
-			handler := NewUsersHandler(mockService)
+			handler := handler.NewUsersHandler(mockService)
 			tc.setupMock(mockService)
 
 			w := httptest.NewRecorder()
@@ -313,7 +314,7 @@ func TestGetUserByID(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockService := new(MockUserService)
-			handler := NewUsersHandler(mockService)
+			handler := handler.NewUsersHandler(mockService)
 			tc.setupMock(mockService)
 
 			w := httptest.NewRecorder()
@@ -372,7 +373,7 @@ func TestGetUserByUsername(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockService := new(MockUserService)
-			handler := NewUsersHandler(mockService)
+			handler := handler.NewUsersHandler(mockService)
 			tc.setupMock(mockService)
 
 			w := httptest.NewRecorder()
@@ -431,7 +432,7 @@ func TestGetUserByEmail(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockService := new(MockUserService)
-			handler := NewUsersHandler(mockService)
+			handler := handler.NewUsersHandler(mockService)
 			tc.setupMock(mockService)
 
 			w := httptest.NewRecorder()
@@ -511,7 +512,7 @@ func TestUpdateUser(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockService := new(MockUserService)
-			handler := NewUsersHandler(mockService)
+			handler := handler.NewUsersHandler(mockService)
 			tc.setupMock(mockService)
 
 			w := httptest.NewRecorder()
@@ -564,7 +565,7 @@ func TestDeleteUser(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockService := new(MockUserService)
-			handler := NewUsersHandler(mockService)
+			handler := handler.NewUsersHandler(mockService)
 			tc.setupMock(mockService)
 
 			w := httptest.NewRecorder()
@@ -642,7 +643,7 @@ func TestSetUserActive(t *testing.T) {
 	for _, tc := range testCases {
 		t.Run(tc.name, func(t *testing.T) {
 			mockService := new(MockUserService)
-			handler := NewUsersHandler(mockService)
+			handler := handler.NewUsersHandler(mockService)
 			tc.setupMock(mockService)
 
 			w := httptest.NewRecorder()
@@ -656,7 +657,7 @@ func TestSetUserActive(t *testing.T) {
 
 func TestRegisterUserInternalError(t *testing.T) {
 	mockService := new(MockUserService)
-	handler := NewUsersHandler(mockService)
+	handler := handler.NewUsersHandler(mockService)
 
 	input := dto.UserCreationDTO{
 		Username: "testuser",
@@ -682,7 +683,7 @@ func TestRegisterUserInternalError(t *testing.T) {
 
 func TestGetAllUsersInternalError(t *testing.T) {
 	mockService := new(MockUserService)
-	handler := NewUsersHandler(mockService)
+	handler := handler.NewUsersHandler(mockService)
 
 	// Mock service returns a non-APIError
 	mockService.On("GetAllUsers", "gym123").Return([]dto.UserResponseDTO{}, assert.AnError)
@@ -696,7 +697,7 @@ func TestGetAllUsersInternalError(t *testing.T) {
 
 func TestGetUserByIDInternalError(t *testing.T) {
 	mockService := new(MockUserService)
-	handler := NewUsersHandler(mockService)
+	handler := handler.NewUsersHandler(mockService)
 
 	// Mock service returns a non-APIError
 	mockService.On("GetUserByID", "gym123", "user123").Return(dto.UserResponseDTO{}, assert.AnError)
@@ -710,7 +711,7 @@ func TestGetUserByIDInternalError(t *testing.T) {
 
 func TestUpdateUserInternalError(t *testing.T) {
 	mockService := new(MockUserService)
-	handler := NewUsersHandler(mockService)
+	handler := handler.NewUsersHandler(mockService)
 
 	input := dto.UserUpdateDTO{
 		Username: "updateduser",
@@ -729,7 +730,7 @@ func TestUpdateUserInternalError(t *testing.T) {
 
 func TestDeleteUserInternalError(t *testing.T) {
 	mockService := new(MockUserService)
-	handler := NewUsersHandler(mockService)
+	handler := handler.NewUsersHandler(mockService)
 
 	// Mock service returns a non-APIError
 	mockService.On("DeleteUser", "gym123", "user123").Return(assert.AnError)
@@ -743,7 +744,7 @@ func TestDeleteUserInternalError(t *testing.T) {
 
 func TestVerifyUserInternalError(t *testing.T) {
 	mockService := new(MockUserService)
-	handler := NewUsersHandler(mockService)
+	handler := handler.NewUsersHandler(mockService)
 
 	// Mock service returns a non-APIError
 	mockService.On("VerifyUser", "gym123", "user123").Return(assert.AnError)
@@ -757,7 +758,7 @@ func TestVerifyUserInternalError(t *testing.T) {
 
 func TestSetUserActiveInternalError(t *testing.T) {
 	mockService := new(MockUserService)
-	handler := NewUsersHandler(mockService)
+	handler := handler.NewUsersHandler(mockService)
 
 	// Mock service returns a non-APIError
 	mockService.On("SetUserActive", "gym123", "user123", true).Return(assert.AnError)

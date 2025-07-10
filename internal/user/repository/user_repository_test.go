@@ -1,4 +1,4 @@
-package repository
+package repository_test
 
 import (
 	"database/sql"
@@ -8,6 +8,7 @@ import (
 	"github.com/DATA-DOG/go-sqlmock"
 	"github.com/alejandro-albiol/athenai/internal/user/dto"
 	userrole_enum "github.com/alejandro-albiol/athenai/internal/user/enum"
+	"github.com/alejandro-albiol/athenai/internal/user/repository"
 	"github.com/stretchr/testify/assert"
 )
 
@@ -23,7 +24,7 @@ func TestCreateUser(t *testing.T) {
 	db, mock := setupTest(t)
 	defer db.Close()
 
-	repo := NewUsersRepository(db)
+	repo := repository.NewUsersRepository(db)
 	userDTO := dto.UserCreationDTO{
 		Username: "testuser",
 		Email:    "test@test.com",
@@ -45,7 +46,7 @@ func TestGetUserByID(t *testing.T) {
 	db, mock := setupTest(t)
 	defer db.Close()
 
-	repo := NewUsersRepository(db)
+	repo := repository.NewUsersRepository(db)
 	gymID := "gym123"
 	userID := "user123"
 	now := time.Now()
@@ -109,7 +110,7 @@ func TestVerifyUser(t *testing.T) {
 	db, mock := setupTest(t)
 	defer db.Close()
 
-	repo := NewUsersRepository(db)
+	repo := repository.NewUsersRepository(db)
 	gymID := "gym123"
 	userID := "user123"
 
@@ -125,7 +126,7 @@ func TestSetUserActive(t *testing.T) {
 	db, mock := setupTest(t)
 	defer db.Close()
 
-	repo := NewUsersRepository(db)
+	repo := repository.NewUsersRepository(db)
 	gymID := "gym123"
 	userID := "user123"
 
@@ -166,7 +167,7 @@ func TestGetUserByUsername(t *testing.T) {
 	db, mock := setupTest(t)
 	defer db.Close()
 
-	repo := NewUsersRepository(db)
+	repo := repository.NewUsersRepository(db)
 	gymID := "gym123"
 	username := "testuser"
 
@@ -229,7 +230,7 @@ func TestGetAllUsers(t *testing.T) {
 	db, mock := setupTest(t)
 	defer db.Close()
 
-	repo := NewUsersRepository(db)
+	repo := repository.NewUsersRepository(db)
 	gymID := "gym123"
 
 	testCases := []struct {
@@ -305,7 +306,7 @@ func TestUpdateUser(t *testing.T) {
 	db, mock := setupTest(t)
 	defer db.Close()
 
-	repo := NewUsersRepository(db)
+	repo := repository.NewUsersRepository(db)
 	gymID := "gym123"
 	userID := "user123"
 	updateDTO := dto.UserUpdateDTO{
@@ -356,7 +357,7 @@ func TestUpdatePassword(t *testing.T) {
 	db, mock := setupTest(t)
 	defer db.Close()
 
-	repo := NewUsersRepository(db)
+	repo := repository.NewUsersRepository(db)
 	gymID := "gym123"
 	userID := "user123"
 	newPasswordHash := "newhash123"
@@ -404,7 +405,7 @@ func TestDeleteUser(t *testing.T) {
 	db, mock := setupTest(t)
 	defer db.Close()
 
-	repo := NewUsersRepository(db)
+	repo := repository.NewUsersRepository(db)
 	gymID := "gym123"
 	userID := "user123"
 
