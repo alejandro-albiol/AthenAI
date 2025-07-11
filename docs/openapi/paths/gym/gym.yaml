@@ -12,8 +12,6 @@ get:
             type: array
             items:
               $ref: "/swagger/components/schemas.yaml#/GymResponseDTO"
-    "400":
-      $ref: "/swagger/components/responses.yaml#/BadRequest"
 
 post:
   tags:

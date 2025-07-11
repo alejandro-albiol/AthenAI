@@ -17,7 +17,7 @@ func NewUsersRepository(db *sql.DB) interfaces.UserRepository {
 
 func (r *usersRepository) CreateUser(gymID string, dto dto.UserCreationDTO) error {
 	query := `
-        INSERT INTO users (
+        INSERT INTO user (
             username, email, password_hash, role, gym_id, 
             verified, is_active, created_at, updated_at
         ) VALUES (
@@ -31,7 +31,7 @@ func (r *usersRepository) CreateUser(gymID string, dto dto.UserCreationDTO) erro
 func (r *usersRepository) GetUserByID(gymID, id string) (dto.UserResponseDTO, error) {
 	query := `
         SELECT id, username, email, role, verified, is_active, created_at, updated_at 
-        FROM users 
+        FROM user 
         WHERE id = $1 AND gym_id = $2 AND is_active = true`
 	row := r.db.QueryRow(query, id, gymID)
 	var user dto.UserResponseDTO
@@ -47,7 +47,7 @@ func (r *usersRepository) GetUserByID(gymID, id string) (dto.UserResponseDTO, er
 }
 
 func (r *usersRepository) GetUserByUsername(gymID, username string) (dto.UserResponseDTO, error) {
-	query := "SELECT id, username, email, role, verified, is_active, created_at, updated_at FROM users WHERE username = $1 AND gym_id = $2"
+	query := "SELECT id, username, email, role, verified, is_active, created_at, updated_at FROM user WHERE username = $1 AND gym_id = $2"
 	row := r.db.QueryRow(query, username, gymID)
 	var user dto.UserResponseDTO
 	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Role, &user.Verified, &user.IsActive, &user.CreatedAt, &user.UpdatedAt)
@@ -59,7 +59,7 @@ func (r *usersRepository) GetUserByUsername(gymID, username string) (dto.UserRes
 }
 
 func (r *usersRepository) GetUserByEmail(gymID, email string) (dto.UserResponseDTO, error) {
-	query := "SELECT id, username, email, role, verified, is_active, created_at, updated_at FROM users WHERE email = $1 AND gym_id = $2"
+	query := "SELECT id, username, email, role, verified, is_active, created_at, updated_at FROM user WHERE email = $1 AND gym_id = $2"
 	row := r.db.QueryRow(query, email, gymID)
 	var user dto.UserResponseDTO
 	err := row.Scan(&user.ID, &user.Username, &user.Email, &user.Role, &user.Verified, &user.IsActive, &user.CreatedAt, &user.UpdatedAt)
@@ -75,7 +75,7 @@ func (r *usersRepository) GetAllUsers(gymID string) ([]dto.UserResponseDTO, erro
 
 	rows, err := r.db.Query(`
         SELECT id, username, email, role, verified, is_active, created_at, updated_at 
-        FROM users 
+        FROM user 
         WHERE gym_id = $1`, gymID)
 	if err != nil {
 		return users, err
@@ -94,7 +94,7 @@ func (r *usersRepository) GetAllUsers(gymID string) ([]dto.UserResponseDTO, erro
 }
 
 func (r *usersRepository) GetPasswordHashByUsername(gymID, username string) (string, error) {
-	query := "SELECT password_hash FROM users WHERE username = $1 AND gym_id = $2"
+	query := "SELECT password_hash FROM user WHERE username = $1 AND gym_id = $2"
 	row := r.db.QueryRow(query, username, gymID)
 	var passwordHash string
 	err := row.Scan(&passwordHash)
@@ -105,25 +105,25 @@ func (r *usersRepository) GetPasswordHashByUsername(gymID, username string) (str
 }
 
 func (r *usersRepository) UpdateUser(gymID string, id string, user dto.UserUpdateDTO) error {
-	query := "UPDATE users SET username = $1, email = $2 WHERE id = $3 AND gym_id = $4"
+	query := "UPDATE user SET username = $1, email = $2 WHERE id = $3 AND gym_id = $4"
 	_, err := r.db.Exec(query, user.Username, user.Email, id, gymID)
 	return err
 }
 
 func (r *usersRepository) UpdatePassword(gymID, userID string, newPasswordHash string) error {
-	query := "UPDATE users SET password_hash = $1 WHERE id = $2 AND gym_id = $3"
+	query := "UPDATE user SET password_hash = $1 WHERE id = $2 AND gym_id = $3"
 	_, err := r.db.Exec(query, newPasswordHash, userID, gymID)
 	return err
 }
 
 func (r *usersRepository) DeleteUser(gymID, id string) error {
-	query := "DELETE FROM users WHERE id = $1 AND gym_id = $2"
+	query := "DELETE FROM user WHERE id = $1 AND gym_id = $2"
 	_, err := r.db.Exec(query, id, gymID)
 	return err
 }
 
 func (r *usersRepository) VerifyUser(gymID, userID string) error {
-	query := "UPDATE users SET verified = true, updated_at = NOW() WHERE id = $1 AND gym_id = $2"
+	query := "UPDATE user SET verified = true, updated_at = NOW() WHERE id = $1 AND gym_id = $2"
 	result, err := r.db.Exec(query, userID, gymID)
 	if err != nil {
 		return err
@@ -139,7 +139,7 @@ func (r *usersRepository) VerifyUser(gymID, userID string) error {
 }
 
 func (r *usersRepository) SetUserActive(gymID, userID string, active bool) error {
-	query := "UPDATE users SET is_active = $1, updated_at = NOW() WHERE id = $2 AND gym_id = $3"
+	query := "UPDATE user SET is_active = $1, updated_at = NOW() WHERE id = $2 AND gym_id = $3"
 	result, err := r.db.Exec(query, active, userID, gymID)
 	if err != nil {
 		return err

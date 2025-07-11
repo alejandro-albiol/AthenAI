@@ -104,8 +104,6 @@ GymUpdateDTO:
   properties:
     name:
       type: string
-    domain:
-      type: string
     address:
       type: string
     phone:

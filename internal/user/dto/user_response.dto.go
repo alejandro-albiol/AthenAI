@@ -14,6 +14,7 @@ type UserResponseDTO struct {
 	GymID     string                 `json:"gym_id"`
 	Verified  bool                   `json:"verified"`
 	IsActive  bool                   `json:"is_active"`
+	Phone     string                 `json:"phone"`
 	CreatedAt time.Time              `json:"created_at"`
 	UpdatedAt time.Time              `json:"updated_at"`
 }

@@ -78,7 +78,7 @@ func (s *GymService) GetAllGyms() ([]dto.GymResponseDTO, error) {
 }
 
 func (s *GymService) UpdateGym(id string, updateDTO dto.GymUpdateDTO) (dto.GymResponseDTO, error) {
-	// Check if gym exists
+
 	_, err := s.repository.GetGymByID(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
@@ -114,7 +114,7 @@ func (s *GymService) SetGymActive(id string, active bool) error {
 }
 
 func (s *GymService) DeleteGym(id string) error {
-	// Check if gym exists
+	
 	_, err := s.repository.GetGymByID(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {

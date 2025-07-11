@@ -11,11 +11,9 @@ components:
   $ref: "./components/index.yaml"
 
 paths:
-  # User routes
-  /user:
-    $ref: "./paths/user/user.yaml"
-
-  /user/{id}:
+  /users:
+    $ref: "./paths/users/users.yaml"
+  /users/{id}:
     parameters:
       - name: id
         in: path
@@ -23,9 +21,8 @@ paths:
         schema:
           type: string
         description: The unique identifier of the user
-    $ref: "./paths/user/user-by-id.yaml"
-
-  /user/username/{username}:
+    $ref: "./paths/users/users-by-id.yaml"
+  /users/username/{username}:
     parameters:
       - name: username
         in: path
@@ -33,9 +30,9 @@ paths:
         schema:
           type: string
         description: The username of the user
-    $ref: "./paths/user/user-by-username.yaml"
+    $ref: "./paths/users/user-by-username.yaml"
 
-  /user/email/{email}:
+  /users/email/{email}:
     parameters:
       - name: email
         in: path
@@ -44,9 +41,9 @@ paths:
           type: string
           format: email
         description: The email address of the user
-    $ref: "./paths/user/user-by-email.yaml"
+    $ref: "./paths/users/user-by-email.yaml"
 
-  /user/{id}/verify:
+  /users/{id}/verify:
     parameters:
       - name: id
         in: path
@@ -54,9 +51,9 @@ paths:
         schema:
           type: string
         description: The unique identifier of the user
-    $ref: "./paths/user/user-verify.yaml"
+    $ref: "./paths/users/user-verify.yaml"
 
-  /user/{id}/active:
+  /users/{id}/active:
     parameters:
       - name: id
         in: path
@@ -64,13 +61,12 @@ paths:
         schema:
           type: string
         description: The unique identifier of the user
-    $ref: "./paths/user/user-active.yaml"
+    $ref: "./paths/users/user-active.yaml"
 
-  # Gym routes
-  /gym:
-    $ref: "./paths/gym/gym.yaml"
+  /gyms:
+    $ref: "./paths/gyms/gyms.yaml"
 
-  /gym/{id}:
+  /gyms/{id}:
     parameters:
       - name: id
         in: path
@@ -78,9 +74,9 @@ paths:
         schema:
           type: string
         description: The unique identifier of the gym
-    $ref: "./paths/gym/gym-by-id.yaml"
+    $ref: "./paths/gyms/gym-by-id.yaml"
 
-  /gym/{id}/update:
+  /gyms/{id}/update:
     parameters:
       - name: id
         in: path
@@ -88,9 +84,9 @@ paths:
         schema:
           type: string
         description: The unique identifier of the gym
-    $ref: "./paths/gym/gym-update.yaml"
+    $ref: "./paths/gyms/gym-update.yaml"
 
-  /gym/domain/{domain}:
+  /gyms/domain/{domain}:
     parameters:
       - name: domain
         in: path
@@ -98,9 +94,9 @@ paths:
         schema:
           type: string
         description: The unique domain of the gym
-    $ref: "./paths/gym/gym-by-domain.yaml"
+    $ref: "./paths/gyms/gym-by-domain.yaml"
 
-  /gym/{id}/activate:
+  /gyms/{id}/activate:
     parameters:
       - name: id
         in: path
@@ -108,9 +104,9 @@ paths:
         schema:
           type: string
         description: The unique identifier of the gym
-    $ref: "./paths/gym/gym-activate.yaml"
+    $ref: "./paths/gyms/gym-activate.yaml"
 
-  /gym/{id}/deactivate:
+  /gyms/{id}/deactivate:
     parameters:
       - name: id
         in: path
@@ -118,9 +114,9 @@ paths:
         schema:
           type: string
         description: The unique identifier of the gym
-    $ref: "./paths/gym/gym-deactivate.yaml"
+    $ref: "./paths/gyms/gym-deactivate.yaml"
 
-  /gym/{id}/delete:
+  /gyms/{id}/delete:
     parameters:
       - name: id
         in: path
@@ -128,4 +124,4 @@ paths:
         schema:
           type: string
         description: The unique identifier of the gym
-    $ref: "./paths/gym/gym-delete.yaml"
+    $ref: "./paths/gyms/gym-delete.yaml"

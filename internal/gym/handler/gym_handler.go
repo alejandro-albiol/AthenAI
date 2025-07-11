@@ -35,7 +35,7 @@ func (h *GymHandler) CreateGym(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
-			apierror.WriteAPIError(w, apiErr)
+			response.WriteAPIError(w, apiErr)
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
@@ -46,12 +46,7 @@ func (h *GymHandler) CreateGym(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	w.WriteHeader(http.StatusCreated)
-	json.NewEncoder(w).Encode(response.APIResponse[any]{
-		Status:  "success",
-		Message: "Gym created successfully",
-		Data:    id,
-	})
+	response.WriteAPISuccess(w, "Gym created successfully", id)
 }
 
 func (h *GymHandler) GetGymByID(w http.ResponseWriter, r *http.Request, id string) {
@@ -59,7 +54,7 @@ func (h *GymHandler) GetGymByID(w http.ResponseWriter, r *http.Request, id strin
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
-			apierror.WriteAPIError(w, apiErr)
+			response.WriteAPIError(w, apiErr)
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
@@ -70,12 +65,7 @@ func (h *GymHandler) GetGymByID(w http.ResponseWriter, r *http.Request, id strin
 		})
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response.APIResponse[dto.GymResponseDTO]{
-		Status:  "success",
-		Message: "Gym found",
-		Data:    gym,
-	})
+	response.WriteAPISuccess(w, "Gym found", gym)
 }
 
 func (h *GymHandler) GetGymByDomain(w http.ResponseWriter, r *http.Request, domain string) {
@@ -83,7 +73,7 @@ func (h *GymHandler) GetGymByDomain(w http.ResponseWriter, r *http.Request, doma
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
-			apierror.WriteAPIError(w, apiErr)
+			response.WriteAPIError(w, apiErr)
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
@@ -94,17 +84,17 @@ func (h *GymHandler) GetGymByDomain(w http.ResponseWriter, r *http.Request, doma
 		})
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response.APIResponse[dto.GymResponseDTO]{
-		Status:  "success",
-		Message: "Gym found",
-		Data:    gym,
-	})
+	response.WriteAPISuccess(w, "Gym found", gym)
 }
 
 func (h *GymHandler) GetAllGyms(w http.ResponseWriter, r *http.Request) {
 	gyms, err := h.service.GetAllGyms()
 	if err != nil {
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) {
+			response.WriteAPIError(w, apiErr)
+			return
+		}
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(response.APIResponse[any]{
 			Status:  "error",
@@ -113,12 +103,7 @@ func (h *GymHandler) GetAllGyms(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response.APIResponse[[]dto.GymResponseDTO]{
-		Status:  "success",
-		Message: "Gyms retrieved successfully",
-		Data:    gyms,
-	})
+	response.WriteAPISuccess(w, "Gyms retrieved successfully", gyms)
 }
 
 func (h *GymHandler) UpdateGym(w http.ResponseWriter, r *http.Request, id string) {
@@ -128,7 +113,7 @@ func (h *GymHandler) UpdateGym(w http.ResponseWriter, r *http.Request, id string
 		json.NewEncoder(w).Encode(response.APIResponse[any]{
 			Status:  "error",
 			Message: "Invalid request payload",
-			Data:    nil,
+			Data:    err,
 		})
 		return
 	}
@@ -136,7 +121,7 @@ func (h *GymHandler) UpdateGym(w http.ResponseWriter, r *http.Request, id string
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
-			apierror.WriteAPIError(w, apiErr)
+			response.WriteAPIError(w, apiErr)
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
@@ -147,12 +132,7 @@ func (h *GymHandler) UpdateGym(w http.ResponseWriter, r *http.Request, id string
 		})
 		return
 	}
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response.APIResponse[dto.GymResponseDTO]{
-		Status:  "success",
-		Message: "Gym updated successfully",
-		Data:    updatedGym,
-	})
+	response.WriteAPISuccess(w, "Gym updated successfully", updatedGym)
 }
 
 func (h *GymHandler) SetGymActive(w http.ResponseWriter, r *http.Request, id string, active bool) {
@@ -160,27 +140,22 @@ func (h *GymHandler) SetGymActive(w http.ResponseWriter, r *http.Request, id str
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
-			apierror.WriteAPIError(w, apiErr)
+			response.WriteAPIError(w, apiErr)
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(response.APIResponse[any]{
 			Status:  "error",
 			Message: "Internal server error when setting gym active",
-			Data:    nil,
+			Data:    err,
 		})
 		return
 	}
-	w.WriteHeader(http.StatusOK)
 	statusMsg := "deactivated"
 	if active {
 		statusMsg = "activated"
 	}
-	json.NewEncoder(w).Encode(response.APIResponse[any]{
-		Status:  "success",
-		Message: fmt.Sprintf("Gym %s successfully", statusMsg),
-		Data:    nil,
-	})
+	response.WriteAPISuccess(w, fmt.Sprintf("Gym %s successfully", statusMsg), nil)
 }
 
 func (h *GymHandler) DeleteGym(w http.ResponseWriter, r *http.Request, id string) {
@@ -188,16 +163,16 @@ func (h *GymHandler) DeleteGym(w http.ResponseWriter, r *http.Request, id string
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
-			apierror.WriteAPIError(w, apiErr)
+			response.WriteAPIError(w, apiErr)
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(response.APIResponse[any]{
 			Status:  "error",
 			Message: "Internal server error when deleting gym",
-			Data:    nil,
+			Data:    err,
 		})
 		return
 	}
-	w.WriteHeader(http.StatusNoContent)
+	response.WriteAPISuccess(w, "Gym deleted successfully", nil)
 }

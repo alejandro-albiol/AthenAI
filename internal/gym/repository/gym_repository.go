@@ -18,9 +18,9 @@ func NewGymRepository(db *sql.DB) *GymRepository {
 
 func (r *GymRepository) CreateGym(gym dto.GymCreationDTO) (string, error) {
 	query := `
-		INSERT INTO gyms (name, domain, email, address, contact_name, phone, logo_url,
+		INSERT INTO gym (name, domain, email, address, phone,
 			is_active, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, $6, $7, true, $8, $8)
+		VALUES ($1, $2, $3, $4, $5, true, $6, $6)
 		RETURNING id`
 
 	var id string
@@ -31,9 +31,7 @@ func (r *GymRepository) CreateGym(gym dto.GymCreationDTO) (string, error) {
 		gym.Domain,
 		gym.Email,
 		gym.Address,
-		gym.ContactName,
 		gym.Phone,
-		gym.LogoURL,
 		now,
 	).Scan(&id)
 
@@ -45,10 +43,9 @@ func (r *GymRepository) CreateGym(gym dto.GymCreationDTO) (string, error) {
 
 func (r *GymRepository) GetGymByID(id string) (dto.GymResponseDTO, error) {
 	query := `
-		SELECT id, name, domain, email, address, contact_name, phone, logo_url, 
-			description, business_hours, social_links, payment_methods, currency, 
-			timezone_offset, is_active, created_at, updated_at
-		FROM gyms 
+		SELECT id, name, domain, email, address, phone,
+			business_hours, social_links, payment_methods, is_active, created_at, updated_at
+		FROM gym 
 		WHERE id = $1 AND deleted_at IS NULL`
 
 	var gym dto.GymResponseDTO
@@ -58,15 +55,10 @@ func (r *GymRepository) GetGymByID(id string) (dto.GymResponseDTO, error) {
 		&gym.Domain,
 		&gym.Email,
 		&gym.Address,
-		&gym.ContactName,
 		&gym.Phone,
-		&gym.LogoURL,
-		&gym.Description,
 		pq.Array(&gym.BusinessHours),
 		pq.Array(&gym.SocialLinks),
 		pq.Array(&gym.PaymentMethods),
-		&gym.Currency,
-		&gym.TimezoneOffset,
 		&gym.IsActive,
 		&gym.CreatedAt,
 		&gym.UpdatedAt,
@@ -80,10 +72,9 @@ func (r *GymRepository) GetGymByID(id string) (dto.GymResponseDTO, error) {
 
 func (r *GymRepository) GetGymByDomain(domain string) (dto.GymResponseDTO, error) {
 	query := `
-		SELECT id, name, domain, email, address, contact_name, phone, logo_url, 
-			description, business_hours, social_links, payment_methods, currency, 
-			timezone_offset, is_active, created_at, updated_at
-		FROM gyms 
+		SELECT id, name, domain, email, address, phone,
+			business_hours, social_links, payment_methods, is_active, created_at, updated_at
+		FROM gym 
 		WHERE domain = $1 AND deleted_at IS NULL`
 
 	var gym dto.GymResponseDTO
@@ -93,15 +84,10 @@ func (r *GymRepository) GetGymByDomain(domain string) (dto.GymResponseDTO, error
 		&gym.Domain,
 		&gym.Email,
 		&gym.Address,
-		&gym.ContactName,
 		&gym.Phone,
-		&gym.LogoURL,
-		&gym.Description,
 		pq.Array(&gym.BusinessHours),
 		pq.Array(&gym.SocialLinks),
 		pq.Array(&gym.PaymentMethods),
-		&gym.Currency,
-		&gym.TimezoneOffset,
 		&gym.IsActive,
 		&gym.CreatedAt,
 		&gym.UpdatedAt,
@@ -116,10 +102,9 @@ func (r *GymRepository) GetGymByDomain(domain string) (dto.GymResponseDTO, error
 
 func (r *GymRepository) GetAllGyms() ([]dto.GymResponseDTO, error) {
 	query := `
-		SELECT id, name, domain, email, address, contact_name, phone, logo_url, 
-			description, business_hours, social_links, payment_methods, currency, 
-			timezone_offset, is_active, created_at, updated_at
-		FROM gyms 
+		SELECT id, name, domain, email, address, phone,
+			business_hours, social_links, payment_methods, is_active, created_at, updated_at
+		FROM gym 
 		WHERE deleted_at IS NULL
 		ORDER BY created_at DESC`
 
@@ -138,15 +123,10 @@ func (r *GymRepository) GetAllGyms() ([]dto.GymResponseDTO, error) {
 			&gym.Domain,
 			&gym.Email,
 			&gym.Address,
-			&gym.ContactName,
 			&gym.Phone,
-			&gym.LogoURL,
-			&gym.Description,
 			pq.Array(&gym.BusinessHours),
 			pq.Array(&gym.SocialLinks),
 			pq.Array(&gym.PaymentMethods),
-			&gym.Currency,
-			&gym.TimezoneOffset,
 			&gym.IsActive,
 			&gym.CreatedAt,
 			&gym.UpdatedAt,
@@ -165,30 +145,22 @@ func (r *GymRepository) GetAllGyms() ([]dto.GymResponseDTO, error) {
 }
 func (r *GymRepository) UpdateGym(id string, gym dto.GymUpdateDTO) (dto.GymResponseDTO, error) {
 	query := `
-		UPDATE gyms 
-		SET name = $1, email = $2, address = $3, contact_name = $4, 
-			phone = $5, logo_url = $6, description = $7, business_hours = $8, 
-			social_links = $9, payment_methods = $10, currency = $11, 
-			timezone_offset = $12, updated_at = $13
-		WHERE id = $14 AND deleted_at IS NULL
-		RETURNING id, name, email, address, contact_name, phone, logo_url,
-			description, business_hours, social_links, payment_methods,
-			currency, timezone_offset, is_active, created_at, updated_at`
-
+		UPDATE gym 
+		SET name = $1, email = $2, address = $3, 
+			phone = $4, business_hours = $5, social_links = $6, payment_methods = $7,
+			updated_at = $8
+		WHERE id = $9 AND deleted_at IS NULL
+		RETURNING id, name, domain, email, address, phone,
+			business_hours, social_links, payment_methods, is_active, created_at, updated_at`
 	var updatedGym dto.GymResponseDTO
 	err := r.db.QueryRow(query,
 		gym.Name,
 		gym.Email,
 		gym.Address,
-		gym.ContactName,
 		gym.Phone,
-		gym.LogoURL,
-		gym.Description,
 		pq.Array(gym.BusinessHours),
 		pq.Array(gym.SocialLinks),
 		pq.Array(gym.PaymentMethods),
-		gym.Currency,
-		gym.TimezoneOffset,
 		time.Now(),
 		id,
 	).Scan(
@@ -197,15 +169,10 @@ func (r *GymRepository) UpdateGym(id string, gym dto.GymUpdateDTO) (dto.GymRespo
 		&updatedGym.Domain,
 		&updatedGym.Email,
 		&updatedGym.Address,
-		&updatedGym.ContactName,
 		&updatedGym.Phone,
-		&updatedGym.LogoURL,
-		&updatedGym.Description,
 		pq.Array(&updatedGym.BusinessHours),
 		pq.Array(&updatedGym.SocialLinks),
 		pq.Array(&updatedGym.PaymentMethods),
-		&updatedGym.Currency,
-		&updatedGym.TimezoneOffset,
 		&updatedGym.IsActive,
 		&updatedGym.CreatedAt,
 		&updatedGym.UpdatedAt,
@@ -219,7 +186,7 @@ func (r *GymRepository) UpdateGym(id string, gym dto.GymUpdateDTO) (dto.GymRespo
 }
 func (r *GymRepository) SetGymActive(id string, active bool) error {
 	query := `
-		UPDATE gyms 
+		UPDATE gym 
 		SET is_active = $1, updated_at = $2
 		WHERE id = $3 AND deleted_at IS NULL`
 
@@ -242,7 +209,7 @@ func (r *GymRepository) SetGymActive(id string, active bool) error {
 
 func (r *GymRepository) DeleteGym(id string) error {
 	query := `
-		UPDATE gyms 
+		UPDATE gym 
 		SET deleted_at = $1
 		WHERE id = $2 AND deleted_at IS NULL`
 
