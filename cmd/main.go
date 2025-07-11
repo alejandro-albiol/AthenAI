@@ -34,6 +34,7 @@ func main() {
 
 	// Setup Swagger at root level
 	api.SetupSwagger(rootRouter)
+	log.Println("Swagger setup at /swagger-ui/")
 
 	// Mount API under /api/v1
 	rootRouter.Mount("/api/v1", api.NewAPIModule(db))

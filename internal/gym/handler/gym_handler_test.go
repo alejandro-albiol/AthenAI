@@ -91,7 +91,7 @@ func TestCreateGym(t *testing.T) {
 				Phone:       "+1234567890",
 			},
 			setupMock: func(mockService *MockGymService) {
-				mockService.On("CreateGym", mock.AnythingOfType("dto.GymCreationDTO")).Return("", apierror.New(errorcode_enum.CodeConflict, "Domain already exists"))
+				mockService.On("CreateGym", mock.AnythingOfType("dto.GymCreationDTO")).Return("", apierror.New(errorcode_enum.CodeConflict, "Domain already exists", nil))
 			},
 			wantStatus: http.StatusConflict,
 		},
@@ -102,7 +102,7 @@ func TestCreateGym(t *testing.T) {
 				Domain: "test-gym",
 			},
 			setupMock: func(mockService *MockGymService) {
-				mockService.On("CreateGym", mock.AnythingOfType("dto.GymCreationDTO")).Return("", apierror.New(errorcode_enum.CodeBadRequest, "Invalid input"))
+				mockService.On("CreateGym", mock.AnythingOfType("dto.GymCreationDTO")).Return("", apierror.New(errorcode_enum.CodeBadRequest, "Invalid input", nil))
 			},
 			wantStatus: http.StatusBadRequest,
 		},
@@ -166,7 +166,7 @@ func TestGetGymByID(t *testing.T) {
 			name:  "gym not found",
 			gymID: "nonexistent",
 			setupMock: func(mockService *MockGymService) {
-				mockService.On("GetGymByID", "nonexistent").Return(dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Gym not found"))
+				mockService.On("GetGymByID", "nonexistent").Return(dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", nil))
 			},
 			wantStatus: http.StatusNotFound,
 		},
@@ -225,7 +225,7 @@ func TestGetGymByDomain(t *testing.T) {
 			name:   "gym not found",
 			domain: "nonexistent",
 			setupMock: func(mockService *MockGymService) {
-				mockService.On("GetGymByDomain", "nonexistent").Return(dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Gym not found"))
+				mockService.On("GetGymByDomain", "nonexistent").Return(dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", nil))
 			},
 			wantStatus: http.StatusNotFound,
 		},

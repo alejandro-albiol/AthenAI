@@ -11,9 +11,9 @@ get:
           schema:
             type: array
             items:
-              $ref: "../../components/schemas.yaml#/GymResponseDTO"
+              $ref: "/swagger/components/schemas.yaml#/GymResponseDTO"
     "400":
-      $ref: "../../components/responses.yaml#/BadRequest"
+      $ref: "/swagger/components/responses.yaml#/BadRequest"
 
 post:
   tags:
@@ -25,11 +25,11 @@ post:
     content:
       application/json:
         schema:
-          $ref: "../../components/schemas.yaml#/GymCreationDTO"
+          $ref: "/swagger/components/schemas.yaml#/GymCreationDTO"
   responses:
     "201":
       description: Gym created successfully
     "400":
-      $ref: "../../components/responses.yaml#/BadRequest"
+      $ref: "/swagger/components/responses.yaml#/BadRequest"
     "409":
-      $ref: "../../components/responses.yaml#/Conflict"
+      $ref: "/swagger/components/responses.yaml#/Conflict"

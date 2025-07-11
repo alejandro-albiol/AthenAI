@@ -12,6 +12,7 @@ import (
 
 func NewUsersRouter(handler interfaces.UserHandler) http.Handler {
 	r := chi.NewRouter()
+	r.Use(middleware.RequireGymID)
 
 	getGymID := func(r *http.Request) string {
 		return middleware.GetGymID(r)

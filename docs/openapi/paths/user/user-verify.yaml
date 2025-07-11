@@ -1,6 +1,6 @@
 post:
   tags:
-    - Users
+    - User
   summary: Verify user
   security:
     - GymIdHeader: []

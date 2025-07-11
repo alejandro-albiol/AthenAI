@@ -106,7 +106,7 @@ func TestRegisterUser(t *testing.T) {
 			},
 			setupMock: func(mockService *MockUserService) {
 				mockService.On("RegisterUser", "gym123", mock.AnythingOfType("dto.UserCreationDTO")).Return(
-					apierror.New(errorcode_enum.CodeConflict, "Username already exists"),
+					apierror.New(errorcode_enum.CodeConflict, "Username already exists", nil),
 				)
 			},
 			wantStatus: http.StatusConflict,
@@ -171,7 +171,7 @@ func TestVerifyUser(t *testing.T) {
 			userID: "nonexistent",
 			setupMock: func(mockService *MockUserService) {
 				mockService.On("VerifyUser", "gym123", "nonexistent").Return(
-					apierror.New(errorcode_enum.CodeNotFound, "User not found"),
+					apierror.New(errorcode_enum.CodeNotFound, "User not found", nil),
 				)
 			},
 			wantStatus: http.StatusNotFound,
@@ -182,7 +182,7 @@ func TestVerifyUser(t *testing.T) {
 			userID: "user123",
 			setupMock: func(mockService *MockUserService) {
 				mockService.On("VerifyUser", "gym123", "user123").Return(
-					apierror.New(errorcode_enum.CodeConflict, "User is already verified"),
+					apierror.New(errorcode_enum.CodeConflict, "User is already verified", nil),
 				)
 			},
 			wantStatus: http.StatusBadRequest,
@@ -246,7 +246,7 @@ func TestGetAllUsers(t *testing.T) {
 			gymID: "gym123",
 			setupMock: func(mockService *MockUserService) {
 				mockService.On("GetAllUsers", "gym123").Return([]dto.UserResponseDTO{},
-					apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve users"))
+					apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve users", nil))
 			},
 			wantStatus: http.StatusBadRequest,
 		},
@@ -296,7 +296,7 @@ func TestGetUserByID(t *testing.T) {
 			userID: "nonexistent",
 			setupMock: func(mockService *MockUserService) {
 				mockService.On("GetUserByID", "gym123", "nonexistent").Return(dto.UserResponseDTO{},
-					apierror.New(errorcode_enum.CodeNotFound, "User not found"))
+					apierror.New(errorcode_enum.CodeNotFound, "User not found", nil))
 			},
 			wantStatus: http.StatusNotFound,
 		},
@@ -355,7 +355,7 @@ func TestGetUserByUsername(t *testing.T) {
 			username: "nonexistent",
 			setupMock: func(mockService *MockUserService) {
 				mockService.On("GetUserByUsername", "gym123", "nonexistent").Return(dto.UserResponseDTO{},
-					apierror.New(errorcode_enum.CodeNotFound, "User not found"))
+					apierror.New(errorcode_enum.CodeNotFound, "User not found", nil))
 			},
 			wantStatus: http.StatusNotFound,
 		},
@@ -414,7 +414,7 @@ func TestGetUserByEmail(t *testing.T) {
 			email: "nonexistent@test.com",
 			setupMock: func(mockService *MockUserService) {
 				mockService.On("GetUserByEmail", "gym123", "nonexistent@test.com").Return(dto.UserResponseDTO{},
-					apierror.New(errorcode_enum.CodeNotFound, "User not found"))
+					apierror.New(errorcode_enum.CodeNotFound, "User not found", nil))
 			},
 			wantStatus: http.StatusNotFound,
 		},
@@ -476,7 +476,7 @@ func TestUpdateUser(t *testing.T) {
 			},
 			setupMock: func(mockService *MockUserService) {
 				mockService.On("UpdateUser", "gym123", "nonexistent", mock.AnythingOfType("dto.UserUpdateDTO")).Return(
-					apierror.New(errorcode_enum.CodeNotFound, "User not found"))
+					apierror.New(errorcode_enum.CodeNotFound, "User not found", nil))
 			},
 			wantStatus: http.StatusNotFound,
 		},
@@ -490,7 +490,7 @@ func TestUpdateUser(t *testing.T) {
 			},
 			setupMock: func(mockService *MockUserService) {
 				mockService.On("UpdateUser", "gym123", "user123", mock.AnythingOfType("dto.UserUpdateDTO")).Return(
-					apierror.New(errorcode_enum.CodeConflict, "Username already exists"))
+					apierror.New(errorcode_enum.CodeConflict, "Username already exists", nil))
 			},
 			wantStatus: http.StatusConflict,
 		},
@@ -547,7 +547,7 @@ func TestDeleteUser(t *testing.T) {
 			userID: "nonexistent",
 			setupMock: func(mockService *MockUserService) {
 				mockService.On("DeleteUser", "gym123", "nonexistent").Return(
-					apierror.New(errorcode_enum.CodeNotFound, "User not found"))
+					apierror.New(errorcode_enum.CodeNotFound, "User not found", nil))
 			},
 			wantStatus: http.StatusNotFound,
 		},
@@ -613,7 +613,7 @@ func TestSetUserActive(t *testing.T) {
 			active: true,
 			setupMock: func(mockService *MockUserService) {
 				mockService.On("SetUserActive", "gym123", "nonexistent", true).Return(
-					apierror.New(errorcode_enum.CodeNotFound, "User not found"))
+					apierror.New(errorcode_enum.CodeNotFound, "User not found", nil))
 			},
 			wantStatus: http.StatusNotFound,
 		},
@@ -624,7 +624,7 @@ func TestSetUserActive(t *testing.T) {
 			active: true,
 			setupMock: func(mockService *MockUserService) {
 				mockService.On("SetUserActive", "gym123", "user123", true).Return(
-					apierror.New(errorcode_enum.CodeConflict, "User is already active"))
+					apierror.New(errorcode_enum.CodeConflict, "User is already active", nil))
 			},
 			wantStatus: http.StatusBadRequest,
 		},

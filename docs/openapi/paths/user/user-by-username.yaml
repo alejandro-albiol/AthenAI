@@ -1,6 +1,6 @@
 get:
   tags:
-    - Users
+    - User
   summary: Get user by username
   security:
     - GymIdHeader: []

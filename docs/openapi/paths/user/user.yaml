@@ -1,6 +1,6 @@
 get:
   tags:
-    - Users
+    - User
   summary: Get all users
   description: Retrieves all users for the given gym
   security:
@@ -19,7 +19,7 @@ get:
 
 post:
   tags:
-    - Users
+    - User
   summary: Register a new user
   description: Creates a new user in the system
   security:

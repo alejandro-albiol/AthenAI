@@ -3,8 +3,8 @@ package api
 import (
 	"database/sql"
 
+	gymmodule "github.com/alejandro-albiol/athenai/internal/gym/module"
 	usermodule "github.com/alejandro-albiol/athenai/internal/user/module"
-	"github.com/alejandro-albiol/athenai/pkg/middleware"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -12,10 +12,11 @@ func NewAPIModule(db *sql.DB) *chi.Mux {
 	r := chi.NewRouter()
 
 	// Global middleware
-	r.Use(middleware.RequireGymID)
+	// r.Use(middleware.RequireGymID)
 
 	// Mount routes
-	r.Mount("/users", usermodule.NewUserModule(db))
+	r.Mount("/user", usermodule.NewUserModule(db))
+	r.Mount("/gym", gymmodule.NewGymModule(db))
 	// r.Mount("/exercises", module.NewExercisesModule(db))
 	// Add more modules as needed
 

@@ -1,6 +1,6 @@
 post:
   tags:
-    - Users
+    - User
   summary: Set user active status
   security:
     - GymIdHeader: []

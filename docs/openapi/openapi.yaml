@@ -12,10 +12,10 @@ components:
 
 paths:
   # User routes
-  /users:
-    $ref: "./paths/users/users.yaml"
+  /user:
+    $ref: "./paths/user/user.yaml"
 
-  /users/{id}:
+  /user/{id}:
     parameters:
       - name: id
         in: path
@@ -23,9 +23,9 @@ paths:
         schema:
           type: string
         description: The unique identifier of the user
-    $ref: "./paths/users/users-by-id.yaml"
+    $ref: "./paths/user/user-by-id.yaml"
 
-  /users/username/{username}:
+  /user/username/{username}:
     parameters:
       - name: username
         in: path
@@ -33,9 +33,9 @@ paths:
         schema:
           type: string
         description: The username of the user
-    $ref: "./paths/users/users-by-username.yaml"
+    $ref: "./paths/user/user-by-username.yaml"
 
-  /users/email/{email}:
+  /user/email/{email}:
     parameters:
       - name: email
         in: path
@@ -44,9 +44,9 @@ paths:
           type: string
           format: email
         description: The email address of the user
-    $ref: "./paths/users/users-by-email.yaml"
+    $ref: "./paths/user/user-by-email.yaml"
 
-  /users/{id}/verify:
+  /user/{id}/verify:
     parameters:
       - name: id
         in: path
@@ -54,9 +54,9 @@ paths:
         schema:
           type: string
         description: The unique identifier of the user
-    $ref: "./paths/users/users-verify.yaml"
+    $ref: "./paths/user/user-verify.yaml"
 
-  /users/{id}/active:
+  /user/{id}/active:
     parameters:
       - name: id
         in: path
@@ -64,7 +64,7 @@ paths:
         schema:
           type: string
         description: The unique identifier of the user
-    $ref: "./paths/users/users-active.yaml"
+    $ref: "./paths/user/user-active.yaml"
 
   # Gym routes
   /gym:

@@ -9,7 +9,6 @@ import (
 	"github.com/alejandro-albiol/athenai/internal/gym/dto"
 	"github.com/alejandro-albiol/athenai/internal/gym/interfaces"
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
-	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
 	"github.com/alejandro-albiol/athenai/pkg/response"
 )
 
@@ -36,22 +35,13 @@ func (h *GymHandler) CreateGym(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
-			status := http.StatusBadRequest
-			if apiErr.Code == errorcode_enum.CodeConflict {
-				status = http.StatusConflict
-			}
-			w.WriteHeader(status)
-			json.NewEncoder(w).Encode(response.APIResponse[any]{
-				Status:  "error",
-				Message: apiErr.Message,
-				Data:    apiErr,
-			})
+			apierror.WriteAPIError(w, apiErr)
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(response.APIResponse[any]{
 			Status:  "error",
-			Message: "Internal server error",
+			Message: "Internal server error when creating gym",
 			Data:    nil,
 		})
 		return
@@ -69,22 +59,13 @@ func (h *GymHandler) GetGymByID(w http.ResponseWriter, r *http.Request, id strin
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
-			status := http.StatusBadRequest
-			if apiErr.Code == errorcode_enum.CodeNotFound {
-				status = http.StatusNotFound
-			}
-			w.WriteHeader(status)
-			json.NewEncoder(w).Encode(response.APIResponse[any]{
-				Status:  "error",
-				Message: apiErr.Message,
-				Data:    apiErr,
-			})
+			apierror.WriteAPIError(w, apiErr)
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(response.APIResponse[any]{
 			Status:  "error",
-			Message: "Internal server error",
+			Message: "Internal server error when getting gym by id",
 			Data:    nil,
 		})
 		return
@@ -102,22 +83,13 @@ func (h *GymHandler) GetGymByDomain(w http.ResponseWriter, r *http.Request, doma
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
-			status := http.StatusBadRequest
-			if apiErr.Code == errorcode_enum.CodeNotFound {
-				status = http.StatusNotFound
-			}
-			w.WriteHeader(status)
-			json.NewEncoder(w).Encode(response.APIResponse[any]{
-				Status:  "error",
-				Message: apiErr.Message,
-				Data:    apiErr,
-			})
+			apierror.WriteAPIError(w, apiErr)
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(response.APIResponse[any]{
 			Status:  "error",
-			Message: "Internal server error",
+			Message: "Internal server error when getting gym by domain",
 			Data:    nil,
 		})
 		return
@@ -136,7 +108,7 @@ func (h *GymHandler) GetAllGyms(w http.ResponseWriter, r *http.Request) {
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(response.APIResponse[any]{
 			Status:  "error",
-			Message: "Internal server error",
+			Message: "Internal server error when getting all gyms",
 			Data:    nil,
 		})
 		return
@@ -164,25 +136,13 @@ func (h *GymHandler) UpdateGym(w http.ResponseWriter, r *http.Request, id string
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
-			status := http.StatusBadRequest
-			switch apiErr.Code {
-			case errorcode_enum.CodeNotFound:
-				status = http.StatusNotFound
-			case errorcode_enum.CodeConflict:
-				status = http.StatusConflict
-			}
-			w.WriteHeader(status)
-			json.NewEncoder(w).Encode(response.APIResponse[any]{
-				Status:  "error",
-				Message: apiErr.Message,
-				Data:    apiErr,
-			})
+			apierror.WriteAPIError(w, apiErr)
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(response.APIResponse[any]{
 			Status:  "error",
-			Message: "Internal server error",
+			Message: "Internal server error when updating gym",
 			Data:    nil,
 		})
 		return
@@ -200,22 +160,13 @@ func (h *GymHandler) SetGymActive(w http.ResponseWriter, r *http.Request, id str
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
-			status := http.StatusBadRequest
-			if apiErr.Code == errorcode_enum.CodeNotFound {
-				status = http.StatusNotFound
-			}
-			w.WriteHeader(status)
-			json.NewEncoder(w).Encode(response.APIResponse[any]{
-				Status:  "error",
-				Message: apiErr.Message,
-				Data:    apiErr,
-			})
+			apierror.WriteAPIError(w, apiErr)
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(response.APIResponse[any]{
 			Status:  "error",
-			Message: "Internal server error",
+			Message: "Internal server error when setting gym active",
 			Data:    nil,
 		})
 		return
@@ -237,22 +188,13 @@ func (h *GymHandler) DeleteGym(w http.ResponseWriter, r *http.Request, id string
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
-			status := http.StatusBadRequest
-			if apiErr.Code == errorcode_enum.CodeNotFound {
-				status = http.StatusNotFound
-			}
-			w.WriteHeader(status)
-			json.NewEncoder(w).Encode(response.APIResponse[any]{
-				Status:  "error",
-				Message: apiErr.Message,
-				Data:    apiErr,
-			})
+			apierror.WriteAPIError(w, apiErr)
 			return
 		}
 		w.WriteHeader(http.StatusInternalServerError)
 		json.NewEncoder(w).Encode(response.APIResponse[any]{
 			Status:  "error",
-			Message: "Internal server error",
+			Message: "Internal server error when deleting gym",
 			Data:    nil,
 		})
 		return

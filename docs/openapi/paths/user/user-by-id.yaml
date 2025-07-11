@@ -1,6 +1,6 @@
 get:
   tags:
-    - Users
+    - User
   summary: Get user by ID
   security:
     - GymIdHeader: []
@@ -16,7 +16,7 @@ get:
 
 put:
   tags:
-    - Users
+    - User
   summary: Update user
   security:
     - GymIdHeader: []
@@ -38,7 +38,7 @@ put:
 
 delete:
   tags:
-    - Users
+    - User
   summary: Delete user
   security:
     - GymIdHeader: []

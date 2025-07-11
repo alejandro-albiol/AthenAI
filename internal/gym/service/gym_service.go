@@ -22,23 +22,23 @@ func NewGymService(repository interfaces.GymRepository) *GymService {
 func (s *GymService) CreateGym(createDTO dto.GymCreationDTO) (string, error) {
 	_, err := s.repository.GetGymByDomain(createDTO.Domain)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to check domain existence")
+		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to check domain existence", err)
 	}
 	if err == nil {
-		return "", apierror.New(errorcode_enum.CodeConflict, "Gym with this domain already exists")
+		return "", apierror.New(errorcode_enum.CodeConflict, "Gym with this domain already exists", nil)
 	}
 
 	domain, err := s.repository.CreateGym(createDTO)
 	if err != nil {
-		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to create gym")
+		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to create gym", err)
 	}
 
 	db, err := database.NewPostgresDB()
 	if err != nil {
-		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to connect to database")
+		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to connect to database", err)
 	}
 	defer db.Close()
-	
+
 	database.CreateTenantSchema(db, domain)
 
 	return domain, nil
@@ -48,9 +48,9 @@ func (s *GymService) GetGymByID(id string) (dto.GymResponseDTO, error) {
 	gym, err := s.repository.GetGymByID(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Gym not found")
+			return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", nil)
 		}
-		return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to get gym")
+		return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to get gym", err)
 	}
 
 	return gym, nil
@@ -60,9 +60,9 @@ func (s *GymService) GetGymByDomain(domain string) (dto.GymResponseDTO, error) {
 	gym, err := s.repository.GetGymByDomain(domain)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Gym not found")
+			return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", nil)
 		}
-		return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to get gym")
+		return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to get gym", err)
 	}
 
 	return gym, nil
@@ -71,7 +71,7 @@ func (s *GymService) GetGymByDomain(domain string) (dto.GymResponseDTO, error) {
 func (s *GymService) GetAllGyms() ([]dto.GymResponseDTO, error) {
 	gyms, err := s.repository.GetAllGyms()
 	if err != nil {
-		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to get gyms")
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to get gyms", err)
 	}
 
 	return gyms, nil
@@ -82,14 +82,14 @@ func (s *GymService) UpdateGym(id string, updateDTO dto.GymUpdateDTO) (dto.GymRe
 	_, err := s.repository.GetGymByID(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Gym not found")
+			return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", nil)
 		}
-		return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to check gym existence")
+		return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to check gym existence", err)
 	}
 
 	updatedGym, err := s.repository.UpdateGym(id, updateDTO)
 	if err != nil {
-		return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to update gym")
+		return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to update gym", err)
 	}
 
 	return updatedGym, nil
@@ -100,14 +100,14 @@ func (s *GymService) SetGymActive(id string, active bool) error {
 	_, err := s.repository.GetGymByID(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return apierror.New(errorcode_enum.CodeNotFound, "Gym not found")
+			return apierror.New(errorcode_enum.CodeNotFound, "Gym not found", nil)
 		}
-		return apierror.New(errorcode_enum.CodeInternal, "Failed to check gym existence")
+		return apierror.New(errorcode_enum.CodeInternal, "Failed to check gym existence", err)
 	}
 
 	err = s.repository.SetGymActive(id, active)
 	if err != nil {
-		return apierror.New(errorcode_enum.CodeInternal, "Failed to update gym status")
+		return apierror.New(errorcode_enum.CodeInternal, "Failed to update gym status", err)
 	}
 
 	return nil
@@ -118,14 +118,14 @@ func (s *GymService) DeleteGym(id string) error {
 	_, err := s.repository.GetGymByID(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return apierror.New(errorcode_enum.CodeNotFound, "Gym not found")
+			return apierror.New(errorcode_enum.CodeNotFound, "Gym not found", nil)
 		}
-		return apierror.New(errorcode_enum.CodeInternal, "Failed to check gym existence")
+		return apierror.New(errorcode_enum.CodeInternal, "Failed to check gym existence", err)
 	}
 
 	err = s.repository.DeleteGym(id)
 	if err != nil {
-		return apierror.New(errorcode_enum.CodeInternal, "Failed to delete gym")
+		return apierror.New(errorcode_enum.CodeInternal, "Failed to delete gym", err)
 	}
 
 	return nil
