@@ -39,7 +39,10 @@ func (s *GymService) CreateGym(createDTO dto.GymCreationDTO) (string, error) {
 	}
 	defer db.Close()
 
-	database.CreateTenantSchema(db, domain)
+	err = database.CreateTenantSchema(db, domain)
+	if err != nil {
+		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to create tenant schema", err)
+	}
 
 	return domain, nil
 }

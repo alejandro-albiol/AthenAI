@@ -29,6 +29,12 @@ func main() {
 	}
 	defer db.Close()
 
+	// Setup database tables
+	err = database.CreatePublicTables(db)
+	if err != nil {
+		log.Fatalf("Failed to create database tables: %v", err)
+	}
+
 	// Root router
 	rootRouter := chi.NewRouter()
 
