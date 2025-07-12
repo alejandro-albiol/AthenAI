@@ -8,120 +8,47 @@ servers:
   - url: http://localhost:8080/api/v1
 
 components:
-  $ref: "./components/index.yaml"
+  index:
+    $ref: "/swagger/components/index.yaml"
 
 paths:
-  /users:
-    $ref: "./paths/users/users.yaml"
-  /users/{id}:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-        description: The unique identifier of the user
-    $ref: "./paths/users/users-by-id.yaml"
-  /users/username/{username}:
-    parameters:
-      - name: username
-        in: path
-        required: true
-        schema:
-          type: string
-        description: The username of the user
-    $ref: "./paths/users/user-by-username.yaml"
+  # User routes
+  /user:
+    $ref: "/swagger/paths/user/user.yaml"
 
-  /users/email/{email}:
-    parameters:
-      - name: email
-        in: path
-        required: true
-        schema:
-          type: string
-          format: email
-        description: The email address of the user
-    $ref: "./paths/users/user-by-email.yaml"
+  /user/{id}:
+    $ref: "/swagger/paths/user/user-by-id.yaml"
 
-  /users/{id}/verify:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-        description: The unique identifier of the user
-    $ref: "./paths/users/user-verify.yaml"
+  /user/username/{username}:
+    $ref: "/swagger/paths/user/user-by-username.yaml"
 
-  /users/{id}/active:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-        description: The unique identifier of the user
-    $ref: "./paths/users/user-active.yaml"
+  /user/email/{email}:
+    $ref: "/swagger/paths/user/user-by-email.yaml"
 
-  /gyms:
-    $ref: "./paths/gyms/gyms.yaml"
+  /user/{id}/verify:
+    $ref: "/swagger/paths/user/user-verify.yaml"
 
-  /gyms/{id}:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-        description: The unique identifier of the gym
-    $ref: "./paths/gyms/gym-by-id.yaml"
+  /user/{id}/active:
+    $ref: "/swagger/paths/user/user-active.yaml"
 
-  /gyms/{id}/update:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-        description: The unique identifier of the gym
-    $ref: "./paths/gyms/gym-update.yaml"
+  # Gym routes
+  /gym:
+    $ref: "/swagger/paths/gym/gym.yaml"
 
-  /gyms/domain/{domain}:
-    parameters:
-      - name: domain
-        in: path
-        required: true
-        schema:
-          type: string
-        description: The unique domain of the gym
-    $ref: "./paths/gyms/gym-by-domain.yaml"
+  /gym/{id}:
+    $ref: "/swagger/paths/gym/gym-by-id.yaml"
 
-  /gyms/{id}/activate:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-        description: The unique identifier of the gym
-    $ref: "./paths/gyms/gym-activate.yaml"
+  /gym/{id}/update:
+    $ref: "/swagger/paths/gym/gym-update.yaml"
 
-  /gyms/{id}/deactivate:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-        description: The unique identifier of the gym
-    $ref: "./paths/gyms/gym-deactivate.yaml"
+  /gym/domain/{domain}:
+    $ref: "/swagger/paths/gym/gym-by-domain.yaml"
 
-  /gyms/{id}/delete:
-    parameters:
-      - name: id
-        in: path
-        required: true
-        schema:
-          type: string
-        description: The unique identifier of the gym
-    $ref: "./paths/gyms/gym-delete.yaml"
+  /gym/{id}/activate:
+    $ref: "/swagger/paths/gym/gym-activate.yaml"
+
+  /gym/{id}/deactivate:
+    $ref: "/swagger/paths/gym/gym-deactivate.yaml"
+
+  /gym/{id}/delete:
+    $ref: "/swagger/paths/gym/gym-delete.yaml"
