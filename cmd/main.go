@@ -4,11 +4,14 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"path/filepath"
+	"strings"
 
 	"github.com/alejandro-albiol/athenai/api"
 	"github.com/alejandro-albiol/athenai/config"
 	"github.com/alejandro-albiol/athenai/internal/database"
 	"github.com/go-chi/chi/v5"
+	"github.com/go-chi/chi/v5/middleware"
 )
 
 func main() {
@@ -38,6 +41,10 @@ func main() {
 	// Root router
 	rootRouter := chi.NewRouter()
 
+	// Add middleware
+	rootRouter.Use(middleware.Logger)
+	rootRouter.Use(middleware.Recoverer)
+
 	// Setup Swagger at root level
 	api.SetupSwagger(rootRouter)
 	log.Println("Swagger setup at /swagger-ui/")
@@ -45,6 +52,28 @@ func main() {
 	// Mount API under /api/v1
 	rootRouter.Mount("/api/v1", api.NewAPIModule(db))
 
+	// Serve static frontend files
+	workDir, _ := os.Getwd()
+	frontendDir := http.Dir(filepath.Join(workDir, "frontend"))
+	FileServer(rootRouter, "/", frontendDir)
+	log.Println("Frontend served at /")
+
 	log.Printf("Server is running on port: %s", port)
 	log.Fatal(http.ListenAndServe(":"+port, rootRouter))
+}
+
+// FileServer sets up a http.FileServer handler to serve static files from a directory.
+func FileServer(r chi.Router, path string, root http.FileSystem) {
+	if path != "/" && path[len(path)-1] != '/' {
+		r.Get(path, http.RedirectHandler(path+"/", http.StatusMovedPermanently).ServeHTTP)
+		path += "/"
+	}
+	path += "*"
+
+	r.Get(path, func(w http.ResponseWriter, r *http.Request) {
+		rctx := chi.RouteContext(r.Context())
+		pathPrefix := strings.TrimSuffix(rctx.RoutePattern(), "/*")
+		fs := http.StripPrefix(pathPrefix, http.FileServer(root))
+		fs.ServeHTTP(w, r)
+	})
 }

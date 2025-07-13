@@ -1,11 +1,274 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>AthenAI</title>
-</head>
-<body>
-    
-</body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>AthenAI - Gym Management Platform</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      rel="stylesheet"
+    />
+  </head>
+  <body>
+    <!-- Navigation -->
+    <nav class="navbar">
+      <div class="nav-container">
+        <div class="nav-logo">
+          <i class="fas fa-dumbbell"></i>
+          <span>AthenAI</span>
+        </div>
+        <div class="nav-menu">
+          <a href="#features" class="nav-link">Features</a>
+          <a href="#pricing" class="nav-link">Pricing</a>
+          <a href="#contact" class="nav-link">Contact</a>
+          <button class="btn btn-primary" onclick="openLoginModal()">
+            <i class="fas fa-sign-in-alt"></i> Login
+          </button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- Hero Section -->
+    <section class="hero">
+      <div class="hero-container">
+        <div class="hero-content">
+          <h1>
+            Transform Your Gym with <span class="highlight">AthenAI</span>
+          </h1>
+          <p class="hero-subtitle">
+            The complete gym management platform that helps you manage members,
+            track workouts, and grow your fitness business with AI-powered
+            insights.
+          </p>
+          <div class="hero-buttons">
+            <button
+              class="btn btn-primary btn-large"
+              onclick="openRegisterModal()"
+            >
+              <i class="fas fa-rocket"></i> Start Free Trial
+            </button>
+            <button
+              class="btn btn-secondary btn-large"
+              onclick="scheduleDemo()"
+            >
+              <i class="fas fa-calendar"></i> Schedule Demo
+            </button>
+          </div>
+          <div class="hero-stats">
+            <div class="stat">
+              <span class="stat-number">500+</span>
+              <span class="stat-label">Gyms Registered</span>
+            </div>
+            <div class="stat">
+              <span class="stat-number">50K+</span>
+              <span class="stat-label">Active Members</span>
+            </div>
+            <div class="stat">
+              <span class="stat-number">99.9%</span>
+              <span class="stat-label">Uptime</span>
+            </div>
+          </div>
+        </div>
+        <div class="hero-image">
+          <div class="hero-illustration">
+            <i class="fas fa-chart-line"></i>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Features Section -->
+    <section id="features" class="features">
+      <div class="container">
+        <h2 class="section-title">Everything You Need to Manage Your Gym</h2>
+        <div class="features-grid">
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-users"></i>
+            </div>
+            <h3>Member Management</h3>
+            <p>
+              Complete member profiles, membership tracking, and automated
+              billing management.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-chart-bar"></i>
+            </div>
+            <h3>Analytics & Reports</h3>
+            <p>
+              Real-time insights into your gym's performance, member engagement,
+              and revenue.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-mobile-alt"></i>
+            </div>
+            <h3>Mobile Access</h3>
+            <p>
+              Access your gym management tools anywhere with our responsive web
+              platform.
+            </p>
+          </div>
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-robot"></i>
+            </div>
+            <h3>AI Insights</h3>
+            <p>
+              Smart recommendations for member retention and business growth
+              strategies.
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Call to Action -->
+    <section class="cta">
+      <div class="container">
+        <div class="cta-content">
+          <h2>Ready to Revolutionize Your Gym?</h2>
+          <p>
+            Join hundreds of gym owners who trust AthenAI to manage their
+            fitness business.
+          </p>
+          <button
+            class="btn btn-primary btn-large"
+            onclick="openRegisterModal()"
+          >
+            <i class="fas fa-play"></i> Get Started Today
+          </button>
+        </div>
+      </div>
+    </section>
+
+    <!-- Registration Modal -->
+    <div id="registerModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3><i class="fas fa-dumbbell"></i> Register Your Gym</h3>
+          <span class="close" onclick="closeRegisterModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+          <form id="registerForm">
+            <div class="form-group">
+              <label for="gymName">Gym Name *</label>
+              <input type="text" id="gymName" name="gymName" required />
+            </div>
+            <div class="form-group">
+              <label for="ownerName">Owner Name *</label>
+              <input type="text" id="ownerName" name="ownerName" required />
+            </div>
+            <div class="form-group">
+              <label for="email">Email *</label>
+              <input type="email" id="email" name="email" required />
+            </div>
+            <div class="form-group">
+              <label for="phone">Phone Number</label>
+              <input type="tel" id="phone" name="phone" />
+            </div>
+            <div class="form-group">
+              <label for="address">Gym Address</label>
+              <textarea id="address" name="address" rows="3"></textarea>
+            </div>
+            <div class="form-group">
+              <label for="domain">Custom Domain (optional)</label>
+              <input
+                type="text"
+                id="domain"
+                name="domain"
+                placeholder="your-gym-name"
+              />
+              <small
+                >This will be your gym's unique URL:
+                your-gym-name.athenai.com</small
+              >
+            </div>
+            <div class="form-actions">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="closeRegisterModal()"
+              >
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-check"></i> Create Account
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Login Modal -->
+    <div id="loginModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h3><i class="fas fa-sign-in-alt"></i> Login to Your Account</h3>
+          <span class="close" onclick="closeLoginModal()">&times;</span>
+        </div>
+        <div class="modal-body">
+          <form id="loginForm">
+            <div class="form-group">
+              <label for="loginEmail">Email</label>
+              <input type="email" id="loginEmail" name="email" required />
+            </div>
+            <div class="form-group">
+              <label for="loginPassword">Password</label>
+              <input
+                type="password"
+                id="loginPassword"
+                name="password"
+                required
+              />
+            </div>
+            <div class="form-actions">
+              <button
+                type="button"
+                class="btn btn-secondary"
+                onclick="closeLoginModal()"
+              >
+                Cancel
+              </button>
+              <button type="submit" class="btn btn-primary">
+                <i class="fas fa-sign-in-alt"></i> Login
+              </button>
+            </div>
+          </form>
+        </div>
+      </div>
+    </div>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="container">
+        <div class="footer-content">
+          <div class="footer-section">
+            <div class="footer-logo">
+              <i class="fas fa-dumbbell"></i>
+              <span>AthenAI</span>
+            </div>
+            <p>Revolutionizing gym management with AI-powered insights.</p>
+          </div>
+          <div class="footer-section">
+            <h4>Platform</h4>
+            <a href="/api-docs" target="_blank">API Documentation</a>
+            <a href="/swagger-ui/" target="_blank">API Explorer</a>
+          </div>
+          <div class="footer-section">
+            <h4>Support</h4>
+            <a href="mailto:support@athenai.com">Contact Support</a>
+            <a href="#" onclick="scheduleDemo()">Schedule Demo</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+
+    <script src="/js/main.js"></script>
+  </body>
 </html>
