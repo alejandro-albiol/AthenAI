@@ -16,8 +16,6 @@ type ExerciseCreationDTO struct {
 	Instructions    string   `json:"instructions" validate:"required"`
 	VideoURL        *string  `json:"video_url"`
 	ImageURL        *string  `json:"image_url"`
-	AIGenerated     bool     `json:"ai_generated"`
-	AIModelVersion  *string  `json:"ai_model_version"`
 	CreatedBy       string   `json:"created_by" validate:"required"`
 }
 
@@ -45,8 +43,6 @@ type ExerciseResponseDTO struct {
 	Instructions    string         `json:"instructions"`
 	VideoURL        *string        `json:"video_url"`
 	ImageURL        *string        `json:"image_url"`
-	AIGenerated     bool           `json:"ai_generated"`
-	AIModelVersion  *string        `json:"ai_model_version"`
 	CreatedBy       string         `json:"created_by"`
 	IsActive        bool           `json:"is_active"`
 	CreatedAt       time.Time      `json:"created_at"`

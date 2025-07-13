@@ -11,7 +11,6 @@ type AdminRepository interface {
 	DeleteExercise(id string) error
 	GetExercisesByMuscularGroup(muscularGroups []string) ([]dto.ExerciseResponseDTO, error)
 	GetExercisesByEquipment(equipment []string) ([]dto.ExerciseResponseDTO, error)
-	GetAIExercises() ([]dto.ExerciseResponseDTO, error)
 
 	// Equipment management
 	CreateEquipment(equipment dto.EquipmentCreationDTO) (string, error)

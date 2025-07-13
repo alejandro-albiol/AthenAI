@@ -57,8 +57,6 @@ func CreatePublicTables(db *sql.DB) error {
 		instructions TEXT NOT NULL,
 		video_url TEXT,
 		image_url TEXT,
-		ai_generated BOOLEAN NOT NULL DEFAULT FALSE,
-		ai_model_version TEXT,
 		created_by UUID REFERENCES public.admin(id),
 		is_active BOOLEAN NOT NULL DEFAULT TRUE,
 		created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
