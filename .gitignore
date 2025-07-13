@@ -3,9 +3,6 @@
 .env.*
 !.env.example
 
-# Deno
-.deno/
-
 # VS Code
 .vscode/*
 !.vscode/settings.json

@@ -11,6 +11,7 @@ athenai/
 │   └── setup-db/          # Database setup utilities
 ├── internal/              # Private application modules
 │   ├── admin/             # Admin management (equipment, exercises, muscle groups)
+│   ├── auth/              # Authentication module (JWT, login, tokens)
 │   ├── database/          # Database connections and utilities
 │   ├── gym/               # Gym management module
 │   └── user/              # User management module
@@ -109,8 +110,53 @@ The server runs on `http://localhost:8080` and provides:
 - **Documentation**: `http://localhost:8080/swagger-ui/` (Interactive API documentation)
 
 ### Available API Routes
+- **Authentication**: `/api/v1/auth/*` - Login, logout, token validation, refresh tokens
 - **Users**: `/api/v1/user/*` - User management endpoints
 - **Gyms**: `/api/v1/gym/*` - Gym management endpoints
+
+## 🔐 Authentication Architecture
+
+### Subdomain-Based Multi-Tenancy
+AthenAI uses subdomain-based authentication to automatically route users to the correct authentication context:
+
+- **Platform Admin**: `athenai.com` → Authenticates against `public.admin` table
+- **Tenant Users**: `{gym_domain}.athenai.com` → Authenticates against tenant-specific schema
+
+### User Types
+1. **Platform Administrators** (`public.admin`)
+   - Full platform access across all gyms
+   - Manage global data (exercises, equipment, muscle groups)
+   - Single user type with active/inactive status
+
+2. **Tenant Users** (per gym schema: `{gym_domain}.users`)
+   - **Admin**: Gym owners/managers with full gym access
+   - **User**: Gym clients who use the services
+   - **Guest**: Demo users with limited trial access
+
+### Authentication Flow
+1. User visits subdomain (e.g., `mygym.athenai.com`)
+2. Middleware extracts gym domain from subdomain
+3. System validates gym domain exists in database
+4. Authentication routes to appropriate user table
+5. JWT tokens include user type and domain context
+6. All subsequent requests use domain-aware authorization
+
+### Module Structure
+```
+internal/auth/
+├── dto/                   # Data Transfer Objects
+│   ├── login.dto.go      # Authentication request/response DTOs
+│   ├── token.dto.go      # Token validation and refresh DTOs
+│   └── repository.dto.go # Database layer DTOs
+├── interfaces/           # Service contracts
+│   ├── auth_handler.interface.go
+│   ├── auth_service.interface.go
+│   └── auth_repository.interface.go
+├── service/             # Business logic
+│   └── auth_service.go  # JWT generation, validation, user authentication
+├── handler/             # HTTP layer (to be implemented)
+└── repository/          # Data access layer (to be implemented)
+```
 
 ## 🏛️ Architecture Decisions
 
