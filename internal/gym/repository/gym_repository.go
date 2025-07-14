@@ -3,7 +3,6 @@ package repository
 import (
 	"database/sql"
 	"encoding/json"
-	"encoding/json"
 	"time"
 
 	"github.com/alejandro-albiol/athenai/internal/gym/dto"
