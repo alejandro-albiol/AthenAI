@@ -32,17 +32,21 @@ func main() {
 	}
 
 	// Initialize database connection
+	log.Printf("🗄️  Connecting to database...")
 	db, err := database.NewPostgresDB()
 	if err != nil {
-		log.Fatalf("Failed to connect to database: %v", err)
+		log.Fatalf("❌ Failed to connect to database: %v", err)
 	}
 	defer db.Close()
+	log.Printf("✅ Database connection established")
 
 	// Setup database tables
+	log.Printf("🔧 Setting up database tables...")
 	err = database.CreatePublicTables(db)
 	if err != nil {
-		log.Fatalf("Failed to create database tables: %v", err)
+		log.Fatalf("❌ Failed to create database tables: %v", err)
 	}
+	log.Printf("✅ Database tables ready")
 
 	// Root router
 	rootRouter := chi.NewRouter()
@@ -50,19 +54,21 @@ func main() {
 	// Add middleware
 	rootRouter.Use(middleware.Logger)
 	rootRouter.Use(middleware.Recoverer)
+	log.Printf("🛡️  Middleware configured (Logger, Recoverer)")
 
 	// Setup Swagger at root level
 	api.SetupSwagger(rootRouter)
-	log.Println("Swagger setup at /swagger-ui/")
+	log.Printf("📚 Swagger UI available at: http://localhost:%s/swagger-ui/", cfg.Port)
 
 	// Mount API under /api/v1
 	rootRouter.Mount("/api/v1", api.NewAPIModule(db))
+	log.Printf("🔌 API mounted at: http://localhost:%s/api/v1", cfg.Port)
 
 	// Serve static frontend files
 	workDir, _ := os.Getwd()
 	frontendDir := http.Dir(filepath.Join(workDir, "frontend"))
 	FileServer(rootRouter, "/", frontendDir)
-	log.Println("Frontend served at /")
+	log.Printf("🎨 Frontend served at: http://localhost:%s/", cfg.Port)
 
 	log.Printf("Server is running on: http://%s:%s", host, port)
 	log.Printf("Documentation: http://%s:%s/swagger-ui/", host, port)

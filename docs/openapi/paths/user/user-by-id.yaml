@@ -3,7 +3,8 @@ get:
     - User
   summary: Get user by ID
   security:
-    - GymIdHeader: []
+    - bearerAuth: []
+      GymIdHeader: []
   responses:
     "200":
       description: User found
@@ -19,7 +20,8 @@ put:
     - User
   summary: Update user
   security:
-    - GymIdHeader: []
+    - bearerAuth: []
+      GymIdHeader: []
   requestBody:
     required: true
     content:

@@ -28,7 +28,7 @@ func (s *GymService) CreateGym(createDTO dto.GymCreationDTO) (string, error) {
 		return "", apierror.New(errorcode_enum.CodeConflict, "Gym with this domain already exists", nil)
 	}
 
-	domain, err := s.repository.CreateGym(createDTO)
+	gymID, err := s.repository.CreateGym(createDTO)
 	if err != nil {
 		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to create gym", err)
 	}
@@ -39,12 +39,13 @@ func (s *GymService) CreateGym(createDTO dto.GymCreationDTO) (string, error) {
 	}
 	defer db.Close()
 
-	err = database.CreateTenantSchema(db, domain)
+	// Use the domain name for the schema, not the gym ID
+	err = database.CreateTenantSchema(db, createDTO.Domain)
 	if err != nil {
 		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to create tenant schema", err)
 	}
 
-	return domain, nil
+	return gymID, nil
 }
 
 func (s *GymService) GetGymByID(id string) (dto.GymResponseDTO, error) {
@@ -75,6 +76,10 @@ func (s *GymService) GetAllGyms() ([]dto.GymResponseDTO, error) {
 	gyms, err := s.repository.GetAllGyms()
 	if err != nil {
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to get gyms", err)
+	}
+
+	if len(gyms) == 0 {
+		return nil, apierror.New(errorcode_enum.CodeNotFound, "No gyms found", nil)
 	}
 
 	return gyms, nil
@@ -117,17 +122,11 @@ func (s *GymService) SetGymActive(id string, active bool) error {
 }
 
 func (s *GymService) DeleteGym(id string) error {
-	
-	_, err := s.repository.GetGymByID(id)
+	err := s.repository.DeleteGym(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return apierror.New(errorcode_enum.CodeNotFound, "Gym not found", nil)
+			return apierror.New(errorcode_enum.CodeNotFound, "Gym not found or already deleted", nil)
 		}
-		return apierror.New(errorcode_enum.CodeInternal, "Failed to check gym existence", err)
-	}
-
-	err = s.repository.DeleteGym(id)
-	if err != nil {
 		return apierror.New(errorcode_enum.CodeInternal, "Failed to delete gym", err)
 	}
 

@@ -3,6 +3,7 @@ package repository
 import (
 	"database/sql"
 	"encoding/json"
+	"encoding/json"
 	"time"
 
 	"github.com/alejandro-albiol/athenai/internal/gym/dto"
@@ -19,8 +20,9 @@ func NewGymRepository(db *sql.DB) *GymRepository {
 func (r *GymRepository) CreateGym(gym dto.GymCreationDTO) (string, error) {
 	query := `
 		INSERT INTO gym (name, domain, email, address, phone,
+			business_hours, social_links, payment_methods,
 			is_active, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, true, $6, $6)
+		VALUES ($1, $2, $3, $4, $5, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, true, $6, $6)
 		RETURNING id`
 
 	var id string
@@ -212,6 +214,9 @@ func (r *GymRepository) UpdateGym(id string, gym dto.GymUpdateDTO) (dto.GymRespo
 		businessHoursJSON,
 		socialLinksJSON,
 		paymentMethodsJSON,
+		businessHoursJSON,
+		socialLinksJSON,
+		paymentMethodsJSON,
 		time.Now(),
 		id,
 	).Scan(
@@ -271,11 +276,10 @@ func (r *GymRepository) SetGymActive(id string, active bool) error {
 
 func (r *GymRepository) DeleteGym(id string) error {
 	query := `
-		UPDATE gym 
-		SET deleted_at = $1
-		WHERE id = $2 AND deleted_at IS NULL`
+		DELETE FROM gym 
+		WHERE id = $1`
 
-	result, err := r.db.Exec(query, time.Now(), id)
+	result, err := r.db.Exec(query, id)
 	if err != nil {
 		return err
 	}

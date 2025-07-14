@@ -5,3 +5,5 @@ securitySchemes:
   $ref: './security.yaml'
 responses:
   $ref: './responses.yaml'
+parameters:
+  $ref: './parameters.yaml'

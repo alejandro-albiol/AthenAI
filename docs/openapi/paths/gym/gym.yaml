@@ -2,7 +2,12 @@ get:
   tags:
     - Gym
   summary: Get all gyms
-  description: Retrieves all gyms
+  description: Retrieves all gyms (platform admin only)
+  
+  # Override global security - only JWT required, no gym ID needed
+  security:
+    - bearerAuth: []
+    
   responses:
     "200":
       description: List of gyms retrieved successfully
@@ -17,7 +22,11 @@ post:
   tags:
     - Gym
   summary: Create a new gym
-  description: Creates a new gym in the system
+  description: Creates a new gym in the system (platform admin only)
+  
+  # Override global security - only JWT required, no gym ID needed
+  security:
+    - bearerAuth: []
   requestBody:
     required: true
     content:
