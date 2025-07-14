@@ -17,7 +17,7 @@ type ClaimsDTO struct {
 	IsActive *bool `json:"is_active,omitempty"`
 
 	// Tenant user claims
-	GymDomain          *string `json:"gym_domain,omitempty"`
+	GymID              *string `json:"gym_id,omitempty"`
 	Role               *string `json:"role,omitempty"`
 	VerificationStatus *string `json:"verification_status,omitempty"`
 

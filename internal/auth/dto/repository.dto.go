@@ -43,7 +43,7 @@ type RefreshTokenDTO struct {
 	Token     string    `json:"token"`
 	UserID    string    `json:"user_id"`
 	UserType  UserType  `json:"user_type"`
-	GymDomain *string   `json:"gym_domain,omitempty"` // For tenant users
+	GymID     *string   `json:"gym_id,omitempty"` // For tenant users
 	ExpiresAt time.Time `json:"expires_at"`
 	CreatedAt time.Time `json:"created_at"`
 }

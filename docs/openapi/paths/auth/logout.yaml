@@ -1,0 +1,53 @@
+post:
+  tags:
+    - Authentication
+  summary: User logout
+  description: Revoke refresh token and logout user
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            refresh_token:
+              type: string
+              description: Refresh token to revoke
+              example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          required:
+            - refresh_token
+  responses:
+    '200':
+      description: Logout successful
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Logout successful"
+              data:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                    example: true
+                  message:
+                    type: string
+                    example: "Logout successful"
+    '400':
+      description: Bad request - Invalid payload
+      content:
+        application/json:
+          schema:
+            $ref: '/swagger/components/schemas.yaml#/ErrorResponse'
+    '500':
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '/swagger/components/schemas.yaml#/ErrorResponse'

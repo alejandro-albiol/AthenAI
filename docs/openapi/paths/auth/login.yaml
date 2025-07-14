@@ -1,0 +1,105 @@
+post:
+  tags:
+    - Authentication
+  summary: User login
+  description: |
+    Authenticates platform admins (no X-Gym-ID header) or gym users (with X-Gym-ID header)
+  
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            username:
+              type: string
+              description: Username for authentication
+            password:
+              type: string
+              description: Password for authentication
+          required:
+            - username
+            - password
+  responses:
+    '200':
+      description: Login successful
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Login successful"
+              data:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: JWT access token
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  refresh_token:
+                    type: string
+                    description: JWT refresh token
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  expires_at:
+                    type: string
+                    format: date-time
+                    description: Token expiration time
+                    example: "2025-07-15T10:30:00Z"
+                  user_info:
+                    type: object
+                    properties:
+                      id:
+                        type: string
+                        example: "123e4567-e89b-12d3-a456-426614174000"
+                      username:
+                        type: string
+                        example: "admin"
+                      email:
+                        type: string
+                        example: "admin@athenai.com"
+                      user_type:
+                        type: string
+                        enum: ["platform_admin", "tenant_user"]
+                        example: "platform_admin"
+                      is_active:
+                        type: boolean
+                        description: Present for platform admins
+                        example: true
+                      gym_domain:
+                        type: string
+                        description: Present for tenant users
+                        example: "powerfit"
+                      role:
+                        type: string
+                        description: Present for tenant users
+                        enum: ["admin", "user", "guest"]
+                        example: "admin"
+                      verification_status:
+                        type: string
+                        description: Present for tenant users
+                        enum: ["verified", "unverified"]
+                        example: "verified"
+    '400':
+      description: Bad request - Invalid payload
+      content:
+        application/json:
+          schema:
+            $ref: '/swagger/components/schemas.yaml#/ErrorResponse'
+    '401':
+      description: Unauthorized - Invalid credentials
+      content:
+        application/json:
+          schema:
+            $ref: '/swagger/components/schemas.yaml#/ErrorResponse'
+    '500':
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '/swagger/components/schemas.yaml#/ErrorResponse'

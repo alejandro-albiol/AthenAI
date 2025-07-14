@@ -8,11 +8,15 @@ import (
 	"os"
 	"strings"
 
+	"github.com/alejandro-albiol/athenai/config"
 	"github.com/alejandro-albiol/athenai/internal/database"
 	"golang.org/x/crypto/bcrypt"
 )
 
 func main() {
+	// Load environment variables from .env file
+	config.LoadEnv()
+
 	fmt.Println("=== AthenAI Super Admin Setup ===")
 	fmt.Println("This tool creates platform super administrators.")
 	fmt.Println("Use with extreme caution - only run in secure environments.")

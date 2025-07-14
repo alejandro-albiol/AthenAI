@@ -1,0 +1,76 @@
+get:
+  tags:
+    - Authentication
+  summary: Validate access token
+  description: Validate JWT access token and return user claims
+  security:
+    - bearerAuth: []
+  responses:
+    '200':
+      description: Token is valid
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Token is valid"
+              data:
+                type: object
+                properties:
+                  valid:
+                    type: boolean
+                    example: true
+                  claims:
+                    type: object
+                    description: JWT token claims
+                    properties:
+                      user_id:
+                        type: string
+                        example: "123e4567-e89b-12d3-a456-426614174000"
+                      username:
+                        type: string
+                        example: "admin"
+                      user_type:
+                        type: string
+                        enum: ["platform_admin", "tenant_user"]
+                        example: "platform_admin"
+                      gym_domain:
+                        type: string
+                        description: Present for tenant users
+                        example: "powerfit"
+                      role:
+                        type: string
+                        description: Present for tenant users
+                        example: "admin"
+                      verified:
+                        type: boolean
+                        description: Present for tenant users
+                        example: true
+                      is_active:
+                        type: boolean
+                        example: true
+                      iat:
+                        type: integer
+                        description: Token issued at (Unix timestamp)
+                        example: 1721815800
+                      exp:
+                        type: integer
+                        description: Token expires at (Unix timestamp)
+                        example: 1721902200
+    '401':
+      description: Unauthorized - Invalid or expired token
+      content:
+        application/json:
+          schema:
+            $ref: '/swagger/components/schemas.yaml#/ErrorResponse'
+    '500':
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: '/swagger/components/schemas.yaml#/ErrorResponse'

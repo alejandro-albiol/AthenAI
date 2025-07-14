@@ -21,9 +21,16 @@ func SetupSwagger(r chi.Router) {
 		http.ServeFile(w, r, filepath.Join("docs", "openapi", "openapi.yaml"))
 	})
 
-	// Serve all OpenAPI files (components, paths, etc.)
-	fileServer := http.FileServer(http.Dir("docs/openapi"))
-	r.Get("/swagger/*", http.StripPrefix("/swagger", fileServer).ServeHTTP)
+	// Serve all OpenAPI files (components, paths, etc.) with no-cache headers
+	r.Get("/swagger/*", func(w http.ResponseWriter, r *http.Request) {
+		// Add no-cache headers for all swagger files
+		w.Header().Set("Cache-Control", "no-cache, no-store, must-revalidate")
+		w.Header().Set("Pragma", "no-cache")
+		w.Header().Set("Expires", "0")
+
+		fileServer := http.FileServer(http.Dir("docs/openapi"))
+		http.StripPrefix("/swagger", fileServer).ServeHTTP(w, r)
+	})
 
 	// Serve Swagger UI, force reload of YAML with timestamp version
 	version := fmt.Sprintf("%d", time.Now().Unix())

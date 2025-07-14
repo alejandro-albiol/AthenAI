@@ -1,0 +1,8 @@
+GymIDHeader:
+  name: X-Gym-ID
+  in: header
+  required: true
+  description: Gym ID for tenant operations (required for user management endpoints)
+  schema:
+    type: string
+    format: uuid

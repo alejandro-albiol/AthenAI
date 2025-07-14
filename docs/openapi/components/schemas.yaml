@@ -164,3 +164,168 @@ GymActivateDTO:
     active:
       type: boolean
       example: true
+
+# Authentication related schemas
+LoginRequestDTO:
+  type: object
+  required:
+    - username
+    - password
+  properties:
+    username:
+      type: string
+      description: Username for authentication
+      example: "admin"
+    password:
+      type: string
+      format: password
+      description: Password for authentication
+      example: "securepassword123"
+
+LoginResponseDTO:
+  type: object
+  properties:
+    access_token:
+      type: string
+      description: JWT access token
+      example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    refresh_token:
+      type: string
+      description: JWT refresh token
+      example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+    expires_at:
+      type: string
+      format: date-time
+      description: Token expiration time
+      example: "2025-07-15T10:30:00Z"
+    user_info:
+      $ref: '#/UserInfoDTO'
+
+UserInfoDTO:
+  type: object
+  properties:
+    id:
+      type: string
+      example: "123e4567-e89b-12d3-a456-426614174000"
+    username:
+      type: string
+      example: "admin"
+    email:
+      type: string
+      example: "admin@athenai.com"
+    user_type:
+      type: string
+      enum: ["platform_admin", "tenant_user"]
+      example: "platform_admin"
+    is_active:
+      type: boolean
+      description: Present for platform admins
+      example: true
+    gym_domain:
+      type: string
+      description: Present for tenant users
+      example: "powerfit"
+    role:
+      type: string
+      description: Present for tenant users
+      enum: ["admin", "user", "guest"]
+      example: "admin"
+    verification_status:
+      type: string
+      description: Present for tenant users
+      enum: ["verified", "unverified"]
+      example: "verified"
+
+RefreshTokenRequestDTO:
+  type: object
+  required:
+    - refresh_token
+  properties:
+    refresh_token:
+      type: string
+      description: Valid refresh token
+      example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+LogoutRequestDTO:
+  type: object
+  required:
+    - refresh_token
+  properties:
+    refresh_token:
+      type: string
+      description: Refresh token to revoke
+      example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+LogoutResponseDTO:
+  type: object
+  properties:
+    success:
+      type: boolean
+      example: true
+    message:
+      type: string
+      example: "Logout successful"
+
+TokenValidationResponseDTO:
+  type: object
+  properties:
+    valid:
+      type: boolean
+      example: true
+    claims:
+      type: object
+      description: JWT token claims
+      properties:
+        user_id:
+          type: string
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        username:
+          type: string
+          example: "admin"
+        user_type:
+          type: string
+          enum: ["platform_admin", "tenant_user"]
+          example: "platform_admin"
+        gym_domain:
+          type: string
+          description: Present for tenant users
+          example: "powerfit"
+        role:
+          type: string
+          description: Present for tenant users
+          example: "admin"
+        verified:
+          type: boolean
+          description: Present for tenant users
+          example: true
+        is_active:
+          type: boolean
+          example: true
+        iat:
+          type: integer
+          description: Token issued at (Unix timestamp)
+          example: 1721815800
+        exp:
+          type: integer
+          description: Token expires at (Unix timestamp)
+          example: 1721902200
+
+# Generic error response
+ErrorResponse:
+  type: object
+  properties:
+    status:
+      type: string
+      example: "error"
+    message:
+      type: string
+      example: "Error description"
+    data:
+      type: object
+      properties:
+        code:
+          type: string
+          example: "BAD_REQUEST"
+        error:
+          type: string
+          example: "Detailed error message"

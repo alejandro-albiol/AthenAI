@@ -35,7 +35,7 @@ type UserInfoDTO struct {
 	IsActive *bool `json:"is_active,omitempty"`
 
 	// For tenant users
-	GymDomain          *string `json:"gym_domain,omitempty"`
+	GymID              *string `json:"gym_id,omitempty"`
 	Role               *string `json:"role,omitempty"`
 	VerificationStatus *string `json:"verification_status,omitempty"`
 }

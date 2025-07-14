@@ -2,9 +2,16 @@ get:
   tags:
     - User
   summary: Get all users
-  description: Retrieves all users for the given gym
+  description: |
+    Retrieves all users for the given gym.
+    Platform admins can access any gym by providing X-Gym-ID header.
+    Gym admins can only access their own gym users.
+  
+  # Require JWT + X-Gym-ID header (both in security schemes)
   security:
-    - GymIdHeader: []
+    - bearerAuth: []
+      GymIdHeader: []
+  
   responses:
     "200":
       description: List of users retrieved successfully
@@ -16,20 +23,32 @@ get:
               $ref: "/swagger/components/schemas.yaml#/UserResponseDTO"
     "400":
       $ref: "/swagger/components/responses.yaml#/BadRequest"
+    "401":
+      $ref: "/swagger/components/responses.yaml#/Unauthorized"
+    "403":
+      $ref: "/swagger/components/responses.yaml#/Forbidden"
 
 post:
   tags:
     - User
   summary: Register a new user
-  description: Creates a new user in the system
+  description: |
+    Creates a new user in the system for a specific gym.
+    Platform admins can create users in any gym by providing X-Gym-ID header.
+    Gym admins can only create users in their own gym.
+  
+  # Require JWT + X-Gym-ID header (both in security schemes)
   security:
-    - GymIdHeader: []
+    - bearerAuth: []
+      GymIdHeader: []
+  
   requestBody:
     required: true
     content:
       application/json:
         schema:
           $ref: "/swagger/components/schemas.yaml#/UserCreationDTO"
+  
   responses:
     "201":
       $ref: "/swagger/components/responses.yaml#/Created"

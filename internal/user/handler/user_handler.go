@@ -24,14 +24,11 @@ func NewUsersHandler(service interfaces.UserService) *UsersHandler {
 func (h *UsersHandler) RegisterUser(w http.ResponseWriter, r *http.Request, gymID string) {
 	var dto dto.UserCreationDTO
 	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(response.APIResponse[any]{
-			Status:  "error",
-			Message: "Invalid request payload",
-			Data:    nil,
-		})
+		apiErr := apierror.New(errorcode_enum.CodeBadRequest, "Invalid request payload", err)
+		response.WriteAPIError(w, apiErr)
 		return
 	}
+
 	err := h.service.RegisterUser(gymID, dto)
 	if err != nil {
 		var apiErr *apierror.APIError
@@ -39,15 +36,12 @@ func (h *UsersHandler) RegisterUser(w http.ResponseWriter, r *http.Request, gymI
 			response.WriteAPIError(w, apiErr)
 			return
 		}
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(response.APIResponse[any]{
-			Status:  "error",
-			Message: "Internal server error",
-			Data:    nil,
-		})
+		apiErr = apierror.New(errorcode_enum.CodeInternal, "Internal server error", err)
+		response.WriteAPIError(w, apiErr)
 		return
 	}
-	response.WriteAPISuccess(w, "User registered", dto)
+
+	response.WriteAPISuccess(w, "User registered successfully", dto)
 }
 
 func (h *UsersHandler) GetAllUsers(w http.ResponseWriter, gymID string) {
@@ -58,15 +52,12 @@ func (h *UsersHandler) GetAllUsers(w http.ResponseWriter, gymID string) {
 			response.WriteAPIError(w, apiErr)
 			return
 		}
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(response.APIResponse[any]{
-			Status:  "error",
-			Message: "Internal server error",
-			Data:    nil,
-		})
+		apiErr = apierror.New(errorcode_enum.CodeInternal, "Internal server error", err)
+		response.WriteAPIError(w, apiErr)
 		return
 	}
-	response.WriteAPISuccess(w, "Users retrieved", users)
+
+	response.WriteAPISuccess(w, "Users retrieved successfully", users)
 }
 
 func (h *UsersHandler) GetUserByID(w http.ResponseWriter, gymID, id string) {
@@ -77,14 +68,11 @@ func (h *UsersHandler) GetUserByID(w http.ResponseWriter, gymID, id string) {
 			response.WriteAPIError(w, apiErr)
 			return
 		}
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(response.APIResponse[any]{
-			Status:  "error",
-			Message: "Internal server error",
-			Data:    nil,
-		})
+		apiErr = apierror.New(errorcode_enum.CodeInternal, "Internal server error", err)
+		response.WriteAPIError(w, apiErr)
 		return
 	}
+
 	response.WriteAPISuccess(w, "User found", user)
 }
 
@@ -93,33 +81,15 @@ func (h *UsersHandler) GetUserByUsername(w http.ResponseWriter, gymID, username 
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
-			status := http.StatusBadRequest
-			if apiErr.Code == errorcode_enum.CodeNotFound {
-				status = http.StatusNotFound
-			}
-			w.WriteHeader(status)
-			json.NewEncoder(w).Encode(response.APIResponse[*apierror.APIError]{
-				Status:  "error",
-				Message: apiErr.Message,
-				Data:    apiErr,
-			})
+			response.WriteAPIError(w, apiErr)
 			return
 		}
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(response.APIResponse[any]{
-			Status:  "error",
-			Message: "Internal server error",
-			Data:    nil,
-		})
+		apiErr = apierror.New(errorcode_enum.CodeInternal, "Internal server error", err)
+		response.WriteAPIError(w, apiErr)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response.APIResponse[dto.UserResponseDTO]{
-		Status:  "success",
-		Message: "User found",
-		Data:    user,
-	})
+	response.WriteAPISuccess(w, "User found", user)
 }
 
 func (h *UsersHandler) GetUserByEmail(w http.ResponseWriter, gymID, email string) {
@@ -127,33 +97,15 @@ func (h *UsersHandler) GetUserByEmail(w http.ResponseWriter, gymID, email string
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
-			status := http.StatusBadRequest
-			if apiErr.Code == errorcode_enum.CodeNotFound {
-				status = http.StatusNotFound
-			}
-			w.WriteHeader(status)
-			json.NewEncoder(w).Encode(response.APIResponse[*apierror.APIError]{
-				Status:  "error",
-				Message: apiErr.Message,
-				Data:    apiErr,
-			})
+			response.WriteAPIError(w, apiErr)
 			return
 		}
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(response.APIResponse[any]{
-			Status:  "error",
-			Message: "Internal server error",
-			Data:    nil,
-		})
+		apiErr = apierror.New(errorcode_enum.CodeInternal, "Internal server error", err)
+		response.WriteAPIError(w, apiErr)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response.APIResponse[dto.UserResponseDTO]{
-		Status:  "success",
-		Message: "User found",
-		Data:    user,
-	})
+	response.WriteAPISuccess(w, "User found", user)
 }
 
 func (h *UsersHandler) UpdateUser(w http.ResponseWriter, gymID, id string, userDTO dto.UserUpdateDTO) {
@@ -164,15 +116,12 @@ func (h *UsersHandler) UpdateUser(w http.ResponseWriter, gymID, id string, userD
 			response.WriteAPIError(w, apiErr)
 			return
 		}
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(response.APIResponse[any]{
-			Status:  "error",
-			Message: "Internal server error",
-			Data:    nil,
-		})
+		apiErr = apierror.New(errorcode_enum.CodeInternal, "Internal server error", err)
+		response.WriteAPIError(w, apiErr)
 		return
 	}
-	response.WriteAPISuccess(w, "User updated", nil)
+
+	response.WriteAPISuccess(w, "User updated successfully", nil)
 }
 
 func (h *UsersHandler) DeleteUser(w http.ResponseWriter, gymID, id string) {
@@ -183,14 +132,11 @@ func (h *UsersHandler) DeleteUser(w http.ResponseWriter, gymID, id string) {
 			response.WriteAPIError(w, apiErr)
 			return
 		}
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(response.APIResponse[any]{
-			Status:  "error",
-			Message: "Internal server error",
-			Data:    nil,
-		})
+		apiErr = apierror.New(errorcode_enum.CodeInternal, "Internal server error", err)
+		response.WriteAPIError(w, apiErr)
 		return
 	}
+
 	w.WriteHeader(http.StatusNoContent)
 }
 
@@ -199,33 +145,15 @@ func (h *UsersHandler) VerifyUser(w http.ResponseWriter, gymID, id string) {
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
-			status := http.StatusBadRequest
-			if apiErr.Code == errorcode_enum.CodeNotFound {
-				status = http.StatusNotFound
-			}
-			w.WriteHeader(status)
-			json.NewEncoder(w).Encode(response.APIResponse[*apierror.APIError]{
-				Status:  "error",
-				Message: apiErr.Message,
-				Data:    apiErr,
-			})
+			response.WriteAPIError(w, apiErr)
 			return
 		}
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(response.APIResponse[any]{
-			Status:  "error",
-			Message: "Internal server error",
-			Data:    nil,
-		})
+		apiErr = apierror.New(errorcode_enum.CodeInternal, "Internal server error", err)
+		response.WriteAPIError(w, apiErr)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(response.APIResponse[any]{
-		Status:  "success",
-		Message: "User verified successfully",
-		Data:    nil,
-	})
+	response.WriteAPISuccess(w, "User verified successfully", nil)
 }
 
 func (h *UsersHandler) SetUserActive(w http.ResponseWriter, gymID, id string, active bool) {
@@ -233,35 +161,17 @@ func (h *UsersHandler) SetUserActive(w http.ResponseWriter, gymID, id string, ac
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
-			status := http.StatusBadRequest
-			if apiErr.Code == errorcode_enum.CodeNotFound {
-				status = http.StatusNotFound
-			}
-			w.WriteHeader(status)
-			json.NewEncoder(w).Encode(response.APIResponse[*apierror.APIError]{
-				Status:  "error",
-				Message: apiErr.Message,
-				Data:    apiErr,
-			})
+			response.WriteAPIError(w, apiErr)
 			return
 		}
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(response.APIResponse[any]{
-			Status:  "error",
-			Message: "Internal server error",
-			Data:    nil,
-		})
+		apiErr = apierror.New(errorcode_enum.CodeInternal, "Internal server error", err)
+		response.WriteAPIError(w, apiErr)
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
 	statusMsg := "deactivated"
 	if active {
 		statusMsg = "activated"
 	}
-	json.NewEncoder(w).Encode(response.APIResponse[any]{
-		Status:  "success",
-		Message: fmt.Sprintf("User %s successfully", statusMsg),
-		Data:    nil,
-	})
+	response.WriteAPISuccess(w, fmt.Sprintf("User %s successfully", statusMsg), nil)
 }

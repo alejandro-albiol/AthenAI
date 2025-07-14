@@ -3,6 +3,7 @@ package response
 import (
 	"encoding/json"
 	"net/http"
+	"os"
 
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
 	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
@@ -42,13 +43,25 @@ func WriteAPIError(w http.ResponseWriter, apiErr *apierror.APIError) {
 		status = http.StatusForbidden
 	}
 	w.WriteHeader(status)
+
+	// Create error data based on environment
 	data := map[string]any{"code": apiErr.Code}
-	if apiErr.Err != nil {
+
+	// Only include detailed error information in development mode
+	if isDevelopmentMode() && apiErr.Err != nil {
 		data["error"] = apiErr.Err.Error()
 	}
+	// In production, only return the code - no error details
+
 	json.NewEncoder(w).Encode(APIResponse[any]{
 		Status:  "error",
 		Message: apiErr.Message,
 		Data:    data,
 	})
+}
+
+// isDevelopmentMode checks if the application is running in development mode
+func isDevelopmentMode() bool {
+	env := os.Getenv("APP_ENV")
+	return env == "development" || env == "dev"
 }
