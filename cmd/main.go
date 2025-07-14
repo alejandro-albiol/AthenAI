@@ -58,17 +58,17 @@ func main() {
 
 	// Setup Swagger at root level
 	api.SetupSwagger(rootRouter)
-	log.Printf("📚 Swagger UI available at: http://localhost:%s/swagger-ui/", cfg.Port)
+	log.Printf("📚 Swagger UI available at: http://localhost:%s/swagger-ui/", port)
 
 	// Mount API under /api/v1
 	rootRouter.Mount("/api/v1", api.NewAPIModule(db))
-	log.Printf("🔌 API mounted at: http://localhost:%s/api/v1", cfg.Port)
+	log.Printf("🔌 API mounted at: http://localhost:%s/api/v1", port)
 
 	// Serve static frontend files
 	workDir, _ := os.Getwd()
 	frontendDir := http.Dir(filepath.Join(workDir, "frontend"))
 	FileServer(rootRouter, "/", frontendDir)
-	log.Printf("🎨 Frontend served at: http://localhost:%s/", cfg.Port)
+	log.Printf("🎨 Frontend served at: http://localhost:%s/", port)
 
 	log.Printf("Server is running on: http://%s:%s", host, port)
 	log.Printf("Documentation: http://%s:%s/swagger-ui/", host, port)
