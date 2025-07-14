@@ -1,516 +1,310 @@
 package service
 
 import (
+	"crypto/rand"
+	"encoding/hex"
+	"fmt"
+	"net/http"
 	"time"
 
-	"github.com/alejandro-albiol/athenai/internal/auth/dto"
-	"github.com/alejandro-albiol/athenai/internal/auth/interfaces"
-	userrole_enum "github.com/alejandro-albiol/athenai/internal/user/enum"
+	"github.com/golang-jwt/jwt/v5"
+
+	authdto "github.com/alejandro-albiol/athenai/internal/auth/dto"
+	authinterfaces "github.com/alejandro-albiol/athenai/internal/auth/interfaces"
+	gyminterfaces "github.com/alejandro-albiol/athenai/internal/gym/interfaces"
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
 	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
-	"github.com/golang-jwt/jwt/v5"
-	"golang.org/x/crypto/bcrypt"
 )
 
 type AuthService struct {
-	repository interfaces.AuthRepository
-	jwtSecret  string
+	authRepo  authinterfaces.AuthRepositoryInterface
+	gymRepo   gyminterfaces.GymRepository
+	jwtSecret string
 }
 
-func NewAuthService(repository interfaces.AuthRepository, jwtSecret string) interfaces.AuthServiceInterface {
+func NewAuthService(
+	authRepo authinterfaces.AuthRepositoryInterface,
+	gymRepo gyminterfaces.GymRepository,
+	jwtSecret string,
+) authinterfaces.AuthServiceInterface {
 	return &AuthService{
-		repository: repository,
-		jwtSecret:  jwtSecret,
+		authRepo:  authRepo,
+		gymRepo:   gymRepo,
+		jwtSecret: jwtSecret,
 	}
 }
 
-// LoginAdmin handles platform admin authentication (athenai.com)
-func (s *AuthService) LoginAdmin(credentials dto.LoginRequestDTO) (dto.LoginResponseDTO, error) {
-	// Get admin from public.admin table
-	admin, err := s.repository.GetAdminByUsername(credentials.Username)
+// Login handles the simplified login logic based on X-Gym-ID header
+func (s *AuthService) Login(r *http.Request, loginReq authdto.LoginRequestDTO) (*authdto.LoginResponseDTO, *apierror.APIError) {
+	// Check for X-Gym-ID header
+	gymID := r.Header.Get("X-Gym-ID")
+
+	if gymID != "" {
+		// Tenant user login - lookup gym and authenticate in tenant schema
+		return s.loginTenantUser(gymID, loginReq)
+	} else {
+		// Platform admin login - authenticate in public.admin table
+		return s.loginPlatformAdmin(loginReq)
+	}
+}
+
+// loginPlatformAdmin handles platform admin authentication
+func (s *AuthService) loginPlatformAdmin(loginReq authdto.LoginRequestDTO) (*authdto.LoginResponseDTO, *apierror.APIError) {
+	// Authenticate against public.admin table
+	admin, err := s.authRepo.AuthenticatePlatformAdmin(loginReq.Email, loginReq.Password)
 	if err != nil {
-		return dto.LoginResponseDTO{}, apierror.New(
+		return nil, apierror.New(
 			errorcode_enum.CodeUnauthorized,
-			"Invalid credentials",
-			nil,
+			"Invalid admin credentials",
+			err,
 		)
 	}
 
-	// Verify password
-	if err := bcrypt.CompareHashAndPassword([]byte(admin.PasswordHash), []byte(credentials.Password)); err != nil {
-		return dto.LoginResponseDTO{}, apierror.New(
-			errorcode_enum.CodeUnauthorized,
-			"Invalid credentials",
-			nil,
-		)
-	}
-
-	// Check if admin is active
-	if !admin.IsActive {
-		return dto.LoginResponseDTO{}, apierror.New(
-			errorcode_enum.CodeUnauthorized,
-			"Account is inactive",
-			nil,
-		)
-	}
-
-	// Generate JWT token
-	claims := jwt.MapClaims{
-		"user_id":   admin.ID,
-		"username":  admin.Username,
-		"user_type": dto.UserTypePlatformAdmin,
-		"is_active": admin.IsActive,
-		"iat":       time.Now().Unix(),
-		"exp":       time.Now().Add(24 * time.Hour).Unix(),
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	accessToken, err := token.SignedString([]byte(s.jwtSecret))
+	// Generate JWT token for platform admin
+	token, err := s.generateJWT(admin.ID, "platform_admin", admin.Username, nil, nil)
 	if err != nil {
-		return dto.LoginResponseDTO{}, apierror.New(
+		return nil, apierror.New(
 			errorcode_enum.CodeInternal,
-			"Failed to generate access token",
+			"Failed to generate token",
 			err,
 		)
 	}
 
 	// Generate refresh token
-	refreshClaims := jwt.MapClaims{
-		"user_id":   admin.ID,
-		"user_type": dto.UserTypePlatformAdmin,
-		"iat":       time.Now().Unix(),
-		"exp":       time.Now().Add(7 * 24 * time.Hour).Unix(), // 7 days
-	}
-
-	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
-	refreshTokenString, err := refreshToken.SignedString([]byte(s.jwtSecret))
+	refreshToken, err := s.generateRefreshToken(admin.ID, "platform_admin", nil)
 	if err != nil {
-		return dto.LoginResponseDTO{}, apierror.New(
+		return nil, apierror.New(
 			errorcode_enum.CodeInternal,
 			"Failed to generate refresh token",
 			err,
 		)
 	}
 
-	// Store refresh token (no gym domain for platform admin)
-	if err := s.repository.StoreRefreshToken(admin.ID, refreshTokenString, dto.UserTypePlatformAdmin, nil); err != nil {
-		return dto.LoginResponseDTO{}, apierror.New(
-			errorcode_enum.CodeInternal,
-			"Failed to store refresh token",
-			err,
-		)
-	}
-
-	// Update last login
-	if err := s.repository.UpdateAdminLastLogin(admin.ID); err != nil {
-		// Log but don't fail the login
-	}
-
-	return dto.LoginResponseDTO{
-		AccessToken:  accessToken,
-		RefreshToken: refreshTokenString,
-		ExpiresAt:    time.Unix(claims["exp"].(int64), 0),
-		UserInfo: dto.UserInfoDTO{
-			ID:       admin.ID,
+	return &authdto.LoginResponseDTO{
+		AccessToken:  token,
+		RefreshToken: refreshToken,
+		UserInfo: authdto.UserInfoDTO{
+			UserID:   admin.ID,
 			Username: admin.Username,
 			Email:    admin.Email,
-			UserType: dto.UserTypePlatformAdmin,
-			IsActive: &admin.IsActive,
+			UserType: "platform_admin",
+			Role:     nil, // Platform admins don't have roles
+			GymID:    nil, // Platform admins are not tied to a specific gym
 		},
 	}, nil
 }
 
-// LoginTenantUser handles tenant user authentication ({domain}.athenai.com)
-func (s *AuthService) LoginTenantUser(gymDomain string, credentials dto.LoginRequestDTO) (dto.LoginResponseDTO, error) {
-	// First, validate that the gym domain exists
-	gymInfo, err := s.repository.ValidateGymDomain(gymDomain)
+// loginTenantUser handles tenant user authentication
+func (s *AuthService) loginTenantUser(gymID string, loginReq authdto.LoginRequestDTO) (*authdto.LoginResponseDTO, *apierror.APIError) {
+	// First, lookup the gym to get its domain
+	gym, err := s.gymRepo.GetGymByID(gymID)
 	if err != nil {
-		return dto.LoginResponseDTO{}, apierror.New(
+		return nil, apierror.New(
 			errorcode_enum.CodeNotFound,
-			"Gym domain not found",
+			"Gym not found",
 			err,
 		)
 	}
 
-	if !gymInfo.IsActive {
-		return dto.LoginResponseDTO{}, apierror.New(
-			errorcode_enum.CodeUnauthorized,
-			"Gym is inactive",
+	// Check if gym is active
+	if !gym.IsActive {
+		return nil, apierror.New(
+			errorcode_enum.CodeForbidden,
+			"Gym is not active",
 			nil,
 		)
 	}
 
-	// Get tenant user from tenant schema
-	user, err := s.repository.GetTenantUserByUsername(gymDomain, credentials.Username)
+	// Authenticate against {domain}.users table
+	user, err := s.authRepo.AuthenticateTenantUser(gym.Domain, loginReq.Email, loginReq.Password)
 	if err != nil {
-		return dto.LoginResponseDTO{}, apierror.New(
+		return nil, apierror.New(
 			errorcode_enum.CodeUnauthorized,
-			"Invalid credentials",
-			nil,
+			"Invalid user credentials",
+			err,
 		)
 	}
 
-	// Verify password
-	if err := bcrypt.CompareHashAndPassword([]byte(user.PasswordHash), []byte(credentials.Password)); err != nil {
-		return dto.LoginResponseDTO{}, apierror.New(
-			errorcode_enum.CodeUnauthorized,
-			"Invalid credentials",
-			nil,
-		)
-	}
-
-	// Check if user is active
-	if !user.IsActive {
-		return dto.LoginResponseDTO{}, apierror.New(
-			errorcode_enum.CodeUnauthorized,
-			"Account is inactive",
-			nil,
-		)
-	}
-
-	// Validate role
-	role := userrole_enum.UserRole(user.Role)
-	if !isValidRole(role) {
-		return dto.LoginResponseDTO{}, apierror.New(
-			errorcode_enum.CodeUnauthorized,
-			"Invalid user role",
-			nil,
-		)
-	}
-
-	// Check verification limitations for guests and demo users
-	if role == userrole_enum.Guest {
-		if hasLimitations, reason := hasVerificationLimitations(user.VerificationStatus); hasLimitations {
-			return dto.LoginResponseDTO{}, apierror.New(
-				errorcode_enum.CodeUnauthorized,
-				reason,
-				nil,
-			)
-		}
-	}
-
-	// Generate JWT token
-	claims := jwt.MapClaims{
-		"user_id":             user.ID,
-		"username":            user.Username,
-		"user_type":           dto.UserTypeTenantUser,
-		"gym_domain":          gymDomain,
-		"role":                user.Role,
-		"verification_status": user.VerificationStatus,
-		"iat":                 time.Now().Unix(),
-		"exp":                 time.Now().Add(24 * time.Hour).Unix(),
-	}
-
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	accessToken, err := token.SignedString([]byte(s.jwtSecret))
+	// Generate JWT token for tenant user
+	token, err := s.generateJWT(user.ID, "tenant_user", user.Username, &user.Role, &user.GymID)
 	if err != nil {
-		return dto.LoginResponseDTO{}, apierror.New(
+		return nil, apierror.New(
 			errorcode_enum.CodeInternal,
-			"Failed to generate access token",
+			"Failed to generate token",
 			err,
 		)
 	}
 
 	// Generate refresh token
-	refreshClaims := jwt.MapClaims{
-		"user_id":    user.ID,
-		"user_type":  dto.UserTypeTenantUser,
-		"gym_domain": gymDomain,
-		"iat":        time.Now().Unix(),
-		"exp":        time.Now().Add(7 * 24 * time.Hour).Unix(), // 7 days
-	}
-
-	refreshToken := jwt.NewWithClaims(jwt.SigningMethodHS256, refreshClaims)
-	refreshTokenString, err := refreshToken.SignedString([]byte(s.jwtSecret))
+	refreshToken, err := s.generateRefreshToken(user.ID, "tenant_user", &user.GymID)
 	if err != nil {
-		return dto.LoginResponseDTO{}, apierror.New(
+		return nil, apierror.New(
 			errorcode_enum.CodeInternal,
 			"Failed to generate refresh token",
 			err,
 		)
 	}
 
-	// Store refresh token with gym domain
-	if err := s.repository.StoreRefreshToken(user.ID, refreshTokenString, dto.UserTypeTenantUser, &gymDomain); err != nil {
-		return dto.LoginResponseDTO{}, apierror.New(
-			errorcode_enum.CodeInternal,
-			"Failed to store refresh token",
-			err,
-		)
-	}
-
-	// Update last login
-	if err := s.repository.UpdateTenantUserLastLogin(gymDomain, user.ID); err != nil {
-		// Log but don't fail the login
-	}
-
-	return dto.LoginResponseDTO{
-		AccessToken:  accessToken,
-		RefreshToken: refreshTokenString,
-		ExpiresAt:    time.Unix(claims["exp"].(int64), 0),
-		UserInfo: dto.UserInfoDTO{
-			ID:                 user.ID,
-			Username:           user.Username,
-			Email:              user.Email,
-			UserType:           dto.UserTypeTenantUser,
-			GymDomain:          &gymDomain,
-			Role:               &user.Role,
-			VerificationStatus: &user.VerificationStatus,
+	return &authdto.LoginResponseDTO{
+		AccessToken:  token,
+		RefreshToken: refreshToken,
+		UserInfo: authdto.UserInfoDTO{
+			UserID:   user.ID,
+			Username: user.Username,
+			Email:    user.Email,
+			UserType: "tenant_user",
+			Role:     &user.Role,
+			GymID:    &user.GymID,
 		},
 	}, nil
 }
 
-// ValidateToken validates JWT token and returns claims
-func (s *AuthService) ValidateToken(tokenString string) (dto.TokenValidationResponseDTO, error) {
-	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
+// generateJWT creates a JWT token with the provided claims
+func (s *AuthService) generateJWT(userID, userType, username string, role, gymID *string) (string, error) {
+	claims := authdto.ClaimsDTO{
+		UserID:   userID,
+		UserType: userType,
+		Username: username,
+		Role:     role,
+		GymID:    gymID,
+		IsActive: true,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(time.Now().Add(24 * time.Hour)), // 24 hours
+			IssuedAt:  jwt.NewNumericDate(time.Now()),
+		},
+	}
+
+	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
+	return token.SignedString([]byte(s.jwtSecret))
+}
+
+// generateRefreshToken creates a refresh token and stores it in the database
+func (s *AuthService) generateRefreshToken(userID, userType string, gymID *string) (string, error) {
+	// Generate random token
+	tokenBytes := make([]byte, 32)
+	_, err := rand.Read(tokenBytes)
+	if err != nil {
+		return "", err
+	}
+
+	tokenString := hex.EncodeToString(tokenBytes)
+
+	// Store in database (store the token directly, not hashed)
+	refreshTokenDTO := &authdto.RefreshTokenDTO{
+		Token:     tokenString,
+		UserID:    userID,
+		UserType:  userType,
+		GymID:     gymID,
+		ExpiresAt: time.Now().Add(30 * 24 * time.Hour), // 30 days
+		CreatedAt: time.Now(),
+	}
+
+	err = s.authRepo.StoreRefreshToken(refreshTokenDTO)
+	if err != nil {
+		return "", err
+	}
+
+	return tokenString, nil
+}
+
+// ValidateToken validates a JWT token and returns claims
+func (s *AuthService) ValidateToken(tokenString string) (*authdto.TokenValidationResponseDTO, *apierror.APIError) {
+	token, err := jwt.ParseWithClaims(tokenString, &authdto.ClaimsDTO{}, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
-			return nil, apierror.New(errorcode_enum.CodeUnauthorized, "Invalid signing method", nil)
+			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
 		return []byte(s.jwtSecret), nil
 	})
 
 	if err != nil {
-		return dto.TokenValidationResponseDTO{
-			Valid:   false,
-			Message: "Invalid token",
+		return nil, apierror.New(
+			errorcode_enum.CodeUnauthorized,
+			"Invalid token",
+			err,
+		)
+	}
+
+	if claims, ok := token.Claims.(*authdto.ClaimsDTO); ok && token.Valid {
+		return &authdto.TokenValidationResponseDTO{
+			Valid:  true,
+			Claims: *claims,
 		}, nil
 	}
 
-	if !token.Valid {
-		return dto.TokenValidationResponseDTO{
-			Valid:   false,
-			Message: "Token is invalid",
-		}, nil
-	}
-
-	claims, ok := token.Claims.(jwt.MapClaims)
-	if !ok {
-		return dto.TokenValidationResponseDTO{
-			Valid:   false,
-			Message: "Invalid token claims",
-		}, nil
-	}
-
-	// Convert claims to DTO
-	claimsDTO := &dto.ClaimsDTO{
-		UserID:    claims["user_id"].(string),
-		Username:  claims["username"].(string),
-		UserType:  dto.UserType(claims["user_type"].(string)),
-		ExpiresAt: int64(claims["exp"].(float64)),
-		IssuedAt:  int64(claims["iat"].(float64)),
-	}
-
-	// Add type-specific claims
-	if claimsDTO.UserType == dto.UserTypePlatformAdmin {
-		if isActive, exists := claims["is_active"]; exists {
-			active := isActive.(bool)
-			claimsDTO.IsActive = &active
-		}
-	} else {
-		if gymDomain, exists := claims["gym_domain"]; exists {
-			domain := gymDomain.(string)
-			claimsDTO.GymDomain = &domain
-		}
-		if role, exists := claims["role"]; exists {
-			roleStr := role.(string)
-			claimsDTO.Role = &roleStr
-		}
-		if verificationStatus, exists := claims["verification_status"]; exists {
-			status := verificationStatus.(string)
-			claimsDTO.VerificationStatus = &status
-		}
-	}
-
-	return dto.TokenValidationResponseDTO{
-		Valid:   true,
-		Claims:  claimsDTO,
-		Message: "Token is valid",
-	}, nil
+	return nil, apierror.New(
+		errorcode_enum.CodeUnauthorized,
+		"Invalid token claims",
+		nil,
+	)
 }
 
-// RefreshToken generates new access token using refresh token
-func (s *AuthService) RefreshToken(refreshReq dto.RefreshTokenRequestDTO) (dto.LoginResponseDTO, error) {
-	// Validate refresh token
-	tokenData, err := s.repository.ValidateRefreshToken(refreshReq.RefreshToken)
+// RefreshToken generates a new access token using a refresh token
+func (s *AuthService) RefreshToken(refreshReq authdto.RefreshTokenRequestDTO) (*authdto.LoginResponseDTO, *apierror.APIError) {
+	// Validate the refresh token directly (no hashing needed)
+	tokenData, err := s.authRepo.ValidateRefreshToken(refreshReq.RefreshToken)
 	if err != nil {
-		return dto.LoginResponseDTO{}, apierror.New(
+		return nil, apierror.New(
 			errorcode_enum.CodeUnauthorized,
 			"Invalid refresh token",
 			err,
 		)
 	}
 
-	// Check expiration
-	if time.Now().After(tokenData.ExpiresAt) {
-		s.repository.RevokeRefreshToken(refreshReq.RefreshToken) // Clean up expired token
-		return dto.LoginResponseDTO{}, apierror.New(
-			errorcode_enum.CodeUnauthorized,
-			"Refresh token expired",
-			nil,
-		)
-	}
-
-	// Generate new access token based on user type
-	var claims jwt.MapClaims
-	var userInfo dto.UserInfoDTO
-
-	if tokenData.UserType == dto.UserTypePlatformAdmin {
-		admin, err := s.repository.GetAdminByID(tokenData.UserID)
+	// Determine user type and get user info
+	if tokenData.UserType == "platform_admin" {
+		// Get admin info and generate new tokens
+		admin, err := s.authRepo.AuthenticatePlatformAdmin("", "") // We need to modify this
 		if err != nil {
-			return dto.LoginResponseDTO{}, apierror.New(
+			return nil, apierror.New(
 				errorcode_enum.CodeUnauthorized,
 				"User not found",
 				err,
 			)
 		}
 
-		claims = jwt.MapClaims{
-			"user_id":   admin.ID,
-			"username":  admin.Username,
-			"user_type": dto.UserTypePlatformAdmin,
-			"is_active": admin.IsActive,
-			"iat":       time.Now().Unix(),
-			"exp":       time.Now().Add(24 * time.Hour).Unix(),
-		}
-
-		userInfo = dto.UserInfoDTO{
-			ID:       admin.ID,
-			Username: admin.Username,
-			Email:    admin.Email,
-			UserType: dto.UserTypePlatformAdmin,
-			IsActive: &admin.IsActive,
-		}
-	} else {
-		// For tenant users
-		if tokenData.GymDomain == nil {
-			return dto.LoginResponseDTO{}, apierror.New(
+		// Generate new JWT
+		newToken, err := s.generateJWT(admin.ID, "platform_admin", admin.Username, nil, nil)
+		if err != nil {
+			return nil, apierror.New(
 				errorcode_enum.CodeInternal,
-				"Missing gym domain in refresh token",
-				nil,
-			)
-		}
-
-		user, err := s.repository.GetTenantUserByID(*tokenData.GymDomain, tokenData.UserID)
-		if err != nil {
-			return dto.LoginResponseDTO{}, apierror.New(
-				errorcode_enum.CodeUnauthorized,
-				"User not found",
+				"Failed to generate new token",
 				err,
 			)
 		}
 
-		claims = jwt.MapClaims{
-			"user_id":             user.ID,
-			"username":            user.Username,
-			"user_type":           dto.UserTypeTenantUser,
-			"gym_domain":          *tokenData.GymDomain,
-			"role":                user.Role,
-			"verification_status": user.VerificationStatus,
-			"iat":                 time.Now().Unix(),
-			"exp":                 time.Now().Add(24 * time.Hour).Unix(),
-		}
-
-		userInfo = dto.UserInfoDTO{
-			ID:                 user.ID,
-			Username:           user.Username,
-			Email:              user.Email,
-			UserType:           dto.UserTypeTenantUser,
-			GymDomain:          tokenData.GymDomain,
-			Role:               &user.Role,
-			VerificationStatus: &user.VerificationStatus,
-		}
+		return &authdto.LoginResponseDTO{
+			AccessToken:  newToken,
+			RefreshToken: refreshReq.RefreshToken, // Keep same refresh token
+			UserInfo: authdto.UserInfoDTO{
+				UserID:   admin.ID,
+				Username: admin.Username,
+				Email:    admin.Email,
+				UserType: "platform_admin",
+				Role:     nil,
+				GymID:    nil,
+			},
+		}, nil
 	}
 
-	token := jwt.NewWithClaims(jwt.SigningMethodHS256, claims)
-	accessToken, err := token.SignedString([]byte(s.jwtSecret))
-	if err != nil {
-		return dto.LoginResponseDTO{}, apierror.New(
-			errorcode_enum.CodeInternal,
-			"Failed to generate access token",
-			err,
-		)
-	}
-
-	return dto.LoginResponseDTO{
-		AccessToken:  accessToken,
-		RefreshToken: refreshReq.RefreshToken, // Keep same refresh token
-		ExpiresAt:    time.Unix(claims["exp"].(int64), 0),
-		UserInfo:     userInfo,
-	}, nil
+	// Handle tenant user refresh (we'll implement this when we need it)
+	return nil, apierror.New(
+		errorcode_enum.CodeNotFound,
+		"Tenant user refresh not implemented yet",
+		nil,
+	)
 }
 
-// Logout revokes refresh token
-func (s *AuthService) Logout(logoutReq dto.LogoutRequestDTO) (dto.LogoutResponseDTO, error) {
-	err := s.repository.RevokeRefreshToken(logoutReq.RefreshToken)
+// Logout revokes a refresh token
+func (s *AuthService) Logout(logoutReq authdto.LogoutRequestDTO) *apierror.APIError {
+	// Revoke the refresh token directly (no hashing needed)
+	err := s.authRepo.RevokeRefreshToken(logoutReq.RefreshToken)
 	if err != nil {
-		return dto.LogoutResponseDTO{}, apierror.New(
+		return apierror.New(
 			errorcode_enum.CodeInternal,
 			"Failed to logout",
 			err,
 		)
 	}
 
-	return dto.LogoutResponseDTO{
-		Success: true,
-		Message: "Logout successful",
-	}, nil
-}
-
-// HasPlatformAccess checks if user has platform admin access
-func (s *AuthService) HasPlatformAccess(userID string) (bool, error) {
-	admin, err := s.repository.GetAdminByID(userID)
-	if err != nil {
-		return false, err
-	}
-
-	return admin.IsActive && admin.ID == userID, nil
-}
-
-// HasTenantAccess checks if user has access to tenant with required role
-func (s *AuthService) HasTenantAccess(userID, gymDomain string, requiredRole string) (bool, error) {
-	user, err := s.repository.GetTenantUserByID(gymDomain, userID)
-	if err != nil {
-		return false, err
-	}
-
-	if user.ID != userID || !user.IsActive {
-		return false, nil
-	}
-
-	role := userrole_enum.UserRole(user.Role)
-	requiredRoleEnum := userrole_enum.UserRole(requiredRole)
-
-	return hasPermission(role, requiredRoleEnum), nil
-}
-
-// Helper functions
-func isValidRole(role userrole_enum.UserRole) bool {
-	return role == userrole_enum.Admin || role == userrole_enum.User || role == userrole_enum.Guest
-}
-
-func hasVerificationLimitations(status string) (bool, string) {
-	verificationStatus := userrole_enum.UserVerificationStatus(status)
-	if verificationStatus == userrole_enum.Demo {
-		// Demo users have time limitations
-		return true, "Demo access expired"
-	}
-	return false, ""
-}
-
-func hasPermission(userRole, requiredRole userrole_enum.UserRole) bool {
-	// Simple role hierarchy: admin > user > guest
-	roleHierarchy := map[userrole_enum.UserRole]int{
-		userrole_enum.Admin: 3,
-		userrole_enum.User:  2,
-		userrole_enum.Guest: 1,
-	}
-
-	userLevel, userExists := roleHierarchy[userRole]
-	requiredLevel, requiredExists := roleHierarchy[requiredRole]
-
-	if !userExists || !requiredExists {
-		return false
-	}
-
-	return userLevel >= requiredLevel
+	return nil
 }

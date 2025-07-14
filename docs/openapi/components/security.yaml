@@ -1,6 +1,12 @@
 # Security schemes
+bearerAuth:
+  type: http
+  scheme: bearer
+  bearerFormat: JWT
+  description: JWT token for authenticated requests
+
 GymIdHeader:
   type: apiKey
   in: header
   name: X-Gym-ID
-  description: Gym ID for tenant isolation
+  description: Gym ID for tenant isolation and login routing

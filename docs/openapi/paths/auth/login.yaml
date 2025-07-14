@@ -1,0 +1,148 @@
+post:
+  summary: "Single login endpoint"
+  description: |
+    Unified login endpoint that supports both platform administrators and tenant users.
+    - **Without X-Gym-ID header**: Authenticates platform administrator against public.admin table
+    - **With X-Gym-ID header**: Looks up gym and authenticates tenant user against {gym_domain}.users table
+  tags:
+    - Authentication
+  parameters:
+    - name: X-Gym-ID
+      in: header
+      required: false
+      schema:
+        type: string
+        format: uuid
+      description: "Gym ID for tenant user authentication. If not provided, attempts platform admin login."
+      example: "123e4567-e89b-12d3-a456-426614174000"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "#/components/schemas/LoginRequestDTO"
+        examples:
+          platform_admin:
+            summary: "Platform Admin Login"
+            description: "Login as platform administrator (no X-Gym-ID header)"
+            value:
+              email: "admin@athenai.com"
+              password: "adminPassword123"
+          tenant_user:
+            summary: "Tenant User Login"
+            description: "Login as gym user (requires X-Gym-ID header)"
+            value:
+              email: "john@olympusgym.com"
+              password: "userPassword123"
+  responses:
+    '200':
+      description: "Login successful"
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/APIResponse"
+              - type: object
+                properties:
+                  data:
+                    $ref: "#/components/schemas/LoginResponseDTO"
+          examples:
+            platform_admin_success:
+              summary: "Platform Admin Login Success"
+              value:
+                status: "success"
+                message: "Login successful"
+                data:
+                  access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  refresh_token: "d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6"
+                  user_info:
+                    user_id: "123e4567-e89b-12d3-a456-426614174000"
+                    username: "admin"
+                    email: "admin@athenai.com"
+                    user_type: "platform_admin"
+                    role: null
+                    gym_id: null
+            tenant_user_success:
+              summary: "Tenant User Login Success"
+              value:
+                status: "success"
+                message: "Login successful"
+                data:
+                  access_token: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  refresh_token: "d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6"
+                  user_info:
+                    user_id: "456e7890-e89b-12d3-a456-426614174000"
+                    username: "johndoe"
+                    email: "john@olympusgym.com"
+                    user_type: "tenant_user"
+                    role: "admin"
+                    gym_id: "789e0123-e89b-12d3-a456-426614174000"
+    '400':
+      description: "Bad request - Invalid request body"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIErrorResponse"
+          example:
+            status: "error"
+            message: "Invalid request body"
+            data:
+              code: "BAD_REQUEST"
+              error: "json: cannot unmarshal string into Go struct field LoginRequestDTO.email of type string"
+    '401':
+      description: "Unauthorized - Invalid credentials"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIErrorResponse"
+          examples:
+            invalid_credentials:
+              summary: "Invalid Credentials"
+              value:
+                status: "error"
+                message: "Invalid admin credentials"
+                data:
+                  code: "UNAUTHORIZED"
+                  error: "sql: no rows in result set"
+            invalid_tenant_credentials:
+              summary: "Invalid Tenant Credentials"
+              value:
+                status: "error"
+                message: "Invalid user credentials"
+                data:
+                  code: "UNAUTHORIZED"
+                  error: "sql: no rows in result set"
+    '403':
+      description: "Forbidden - Gym not active"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIErrorResponse"
+          example:
+            status: "error"
+            message: "Gym is not active"
+            data:
+              code: "FORBIDDEN"
+    '404':
+      description: "Not Found - Gym not found"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIErrorResponse"
+          example:
+            status: "error"
+            message: "Gym not found"
+            data:
+              code: "NOT_FOUND"
+              error: "sql: no rows in result set"
+    '500':
+      description: "Internal server error"
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIErrorResponse"
+          example:
+            status: "error"
+            message: "Failed to generate token"
+            data:
+              code: "INTERNAL_ERROR"

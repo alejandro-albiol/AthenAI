@@ -1,54 +1,378 @@
 openapi: 3.0.0
 info:
   title: Athenai API
-  description: API documentation for the Athenai application
+  description: |
+    API documentation for the Athenai multi-tenant gym management platform.
   version: 1.0.0
 
 servers:
   - url: http://localhost:8080/api/v1
+    description: Development server
+
+tags:
+  - name: Authentication
+    description: User authentication and token management
+  - name: User Management
+    description: Tenant user management operations
+  - name: Gym Management
+    description: Gym tenant management operations
 
 components:
-  index:
-    $ref: "/swagger/components/index.yaml"
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+      description: JWT token for authenticated requests
+    GymIdHeader:
+      type: apiKey
+      in: header
+      name: X-Gym-ID
+      description: Gym ID for tenant isolation and login routing
+  
+  schemas:
+    # Auth DTOs
+    LoginRequestDTO:
+      type: object
+      required:
+        - email
+        - password
+      properties:
+        email:
+          type: string
+          format: email
+          example: "admin@athenai.com"
+          description: "User email address"
+        password:
+          type: string
+          format: password
+          example: "adminPassword123"
+          description: "User password"
+
+    LoginResponseDTO:
+      type: object
+      properties:
+        access_token:
+          type: string
+          example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          description: "JWT access token"
+        refresh_token:
+          type: string
+          example: "d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6"
+          description: "Refresh token for obtaining new access tokens"
+        user_info:
+          $ref: "#/components/schemas/UserInfoDTO"
+
+    UserInfoDTO:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        username:
+          type: string
+          example: "admin"
+        email:
+          type: string
+          format: email
+          example: "admin@athenai.com"
+        user_type:
+          type: string
+          enum: ["platform_admin", "tenant_user"]
+          example: "platform_admin"
+        role:
+          type: string
+          enum: ["admin", "user", "guest"]
+          example: "admin"
+          nullable: true
+        gym_id:
+          type: string
+          format: uuid
+          example: "456e7890-e89b-12d3-a456-426614174000"
+          nullable: true
+
+    TokenValidationResponseDTO:
+      type: object
+      properties:
+        valid:
+          type: boolean
+          example: true
+          description: "Whether the token is valid"
+        claims:
+          $ref: "#/components/schemas/ClaimsDTO"
+        message:
+          type: string
+          example: "Token validation result"
+          description: "Validation result message"
+
+    ClaimsDTO:
+      type: object
+      properties:
+        user_id:
+          type: string
+          format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
+        username:
+          type: string
+          example: "johndoe"
+        user_type:
+          type: string
+          enum: ["platform_admin", "tenant_user"]
+          example: "tenant_user"
+        gym_id:
+          type: string
+          format: uuid
+          example: "456e7890-e89b-12d3-a456-426614174000"
+          nullable: true
+        role:
+          type: string
+          enum: ["admin", "user", "guest"]
+          example: "admin"
+          nullable: true
+        is_active:
+          type: boolean
+          example: true
+        exp:
+          type: integer
+          format: int64
+          example: 1642248000
+          description: "Token expiration timestamp"
+        iat:
+          type: integer
+          format: int64
+          example: 1642161600
+          description: "Token issued at timestamp"
+
+    # User DTOs
+    UserCreationDTO:
+      type: object
+      required:
+        - username
+        - email
+        - password
+        - role
+      properties:
+        username:
+          type: string
+          example: "john_doe"
+        email:
+          type: string
+          format: email
+          example: "john@example.com"
+        password:
+          type: string
+          format: password
+          example: "securePassword123"
+        role:
+          type: string
+          enum: [user, admin]
+          example: "user"
+
+    UserUpdateDTO:
+      type: object
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+          format: email
+        role:
+          type: string
+          enum: [user, admin]
+
+    UserResponseDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        username:
+          type: string
+        email:
+          type: string
+        role:
+          type: string
+        gym_id:
+          type: string
+          format: uuid
+        is_active:
+          type: boolean
+        is_verified:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    UserActiveDTO:
+      type: object
+      required:
+        - is_active
+      properties:
+        is_active:
+          type: boolean
+          example: true
+
+    # Gym DTOs
+    GymCreationDTO:
+      type: object
+      required:
+        - name
+        - domain
+        - email
+        - phone
+      properties:
+        name:
+          type: string
+          example: "Olympus Gym"
+        domain:
+          type: string
+          example: "olympus"
+        email:
+          type: string
+          format: email
+          example: "contact@olympusgym.com"
+        phone:
+          type: string
+          example: "+1234567890"
+        address:
+          type: string
+          example: "123 Fitness Street"
+
+    GymUpdateDTO:
+      type: object
+      properties:
+        name:
+          type: string
+        email:
+          type: string
+          format: email
+        phone:
+          type: string
+        address:
+          type: string
+
+    GymResponseDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        name:
+          type: string
+        domain:
+          type: string
+        email:
+          type: string
+        phone:
+          type: string
+        address:
+          type: string
+        is_active:
+          type: boolean
+        created_at:
+          type: string
+          format: date-time
+        updated_at:
+          type: string
+          format: date-time
+
+    # Common API Response schemas
+    APIResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: ["success"]
+          example: "success"
+          description: "Response status"
+        message:
+          type: string
+          example: "Operation completed successfully"
+          description: "Human-readable message"
+        data:
+          description: "Response data (varies by endpoint)"
+
+    APIErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: ["error"]
+          example: "error"
+          description: "Response status"
+        message:
+          type: string
+          example: "An error occurred"
+          description: "Human-readable error message"
+        data:
+          type: object
+          properties:
+            code:
+              type: string
+              enum: ["BAD_REQUEST", "UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND", "CONFLICT", "INTERNAL_ERROR"]
+              example: "BAD_REQUEST"
+              description: "Error code"
+            error:
+              type: string
+              example: "Invalid input provided"
+              description: "Technical error details"
+              nullable: true
 
 paths:
-  # User routes
-  /user:
-    $ref: "/swagger/paths/user/user.yaml"
+  # Auth routes
+  /auth/login:
+    $ref: "./paths/auth/login.yaml"
 
-  /user/{id}:
-    $ref: "/swagger/paths/user/user-by-id.yaml"
+  /auth/refresh:
+    $ref: "./paths/auth/refresh.yaml"
 
-  /user/username/{username}:
-    $ref: "/swagger/paths/user/user-by-username.yaml"
+  /auth/logout:
+    $ref: "./paths/auth/logout.yaml"
 
-  /user/email/{email}:
-    $ref: "/swagger/paths/user/user-by-email.yaml"
+  /auth/validate:
+    $ref: "./paths/auth/validate.yaml"
 
-  /user/{id}/verify:
-    $ref: "/swagger/paths/user/user-verify.yaml"
+  # User routes (commented out until endpoint files are created)
+  # /user:
+  #   $ref: "./paths/user/user.yaml"
 
-  /user/{id}/active:
-    $ref: "/swagger/paths/user/user-active.yaml"
+  # /user/{id}:
+  #   $ref: "./paths/user/user-by-id.yaml"
 
-  # Gym routes
-  /gym:
-    $ref: "/swagger/paths/gym/gym.yaml"
+  # /user/username/{username}:
+  #   $ref: "./paths/user/user-by-username.yaml"
 
-  /gym/{id}:
-    $ref: "/swagger/paths/gym/gym-by-id.yaml"
+  # /user/email/{email}:
+  #   $ref: "./paths/user/user-by-email.yaml"
 
-  /gym/{id}/update:
-    $ref: "/swagger/paths/gym/gym-update.yaml"
+  # /user/{id}/verify:
+  #   $ref: "./paths/user/user-verify.yaml"
 
-  /gym/domain/{domain}:
-    $ref: "/swagger/paths/gym/gym-by-domain.yaml"
+  # /user/{id}/active:
+  #   $ref: "./paths/user/user-active.yaml"
 
-  /gym/{id}/activate:
-    $ref: "/swagger/paths/gym/gym-activate.yaml"
+  # Gym routes (commented out until endpoint files are created)  
+  # /gym:
+  #   $ref: "./paths/gym/gym.yaml"
 
-  /gym/{id}/deactivate:
-    $ref: "/swagger/paths/gym/gym-deactivate.yaml"
+  # /gym/{id}:
+  #   $ref: "./paths/gym/gym-by-id.yaml"
 
-  /gym/{id}/delete:
-    $ref: "/swagger/paths/gym/gym-delete.yaml"
+  # /gym/{id}/update:
+  #   $ref: "./paths/gym/gym-update.yaml"
+
+  # /gym/domain/{domain}:
+  #   $ref: "./paths/gym/gym-by-domain.yaml"
+
+  # /gym/{id}/activate:
+  #   $ref: "./paths/gym/gym-activate.yaml"
+
+  # /gym/{id}/deactivate:
+  #   $ref: "./paths/gym/gym-deactivate.yaml"
+
+  # /gym/{id}/delete:
+  #   $ref: "./paths/gym/gym-delete.yaml"

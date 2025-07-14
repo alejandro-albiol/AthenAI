@@ -1,0 +1,63 @@
+post:
+  tags:
+    - Authentication
+  summary: User logout
+  security:
+    - bearerAuth: []
+  description: Revoke refresh token and logout user
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            refresh_token:
+              type: string
+              description: Refresh token to revoke
+              example: "d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6"
+          required:
+            - refresh_token
+  responses:
+    '200':
+      description: Logout successful
+      content:
+        application/json:
+          schema:
+            allOf:
+              - $ref: "#/components/schemas/APIResponse"
+              - type: object
+                properties:
+                  data:
+                    type: object
+                    properties:
+                      success:
+                        type: boolean
+                        example: true
+                      message:
+                        type: string
+                        example: "User logged out successfully"
+          example:
+            status: "success"
+            message: "Logout successful"
+            data:
+              success: true
+              message: "User logged out successfully"
+    '400':
+      description: Bad request - Invalid payload
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIErrorResponse"
+    '401':
+      description: Unauthorized - Invalid or expired token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIErrorResponse"
+    '500':
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIErrorResponse"

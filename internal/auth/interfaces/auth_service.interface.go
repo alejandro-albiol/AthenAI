@@ -1,21 +1,19 @@
 package interfaces
 
-import "github.com/alejandro-albiol/athenai/internal/auth/dto"
+import (
+	"net/http"
 
-// AuthService interface defines authentication business logic
+	"github.com/alejandro-albiol/athenai/internal/auth/dto"
+	"github.com/alejandro-albiol/athenai/pkg/apierror"
+)
+
+// AuthServiceInterface defines authentication business logic with simplified approach
 type AuthServiceInterface interface {
-	// Platform admin authentication (admin.athenai.com)
-	LoginAdmin(credentials dto.LoginRequestDTO) (dto.LoginResponseDTO, error)
-
-	// Tenant user authentication (extracted from subdomain)
-	LoginTenantUser(gymDomain string, credentials dto.LoginRequestDTO) (dto.LoginResponseDTO, error)
+	// Single login method that checks X-Gym-ID header to determine authentication type
+	Login(r *http.Request, credentials dto.LoginRequestDTO) (*dto.LoginResponseDTO, *apierror.APIError)
 
 	// Token operations
-	ValidateToken(token string) (dto.TokenValidationResponseDTO, error)
-	RefreshToken(refreshReq dto.RefreshTokenRequestDTO) (dto.LoginResponseDTO, error)
-	Logout(logoutReq dto.LogoutRequestDTO) (dto.LogoutResponseDTO, error)
-
-	// Authorization checks
-	HasPlatformAccess(userID string) (bool, error)
-	HasTenantAccess(userID, gymDomain string, requiredRole string) (bool, error)
+	ValidateToken(token string) (*dto.TokenValidationResponseDTO, *apierror.APIError)
+	RefreshToken(refreshReq dto.RefreshTokenRequestDTO) (*dto.LoginResponseDTO, *apierror.APIError)
+	Logout(logoutReq dto.LogoutRequestDTO) *apierror.APIError
 }

@@ -164,3 +164,183 @@ GymActivateDTO:
     active:
       type: boolean
       example: true
+
+# Auth related schemas
+LoginRequestDTO:
+  type: object
+  required:
+    - email
+    - password
+  properties:
+    email:
+      type: string
+      format: email
+      example: "admin@athenai.com"
+      description: "User email address"
+    password:
+      type: string
+      format: password
+      example: "securePassword123"
+      description: "User password"
+
+LoginResponseDTO:
+  type: object
+  properties:
+    access_token:
+      type: string
+      example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+      description: "JWT access token (expires in 24 hours)"
+    refresh_token:
+      type: string
+      example: "d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6"
+      description: "Refresh token (expires in 30 days)"
+    user_info:
+      $ref: "#/components/schemas/UserInfoDTO"
+
+UserInfoDTO:
+  type: object
+  properties:
+    user_id:
+      type: string
+      format: uuid
+      example: "123e4567-e89b-12d3-a456-426614174000"
+      description: "User unique identifier"
+    username:
+      type: string
+      example: "johndoe"
+      description: "Username"
+    email:
+      type: string
+      format: email
+      example: "john@olympusgym.com"
+      description: "User email address"
+    user_type:
+      type: string
+      enum: ["platform_admin", "tenant_user"]
+      example: "tenant_user"
+      description: "Type of user account"
+    role:
+      type: string
+      enum: ["admin", "user", "guest"]
+      example: "admin"
+      description: "User role within gym (only for tenant users)"
+      nullable: true
+    gym_id:
+      type: string
+      format: uuid
+      example: "456e7890-e89b-12d3-a456-426614174000"
+      description: "Associated gym ID (only for tenant users)"
+      nullable: true
+
+RefreshTokenRequestDTO:
+  type: object
+  required:
+    - refresh_token
+  properties:
+    refresh_token:
+      type: string
+      example: "d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6"
+      description: "Valid refresh token"
+
+LogoutRequestDTO:
+  type: object
+  required:
+    - refresh_token
+  properties:
+    refresh_token:
+      type: string
+      example: "d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6"
+      description: "Refresh token to revoke"
+
+TokenValidationResponseDTO:
+  type: object
+  properties:
+    valid:
+      type: boolean
+      example: true
+      description: "Whether the token is valid"
+    claims:
+      $ref: "#/components/schemas/ClaimsDTO"
+    message:
+      type: string
+      example: "Token validation result"
+      description: "Validation result message"
+
+ClaimsDTO:
+  type: object
+  properties:
+    user_id:
+      type: string
+      format: uuid
+      example: "123e4567-e89b-12d3-a456-426614174000"
+    username:
+      type: string
+      example: "johndoe"
+    user_type:
+      type: string
+      enum: ["platform_admin", "tenant_user"]
+      example: "tenant_user"
+    gym_id:
+      type: string
+      format: uuid
+      example: "456e7890-e89b-12d3-a456-426614174000"
+      nullable: true
+    role:
+      type: string
+      enum: ["admin", "user", "guest"]
+      example: "admin"
+      nullable: true
+    is_active:
+      type: boolean
+      example: true
+    exp:
+      type: integer
+      format: int64
+      example: 1642248000
+      description: "Token expiration timestamp"      iat:
+      type: integer
+      format: int64
+      example: 1642161600
+      description: "Token issued at timestamp"
+
+# Common API Response schemas
+APIResponse:
+  type: object
+  properties:
+    status:
+      type: string
+      enum: ["success"]
+      example: "success"
+      description: "Response status"
+    message:
+      type: string
+      example: "Operation completed successfully"
+      description: "Human-readable message"
+    data:
+      description: "Response data (varies by endpoint)"
+
+APIErrorResponse:
+  type: object
+  properties:
+    status:
+      type: string
+      enum: ["error"]
+      example: "error"
+      description: "Response status"
+    message:
+      type: string
+      example: "An error occurred"
+      description: "Human-readable error message"
+    data:
+      type: object
+      properties:
+        code:
+          type: string
+          enum: ["BAD_REQUEST", "UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND", "CONFLICT", "INTERNAL_ERROR"]
+          example: "BAD_REQUEST"
+          description: "Error code"
+        error:
+          type: string
+          example: "Invalid input provided"
+          description: "Technical error details"
+          nullable: true

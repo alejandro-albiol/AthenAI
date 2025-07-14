@@ -1,28 +1,24 @@
 package dto
 
+import "github.com/golang-jwt/jwt/v5"
+
 // TokenValidationResponseDTO - Response from token validation
 type TokenValidationResponseDTO struct {
-	Valid   bool       `json:"valid"`
-	Claims  *ClaimsDTO `json:"claims,omitempty"`
-	Message string     `json:"message"`
+	Valid   bool      `json:"valid"`
+	Claims  ClaimsDTO `json:"claims,omitempty"`
+	Message string    `json:"message"`
 }
 
-// ClaimsDTO - JWT token claims
+// ClaimsDTO - JWT token claims (implements jwt.Claims)
 type ClaimsDTO struct {
-	UserID   string   `json:"user_id"`
-	Username string   `json:"username"`
-	UserType UserType `json:"user_type"`
+	UserID   string  `json:"user_id"`
+	Username string  `json:"username"`
+	UserType string  `json:"user_type"` // "platform_admin" or "tenant_user"
+	GymID    *string `json:"gym_id,omitempty"`
+	Role     *string `json:"role,omitempty"` // admin, user, guest
+	IsActive bool    `json:"is_active"`
 
-	// Platform admin claims
-	IsActive *bool `json:"is_active,omitempty"`
-
-	// Tenant user claims
-	GymDomain          *string `json:"gym_domain,omitempty"`
-	Role               *string `json:"role,omitempty"`
-	VerificationStatus *string `json:"verification_status,omitempty"`
-
-	ExpiresAt int64 `json:"exp"`
-	IssuedAt  int64 `json:"iat"`
+	jwt.RegisteredClaims
 }
 
 // RefreshTokenRequestDTO - Request to refresh access token
@@ -33,10 +29,4 @@ type RefreshTokenRequestDTO struct {
 // LogoutRequestDTO - Request to logout and revoke tokens
 type LogoutRequestDTO struct {
 	RefreshToken string `json:"refresh_token" validate:"required"`
-}
-
-// LogoutResponseDTO - Response after logout
-type LogoutResponseDTO struct {
-	Success bool   `json:"success"`
-	Message string `json:"message"`
 }

@@ -25,6 +25,12 @@ func main() {
 		log.Println("PORT undefined, using 8080")
 	}
 
+	host := os.Getenv("HOST")
+	if host == "" {
+		host = "localhost"
+		log.Println("HOST undefined, using localhost")
+	}
+
 	// Initialize database connection
 	db, err := database.NewPostgresDB()
 	if err != nil {
@@ -58,7 +64,8 @@ func main() {
 	FileServer(rootRouter, "/", frontendDir)
 	log.Println("Frontend served at /")
 
-	log.Printf("Server is running on port: %s", port)
+	log.Printf("Server is running on: http://%s:%s", host, port)
+	log.Printf("Documentation: http://%s:%s/swagger-ui/", host, port)
 	log.Fatal(http.ListenAndServe(":"+port, rootRouter))
 }
 

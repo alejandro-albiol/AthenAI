@@ -29,10 +29,10 @@ Each module follows **strict layering**: `repository → service → handler` wi
 
 ### Authentication Architecture
 
-**Subdomain-Based Multi-Tenancy**: Authentication routes based on subdomain automatically:
+**Header-Based Authentication**: Single login endpoint with automatic routing:
 
-- `athenai.com` → Platform admin (`public.admin` table)
-- `{gym_domain}.athenai.com` → Tenant users (`{gym_domain}.users` table)
+- **No `X-Gym-ID` header** → Platform admin (`public.admin` table)
+- **With `X-Gym-ID` header** → Tenant users (`{gym_domain}.users` table)
 
 **User Types**:
 
@@ -46,12 +46,27 @@ internal/auth/
 ├── dto/
 │   ├── login.dto.go      # LoginRequestDTO, LoginResponseDTO, UserInfoDTO
 │   ├── token.dto.go      # TokenValidationResponseDTO, ClaimsDTO, RefreshTokenRequestDTO
-│   └── repository.dto.go # AdminAuthDTO, TenantUserAuthDTO, GymDomainDTO, RefreshTokenDTO
+│   └── repository.dto.go # AdminAuthDTO, TenantUserAuthDTO, RefreshTokenDTO
+├── handler/              # Standard response patterns with error code enums
 ├── interfaces/           # AuthService, AuthRepository, AuthHandler contracts
-├── service/             # JWT generation, validation, subdomain routing
-├── handler/             # HTTP layer with subdomain-aware routing (to be implemented)
-└── repository/          # Database operations for both admin and tenant users (to be implemented)
+├── module/               # Self-contained dependency injection
+├── repository/           # Pure authentication operations
+├── router/               # RESTful endpoints: /login, /refresh, /logout, /validate
+└── service/              # Business logic orchestration with gym repository
 ```
+
+**Key Patterns**:
+
+- **Single endpoint**: `/auth/login` routes based on `X-Gym-ID` header presence
+- **Repository delegation**: Auth service uses gym repository for lookups
+- **Self-contained modules**: Each module manages its own dependencies
+- **JWT + Refresh tokens**: 24h access tokens, 30d refresh tokens
+- **Standard responses**: Uses `response.WriteAPIError()` and `response.WriteAPISuccess()`
+  ├── service/ # JWT generation, validation, subdomain routing
+  ├── handler/ # HTTP layer with subdomain-aware routing (to be implemented)
+  └── repository/ # Database operations for both admin and tenant users (to be implemented)
+
+````
 
 **Key Patterns**:
 
@@ -74,7 +89,7 @@ internal/module_name/
 ├── repository/    # Data layer - handles database operations, returns raw SQL errors
 ├── router/        # Chi router setup
 └── service/       # Business logic - transforms data, maps SQL errors to APIError
-```
+````
 
 ### Error Handling Pattern
 
@@ -188,11 +203,13 @@ func NewModuleModule(db *sql.DB) http.Handler {
 
 ## Key File References
 
-- **Module pattern**: `internal/gym/module/gym_module.go`
-- **Interface design**: `internal/gym/interfaces/*.go`
-- **Authentication**: `internal/auth/` (JWT-based subdomain routing)
+- **Module pattern**: `internal/gym/module/gym_module.go`, `internal/auth/module/auth_module.go`
+- **Interface design**: `internal/gym/interfaces/*.go`, `internal/auth/interfaces/*.go`
+- **Authentication**: `internal/auth/` (Header-based single-endpoint routing)
 - **Auth DTOs**: `internal/auth/dto/` (login, token, repository DTOs)
+- **Auth Documentation**: `docs/auth-module-architecture.md` (comprehensive architecture guide)
 - **Error handling**: `pkg/apierror/api_error.go`
+- **Standard responses**: `pkg/response/api_response.go`
 - **Testing examples**: `internal/gym/handler/gym_handler_test.go`
 - **Tenancy**: `internal/database/tenancy.go`
 - **Frontend integration**: `frontend/js/main.js` (ApiClient class)

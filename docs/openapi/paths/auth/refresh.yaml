@@ -1,0 +1,85 @@
+post:
+  tags:
+    - Authentication
+  summary: Refresh access token
+  security:
+    - bearerAuth: []
+  description: Generate a new access token using a valid refresh token
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          type: object
+          properties:
+            refresh_token:
+              type: string
+              description: Valid refresh token
+              example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+          required:
+            - refresh_token
+  responses:
+    '200':
+      description: Token refreshed successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Token refreshed successfully"
+              data:
+                type: object
+                properties:
+                  access_token:
+                    type: string
+                    description: New JWT access token
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  refresh_token:
+                    type: string
+                    description: Same refresh token (reused)
+                    example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+                  expires_at:
+                    type: string
+                    format: date-time
+                    description: New token expiration time
+                    example: "2025-07-15T10:30:00Z"
+                  user_info:
+                    type: object
+                    description: Updated user information
+                    properties:
+                      id:
+                        type: string
+                        example: "123e4567-e89b-12d3-a456-426614174000"
+                      username:
+                        type: string
+                        example: "admin"
+                      email:
+                        type: string
+                        example: "admin@athenai.com"
+                      user_type:
+                        type: string
+                        enum: ["platform_admin", "tenant_user"]
+                        example: "platform_admin"
+    '400':
+      description: Bad request - Invalid payload
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIErrorResponse"
+    '401':
+      description: Unauthorized - Invalid or expired refresh token
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIErrorResponse"
+    '500':
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIErrorResponse"

@@ -9,6 +9,7 @@ import (
 	"github.com/alejandro-albiol/athenai/internal/gym/dto"
 	"github.com/alejandro-albiol/athenai/internal/gym/interfaces"
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
+	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
 	"github.com/alejandro-albiol/athenai/pkg/response"
 )
 
@@ -23,14 +24,14 @@ func NewGymHandler(service interfaces.GymService) *GymHandler {
 func (h *GymHandler) CreateGym(w http.ResponseWriter, r *http.Request) {
 	var creationDTO dto.GymCreationDTO
 	if err := json.NewDecoder(r.Body).Decode(&creationDTO); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(response.APIResponse[any]{
-			Status:  "error",
-			Message: "Invalid request payload",
-			Data:    nil,
-		})
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeBadRequest,
+			"Invalid request payload",
+			err,
+		))
 		return
 	}
+
 	id, err := h.service.CreateGym(creationDTO)
 	if err != nil {
 		var apiErr *apierror.APIError
@@ -38,12 +39,11 @@ func (h *GymHandler) CreateGym(w http.ResponseWriter, r *http.Request) {
 			response.WriteAPIError(w, apiErr)
 			return
 		}
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(response.APIResponse[any]{
-			Status:  "error",
-			Message: "Internal server error when creating gym",
-			Data:    nil,
-		})
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeInternal,
+			"Internal server error when creating gym",
+			err,
+		))
 		return
 	}
 	response.WriteAPISuccess(w, "Gym created successfully", id)
@@ -57,12 +57,11 @@ func (h *GymHandler) GetGymByID(w http.ResponseWriter, r *http.Request, id strin
 			response.WriteAPIError(w, apiErr)
 			return
 		}
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(response.APIResponse[any]{
-			Status:  "error",
-			Message: "Internal server error when getting gym by id",
-			Data:    nil,
-		})
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeInternal,
+			"Internal server error when getting gym by id",
+			err,
+		))
 		return
 	}
 	response.WriteAPISuccess(w, "Gym found", gym)
@@ -76,12 +75,11 @@ func (h *GymHandler) GetGymByDomain(w http.ResponseWriter, r *http.Request, doma
 			response.WriteAPIError(w, apiErr)
 			return
 		}
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(response.APIResponse[any]{
-			Status:  "error",
-			Message: "Internal server error when getting gym by domain",
-			Data:    nil,
-		})
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeInternal,
+			"Internal server error when getting gym by domain",
+			err,
+		))
 		return
 	}
 	response.WriteAPISuccess(w, "Gym found", gym)
@@ -95,12 +93,11 @@ func (h *GymHandler) GetAllGyms(w http.ResponseWriter, r *http.Request) {
 			response.WriteAPIError(w, apiErr)
 			return
 		}
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(response.APIResponse[any]{
-			Status:  "error",
-			Message: "Internal server error when getting all gyms",
-			Data:    nil,
-		})
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeInternal,
+			"Internal server error when getting all gyms",
+			err,
+		))
 		return
 	}
 	response.WriteAPISuccess(w, "Gyms retrieved successfully", gyms)
@@ -109,14 +106,14 @@ func (h *GymHandler) GetAllGyms(w http.ResponseWriter, r *http.Request) {
 func (h *GymHandler) UpdateGym(w http.ResponseWriter, r *http.Request, id string) {
 	var updateDTO dto.GymUpdateDTO
 	if err := json.NewDecoder(r.Body).Decode(&updateDTO); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(response.APIResponse[any]{
-			Status:  "error",
-			Message: "Invalid request payload",
-			Data:    err,
-		})
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeBadRequest,
+			"Invalid request payload",
+			err,
+		))
 		return
 	}
+
 	updatedGym, err := h.service.UpdateGym(id, updateDTO)
 	if err != nil {
 		var apiErr *apierror.APIError
@@ -124,12 +121,11 @@ func (h *GymHandler) UpdateGym(w http.ResponseWriter, r *http.Request, id string
 			response.WriteAPIError(w, apiErr)
 			return
 		}
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(response.APIResponse[any]{
-			Status:  "error",
-			Message: "Internal server error when updating gym",
-			Data:    nil,
-		})
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeInternal,
+			"Internal server error when updating gym",
+			err,
+		))
 		return
 	}
 	response.WriteAPISuccess(w, "Gym updated successfully", updatedGym)
@@ -143,12 +139,11 @@ func (h *GymHandler) SetGymActive(w http.ResponseWriter, r *http.Request, id str
 			response.WriteAPIError(w, apiErr)
 			return
 		}
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(response.APIResponse[any]{
-			Status:  "error",
-			Message: "Internal server error when setting gym active",
-			Data:    err,
-		})
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeInternal,
+			"Internal server error when setting gym active",
+			err,
+		))
 		return
 	}
 	statusMsg := "deactivated"
@@ -166,12 +161,11 @@ func (h *GymHandler) DeleteGym(w http.ResponseWriter, r *http.Request, id string
 			response.WriteAPIError(w, apiErr)
 			return
 		}
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(response.APIResponse[any]{
-			Status:  "error",
-			Message: "Internal server error when deleting gym",
-			Data:    err,
-		})
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeInternal,
+			"Internal server error when deleting gym",
+			err,
+		))
 		return
 	}
 	response.WriteAPISuccess(w, "Gym deleted successfully", nil)

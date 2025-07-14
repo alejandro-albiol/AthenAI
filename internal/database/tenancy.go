@@ -21,6 +21,8 @@ func CreateTenantSchema(db *sql.DB, schemaName string) error {
 			id SERIAL PRIMARY KEY,
 			username TEXT NOT NULL,
 			email TEXT NOT NULL,
+			is_verified BOOLEAN NOT NULL DEFAULT false,
+			is_active BOOLEAN NOT NULL DEFAULT true,
 			password_hash TEXT NOT NULL,
 			role TEXT NOT NULL,
 			created_at TIMESTAMP NOT NULL DEFAULT NOW(),

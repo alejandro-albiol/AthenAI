@@ -6,44 +6,31 @@ import "time"
 
 // AdminAuthDTO - Platform admin authentication data from public.admin table
 type AdminAuthDTO struct {
-	ID           string     `json:"id"`
-	Username     string     `json:"username"`
-	PasswordHash string     `json:"password_hash"`
-	Email        string     `json:"email"`
-	IsActive     bool       `json:"is_active"`
-	LastLoginAt  *time.Time `json:"last_login_at,omitempty"`
-	CreatedAt    time.Time  `json:"created_at"`
+	ID        string    `json:"id"`
+	Username  string    `json:"username"`
+	Email     string    `json:"email"`
+	IsActive  bool      `json:"is_active"`
+	CreatedAt time.Time `json:"created_at"`
 }
 
-// TenantUserAuthDTO - Tenant user authentication data from tenant schema
+// TenantUserAuthDTO - Tenant user authentication data from {domain}.users table
 type TenantUserAuthDTO struct {
-	ID                 string     `json:"id"`
-	Username           string     `json:"username"`
-	PasswordHash       string     `json:"password_hash"`
-	Email              string     `json:"email"`
-	Role               string     `json:"role"`
-	VerificationStatus string     `json:"verification_status"`
-	IsActive           bool       `json:"is_active"`
-	GymID              string     `json:"gym_id"`
-	LastLoginAt        *time.Time `json:"last_login_at,omitempty"`
-	CreatedAt          time.Time  `json:"created_at"`
+	ID         string    `json:"id"`
+	Username   string    `json:"username"`
+	Email      string    `json:"email"`
+	Role       string    `json:"role"`        // admin, user, guest
+	IsVerified bool      `json:"is_verified"` // verification status
+	IsActive   bool      `json:"is_active"`
+	GymID      string    `json:"gym_id"`
+	CreatedAt  time.Time `json:"created_at"`
 }
 
-// GymDomainDTO - Gym domain validation data from gym table
-type GymDomainDTO struct {
-	ID       string `json:"id"`
-	Domain   string `json:"domain"`
-	Name     string `json:"name"`
-	Schema   string `json:"schema"`
-	IsActive bool   `json:"is_active"`
-}
-
-// RefreshTokenDTO - Stored refresh token data from refresh_tokens table
+// RefreshTokenDTO - Stored refresh token data
 type RefreshTokenDTO struct {
 	Token     string    `json:"token"`
 	UserID    string    `json:"user_id"`
-	UserType  UserType  `json:"user_type"`
-	GymDomain *string   `json:"gym_domain,omitempty"` // For tenant users
+	UserType  string    `json:"user_type"`        // "platform_admin" or "tenant_user"
+	GymID     *string   `json:"gym_id,omitempty"` // For tenant users
 	ExpiresAt time.Time `json:"expires_at"`
 	CreatedAt time.Time `json:"created_at"`
 }
