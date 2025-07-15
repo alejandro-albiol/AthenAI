@@ -11,14 +11,17 @@ import (
 	"github.com/alejandro-albiol/athenai/pkg/response"
 )
 
+type contextKey string
+
 const (
 	UserIDKey   contextKey = "userID"
 	UserTypeKey contextKey = "userType"
 	UserRoleKey contextKey = "userRole"
+	GymIDKey    contextKey = "gymID"
 )
 
-// AuthMiddleware handles JWT token validation and authorization in one place
-func AuthMiddleware(authService interfaces.AuthServiceInterface, requiredAccess string) func(http.Handler) http.Handler {
+// AuthMiddleware handles JWT token validation and puts user context in request
+func AuthMiddleware(authService interfaces.AuthServiceInterface) func(http.Handler) http.Handler {
 	return func(next http.Handler) http.Handler {
 		return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 			authHeader := r.Header.Get("Authorization")
@@ -73,110 +76,10 @@ func AuthMiddleware(authService interfaces.AuthServiceInterface, requiredAccess 
 				ctx = context.WithValue(ctx, UserRoleKey, *validationResponse.Claims.Role)
 			}
 
-			// Handle authorization based on requiredAccess
-			userType := string(validationResponse.Claims.UserType)
-
-			switch requiredAccess {
-			case "platform_admin":
-				// Only platform admins allowed
-				if userType != "platform_admin" {
-					apiErr := apierror.New(
-						errorcode_enum.CodeForbidden,
-						"Platform admin access required",
-						nil,
-					)
-					response.WriteAPIError(w, apiErr)
-					return
-				}
-
-			case "gym_operations":
-				// Platform admins (super admin mode) OR gym users with X-Gym-ID
-				gymID := r.Header.Get("X-Gym-ID")
-
-				switch userType {
-				case "platform_admin":
-					// Platform admins can access any gym if they provide gym ID
-					if gymID == "" {
-						apiErr := apierror.New(
-							errorcode_enum.CodeBadRequest,
-							"X-Gym-ID header required for gym operations",
-							nil,
-						)
-						response.WriteAPIError(w, apiErr)
-						return
-					}
-					ctx = context.WithValue(ctx, GymIDKey, gymID)
-					// Platform admin acts as super admin in this gym
-
-				case "tenant_user":
-					// Regular gym users need gym ID and must match their gym
-					if gymID == "" {
-						apiErr := apierror.New(
-							errorcode_enum.CodeBadRequest,
-							"X-Gym-ID header required for gym operations",
-							nil,
-						)
-						response.WriteAPIError(w, apiErr)
-						return
-					}
-					ctx = context.WithValue(ctx, GymIDKey, gymID)
-					// TODO: Validate that tenant user's gym matches the X-Gym-ID header
-
-				default:
-					apiErr := apierror.New(
-						errorcode_enum.CodeForbidden,
-						"Gym access required",
-						nil,
-					)
-					response.WriteAPIError(w, apiErr)
-					return
-				}
-
-			case "gym_admin":
-				// Platform admins (super admin mode) OR gym admins with X-Gym-ID
-				gymID := r.Header.Get("X-Gym-ID")
-				if gymID == "" {
-					apiErr := apierror.New(
-						errorcode_enum.CodeBadRequest,
-						"X-Gym-ID header required for admin operations",
-						nil,
-					)
-					response.WriteAPIError(w, apiErr)
-					return
-				}
-
+			// Store gym ID from header if present
+			gymID := r.Header.Get("X-Gym-ID")
+			if gymID != "" {
 				ctx = context.WithValue(ctx, GymIDKey, gymID)
-
-				switch userType {
-				case "platform_admin":
-					// Platform admin acts as super admin in any gym
-
-				case "tenant_user":
-					// Regular gym user must have admin role
-					userRole := ""
-					if validationResponse.Claims.Role != nil {
-						userRole = *validationResponse.Claims.Role
-					}
-					if userRole != "admin" {
-						apiErr := apierror.New(
-							errorcode_enum.CodeForbidden,
-							"Gym admin role required",
-							nil,
-						)
-						response.WriteAPIError(w, apiErr)
-						return
-					}
-					// TODO: Validate that tenant user's gym matches the X-Gym-ID header
-
-				default:
-					apiErr := apierror.New(
-						errorcode_enum.CodeForbidden,
-						"Admin access required",
-						nil,
-					)
-					response.WriteAPIError(w, apiErr)
-					return
-				}
 			}
 
 			next.ServeHTTP(w, r.WithContext(ctx))
@@ -206,4 +109,29 @@ func GetUserRole(r *http.Request) string {
 		return userRole
 	}
 	return ""
+}
+
+// GetGymID helper to get gym ID from request context
+func GetGymID(r *http.Request) string {
+	if gymID, ok := r.Context().Value(GymIDKey).(string); ok {
+		return gymID
+	}
+	return ""
+}
+
+// IsPlatformAdmin checks if the current user is a platform admin
+func IsPlatformAdmin(r *http.Request) bool {
+	return GetUserType(r) == "platform_admin"
+}
+
+// IsGymAdmin checks if the current user is a gym admin (platform admin OR tenant user with admin role)
+func IsGymAdmin(r *http.Request) bool {
+	userType := GetUserType(r)
+	if userType == "platform_admin" {
+		return true
+	}
+	if userType == "tenant_user" {
+		return GetUserRole(r) == "admin"
+	}
+	return false
 }

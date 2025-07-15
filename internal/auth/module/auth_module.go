@@ -6,14 +6,21 @@ import (
 	"os"
 
 	authhandler "github.com/alejandro-albiol/athenai/internal/auth/handler"
+	"github.com/alejandro-albiol/athenai/internal/auth/interfaces"
 	authrepository "github.com/alejandro-albiol/athenai/internal/auth/repository"
 	authrouter "github.com/alejandro-albiol/athenai/internal/auth/router"
 	authservice "github.com/alejandro-albiol/athenai/internal/auth/service"
 	gymrepository "github.com/alejandro-albiol/athenai/internal/gym/repository"
 )
 
-// NewAuthModule creates a new auth module with all dependencies wired and returns the router
-func NewAuthModule(db *sql.DB) http.Handler {
+// AuthModule holds the auth service and router
+type AuthModule struct {
+	Service interfaces.AuthServiceInterface
+	Router  http.Handler
+}
+
+// NewAuthModule creates a new auth module with all dependencies wired and returns both service and router
+func NewAuthModule(db *sql.DB) *AuthModule {
 	// Create auth repository
 	authRepo := authrepository.NewAuthRepository(db)
 
@@ -32,6 +39,11 @@ func NewAuthModule(db *sql.DB) http.Handler {
 	// Create handler
 	handler := authhandler.NewAuthHandler(service)
 
-	// Return router with all endpoints wired
-	return authrouter.NewAuthRouter(handler)
+	// Create router with all endpoints wired
+	router := authrouter.NewAuthRouter(handler)
+
+	return &AuthModule{
+		Service: service,
+		Router:  router,
+	}
 }

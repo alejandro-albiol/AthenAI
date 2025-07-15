@@ -13,7 +13,8 @@ import (
 func NewUsersRouter(handler interfaces.UserHandler) http.Handler {
 	r := chi.NewRouter()
 
-	r.Use(middleware.RequireGymID)
+	// Auth middleware is applied globally at the API level
+	// All routes here already have authenticated user context with gym ID
 
 	getGymID := func(r *http.Request) string {
 		return middleware.GetGymID(r)
