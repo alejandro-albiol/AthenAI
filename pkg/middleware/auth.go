@@ -94,7 +94,7 @@ func AuthMiddleware(authService interfaces.AuthServiceInterface, requiredAccess 
 				gymID := r.Header.Get("X-Gym-ID")
 
 				switch userType {
-case "platform_admin":
+				case "platform_admin":
 					// Platform admins can access any gym if they provide gym ID
 					if gymID == "" {
 						apiErr := apierror.New(
@@ -148,7 +148,7 @@ case "platform_admin":
 				ctx = context.WithValue(ctx, GymIDKey, gymID)
 
 				switch userType {
-case "platform_admin":
+				case "platform_admin":
 					// Platform admin acts as super admin in any gym
 
 				case "tenant_user":

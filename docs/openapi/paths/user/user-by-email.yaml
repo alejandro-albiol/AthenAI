@@ -1,5 +1,6 @@
 get:
-  tags:
+  tag          schema:
+            $ref: "../../openapi.yaml#/components/schemas/UserResponseDTO"
     - User
   summary: Get user by email
   security:

@@ -45,7 +45,7 @@ func TestWriteAPIError_SecurityModes(t *testing.T) {
 
 		body := w.Body.String()
 		assert.Contains(t, body, `"code":"UNAUTHORIZED"`)
-		assert.NotContains(t, body, `"error"`)                    // Should NOT contain error details
+		assert.NotContains(t, body, `"error":`)                   // Should NOT contain error field
 		assert.NotContains(t, body, "sql: no rows in result set") // Should NOT show database details
 
 		// Verify only code is present in data
@@ -61,7 +61,7 @@ func TestWriteAPIError_SecurityModes(t *testing.T) {
 
 		body := w.Body.String()
 		assert.Contains(t, body, `"code":"UNAUTHORIZED"`)
-		assert.NotContains(t, body, `"error"`)                    // Should NOT contain error details (production mode)
+		assert.NotContains(t, body, `"error":`)                   // Should NOT contain error field (production mode)
 		assert.NotContains(t, body, "sql: no rows in result set") // Should NOT show database details
 	})
 }

@@ -185,7 +185,7 @@ func TestVerifyUser(t *testing.T) {
 					apierror.New(errorcode_enum.CodeConflict, "User is already verified", nil),
 				)
 			},
-			wantStatus: http.StatusBadRequest,
+			wantStatus: http.StatusConflict,
 		},
 	}
 
@@ -248,7 +248,7 @@ func TestGetAllUsers(t *testing.T) {
 				mockService.On("GetAllUsers", "gym123").Return([]dto.UserResponseDTO{},
 					apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve users", nil))
 			},
-			wantStatus: http.StatusBadRequest,
+			wantStatus: http.StatusInternalServerError,
 		},
 	}
 
@@ -626,7 +626,7 @@ func TestSetUserActive(t *testing.T) {
 				mockService.On("SetUserActive", "gym123", "user123", true).Return(
 					apierror.New(errorcode_enum.CodeConflict, "User is already active", nil))
 			},
-			wantStatus: http.StatusBadRequest,
+			wantStatus: http.StatusConflict,
 		},
 		{
 			name:   "internal server error",

@@ -16,7 +16,7 @@ put:
       content:
         application/json:
           schema:
-            $ref: "../../components/schemas.yaml#/GymResponseDTO"
+            $ref: "../../openapi.yaml#/components/schemas/GymResponseDTO"
     "400":
       $ref: "../../components/responses.yaml#/BadRequest"
     "404":

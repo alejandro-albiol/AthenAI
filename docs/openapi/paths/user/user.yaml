@@ -20,13 +20,13 @@ get:
           schema:
             type: array
             items:
-              $ref: "/swagger/components/schemas.yaml#/UserResponseDTO"
+              $ref: "../../openapi.yaml#/components/schemas/UserResponseDTO"
     "400":
-      $ref: "/swagger/components/responses.yaml#/BadRequest"
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
     "401":
-      $ref: "/swagger/components/responses.yaml#/Unauthorized"
+      $ref: "../../openapi.yaml#/components/responses/Unauthorized"
     "403":
-      $ref: "/swagger/components/responses.yaml#/Forbidden"
+      $ref: "../../openapi.yaml#/components/responses/Forbidden"
 
 post:
   tags:
@@ -47,7 +47,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "/swagger/components/schemas.yaml#/UserCreationDTO"
+          $ref: "../../openapi.yaml#/components/schemas/UserCreationDTO"
   
   responses:
     "201":

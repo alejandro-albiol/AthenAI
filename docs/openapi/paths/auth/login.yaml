@@ -1,11 +1,11 @@
 post:
+  tags:
+    - Authentication
   summary: "Single login endpoint"
   description: |
     Unified login endpoint that supports both platform administrators and tenant users.
     - **Without X-Gym-ID header**: Authenticates platform administrator against public.admin table
     - **With X-Gym-ID header**: Looks up gym and authenticates tenant user against {gym_domain}.users table
-  tags:
-    - Authentication
   parameters:
     - name: X-Gym-ID
       in: header
@@ -20,19 +20,19 @@ post:
     content:
       application/json:
         schema:
-          $ref: "#/components/schemas/LoginRequestDTO"
+          $ref: "../../openapi.yaml#/components/schemas/LoginRequestDTO"
         examples:
           platform_admin:
             summary: "Platform Admin Login"
             description: "Login as platform administrator (no X-Gym-ID header)"
             value:
-              email: "admin@athenai.com"
+              username: "admin"
               password: "adminPassword123"
           tenant_user:
             summary: "Tenant User Login"
             description: "Login as gym user (requires X-Gym-ID header)"
             value:
-              email: "john@olympusgym.com"
+              username: "johndoe"
               password: "userPassword123"
   responses:
     '200':
@@ -41,11 +41,11 @@ post:
         application/json:
           schema:
             allOf:
-              - $ref: "#/components/schemas/APIResponse"
+              - $ref: "../../openapi.yaml#/components/schemas/APIResponse"
               - type: object
                 properties:
                   data:
-                    $ref: "#/components/schemas/LoginResponseDTO"
+                    $ref: "../../openapi.yaml#/components/schemas/LoginResponseDTO"
           examples:
             platform_admin_success:
               summary: "Platform Admin Login Success"
@@ -82,7 +82,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/APIErrorResponse"
+            $ref: "../../openapi.yaml#/components/schemas/APIErrorResponse"
           example:
             status: "error"
             message: "Invalid request body"
@@ -94,7 +94,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/APIErrorResponse"
+            $ref: "../../openapi.yaml#/components/schemas/APIErrorResponse"
           examples:
             invalid_credentials:
               summary: "Invalid Credentials"
@@ -117,7 +117,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/APIErrorResponse"
+            $ref: "../../openapi.yaml#/components/schemas/APIErrorResponse"
           example:
             status: "error"
             message: "Gym is not active"
@@ -128,7 +128,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/APIErrorResponse"
+            $ref: "../../openapi.yaml#/components/schemas/APIErrorResponse"
           example:
             status: "error"
             message: "Gym not found"
@@ -140,7 +140,7 @@ post:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/APIErrorResponse"
+            $ref: "../../openapi.yaml#/components/schemas/APIErrorResponse"
           example:
             status: "error"
             message: "Failed to generate token"

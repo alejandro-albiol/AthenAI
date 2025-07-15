@@ -27,6 +27,17 @@ func WriteAPISuccess(w http.ResponseWriter, message string, data any) {
 	})
 }
 
+// WriteAPICreated writes a standardized JSON success response with 201 status code.
+func WriteAPICreated(w http.ResponseWriter, message string, data any) {
+	w.Header().Set("Content-Type", "application/json; charset=utf-8")
+	w.WriteHeader(http.StatusCreated)
+	json.NewEncoder(w).Encode(APIResponse[any]{
+		Status:  "success",
+		Message: message,
+		Data:    data,
+	})
+}
+
 func WriteAPIError(w http.ResponseWriter, apiErr *apierror.APIError) {
 	w.Header().Set("Content-Type", "application/json; charset=utf-8")
 	status := http.StatusBadRequest

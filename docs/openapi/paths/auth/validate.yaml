@@ -1,8 +1,8 @@
 get:
-  summary: "Validate JWT token"
-  description: "Validate a JWT access token and return claims information"
   tags:
     - Authentication
+  summary: "Validate JWT token"
+  description: "Validate a JWT access token and return claims information"
   security:
     - bearerAuth: []
   responses:
@@ -12,11 +12,11 @@ get:
         application/json:
           schema:
             allOf:
-              - $ref: "#/components/schemas/APIResponse"
+              - $ref: "../../openapi.yaml#/components/schemas/APIResponse"
               - type: object
                 properties:
                   data:
-                    $ref: "#/components/schemas/TokenValidationResponseDTO"
+                    $ref: "../../openapi.yaml#/components/schemas/TokenValidationResponseDTO"
           examples:
             valid_token:
               summary: "Valid Token"
@@ -57,7 +57,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/APIErrorResponse"
+            $ref: "../../openapi.yaml#/components/schemas/APIErrorResponse"
           examples:
             missing_header:
               summary: "Missing Authorization Header"

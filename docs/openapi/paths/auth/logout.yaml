@@ -25,7 +25,7 @@ post:
         application/json:
           schema:
             allOf:
-              - $ref: "#/components/schemas/APIResponse"
+              - $ref: "../../openapi.yaml#/components/schemas/APIResponse"
               - type: object
                 properties:
                   data:
@@ -48,16 +48,16 @@ post:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/APIErrorResponse"
+            $ref: "../../openapi.yaml#/components/schemas/APIErrorResponse"
     '401':
       description: Unauthorized - Invalid or expired token
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/APIErrorResponse"
+            $ref: "../../openapi.yaml#/components/schemas/APIErrorResponse"
     '500':
       description: Internal server error
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/APIErrorResponse"
+            $ref: "../../openapi.yaml#/components/schemas/APIErrorResponse"

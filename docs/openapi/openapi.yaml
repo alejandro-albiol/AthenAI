@@ -9,14 +9,6 @@ servers:
   - url: http://localhost:8080/api/v1
     description: Development server
 
-tags:
-  - name: Authentication
-    description: User authentication and token management
-  - name: User Management
-    description: Tenant user management operations
-  - name: Gym Management
-    description: Gym tenant management operations
-
 components:
   securitySchemes:
     bearerAuth:
@@ -29,24 +21,60 @@ components:
       in: header
       name: X-Gym-ID
       description: Gym ID for tenant isolation and login routing
-  
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIErrorResponse"
+    Unauthorized:
+      description: Authentication required
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIErrorResponse"
+    Forbidden:
+      description: Insufficient permissions
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIErrorResponse"
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIErrorResponse"
+    Conflict:
+      description: Resource conflict
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIErrorResponse"
+    Created:
+      description: Resource created successfully
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIResponse"
+
   schemas:
-    # Auth DTOs
     LoginRequestDTO:
       type: object
       required:
-        - email
+        - username
         - password
       properties:
-        email:
+        username:
           type: string
-          format: email
-          example: "admin@athenai.com"
-          description: "User email address"
+          example: "admin"
+          description: "Username for authentication"
         password:
           type: string
           format: password
-          example: "adminPassword123"
+          example: "securePassword123"
           description: "User password"
 
     LoginResponseDTO:
@@ -55,11 +83,11 @@ components:
         access_token:
           type: string
           example: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
-          description: "JWT access token"
+          description: "JWT access token (expires in 24 hours)"
         refresh_token:
           type: string
           example: "d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6"
-          description: "Refresh token for obtaining new access tokens"
+          description: "Refresh token (expires in 30 days)"
         user_info:
           $ref: "#/components/schemas/UserInfoDTO"
 
@@ -70,27 +98,74 @@ components:
           type: string
           format: uuid
           example: "123e4567-e89b-12d3-a456-426614174000"
+          description: "User unique identifier"
         username:
           type: string
-          example: "admin"
+          example: "johndoe"
+          description: "Username"
         email:
           type: string
           format: email
-          example: "admin@athenai.com"
+          example: "john@olympusgym.com"
+          description: "User email address"
         user_type:
           type: string
           enum: ["platform_admin", "tenant_user"]
-          example: "platform_admin"
+          example: "tenant_user"
+          description: "Type of user account"
         role:
           type: string
           enum: ["admin", "user", "guest"]
           example: "admin"
+          description: "User role within gym (only for tenant users)"
           nullable: true
         gym_id:
           type: string
           format: uuid
           example: "456e7890-e89b-12d3-a456-426614174000"
+          description: "Associated gym ID (only for tenant users)"
           nullable: true
+
+    APIResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: ["success"]
+          example: "success"
+          description: "Response status"
+        message:
+          type: string
+          example: "Operation completed successfully"
+          description: "Human-readable message"
+        data:
+          description: "Response data (varies by endpoint)"
+
+    APIErrorResponse:
+      type: object
+      properties:
+        status:
+          type: string
+          enum: ["error"]
+          example: "error"
+          description: "Response status"
+        message:
+          type: string
+          example: "An error occurred"
+          description: "Human-readable error message"
+        data:
+          type: object
+          properties:
+            code:
+              type: string
+              enum: ["BAD_REQUEST", "UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND", "CONFLICT", "INTERNAL_ERROR"]
+              example: "BAD_REQUEST"
+              description: "Error code"
+            error:
+              type: string
+              example: "Invalid input provided"
+              description: "Technical error details"
+              nullable: true
 
     TokenValidationResponseDTO:
       type: object
@@ -144,7 +219,7 @@ components:
           example: 1642161600
           description: "Token issued at timestamp"
 
-    # User DTOs
+    # User related schemas
     UserCreationDTO:
       type: object
       required:
@@ -186,141 +261,118 @@ components:
       properties:
         id:
           type: string
-          format: uuid
         username:
           type: string
         email:
           type: string
         role:
           type: string
-        gym_id:
+        gymId:
           type: string
-          format: uuid
-        is_active:
+        verified:
           type: boolean
-        is_verified:
+        isActive:
           type: boolean
-        created_at:
+        createdAt:
           type: string
           format: date-time
-        updated_at:
+        updatedAt:
           type: string
           format: date-time
 
     UserActiveDTO:
       type: object
       required:
-        - is_active
+        - active
       properties:
-        is_active:
+        active:
           type: boolean
           example: true
 
-    # Gym DTOs
+    # Gym related schemas
     GymCreationDTO:
       type: object
       required:
         - name
         - domain
-        - email
-        - phone
+        - admin_username
+        - admin_email
+        - admin_password
       properties:
         name:
           type: string
-          example: "Olympus Gym"
+          example: "Fitness First"
+          description: "Gym name"
         domain:
           type: string
-          example: "olympus"
-        email:
+          example: "fitnessfirst"
+          description: "Unique domain identifier for the gym"
+        admin_username:
+          type: string
+          example: "admin"
+          description: "Username for the gym admin"
+        admin_email:
           type: string
           format: email
-          example: "contact@olympusgym.com"
-        phone:
+          example: "admin@fitnessfirst.com"
+          description: "Email for the gym admin"
+        admin_password:
           type: string
-          example: "+1234567890"
-        address:
-          type: string
-          example: "123 Fitness Street"
+          format: password
+          example: "securePassword123"
+          description: "Password for the gym admin"
 
     GymUpdateDTO:
       type: object
       properties:
         name:
           type: string
-        email:
-          type: string
-          format: email
-        phone:
-          type: string
-        address:
-          type: string
+          example: "New Gym Name"
+          description: "Updated gym name"
 
     GymResponseDTO:
       type: object
       properties:
-        id:
+        gym_id:
           type: string
           format: uuid
+          example: "123e4567-e89b-12d3-a456-426614174000"
         name:
           type: string
+          example: "Fitness First"
         domain:
           type: string
-        email:
-          type: string
-        phone:
-          type: string
-        address:
-          type: string
+          example: "fitnessfirst"
         is_active:
           type: boolean
+          example: true
         created_at:
           type: string
           format: date-time
+          example: "2024-01-15T10:30:00Z"
         updated_at:
           type: string
           format: date-time
+          example: "2024-01-15T10:30:00Z"
 
-    # Common API Response schemas
-    APIResponse:
+    GymActivateDTO:
       type: object
+      required:
+        - active
       properties:
-        status:
-          type: string
-          enum: ["success"]
-          example: "success"
-          description: "Response status"
-        message:
-          type: string
-          example: "Operation completed successfully"
-          description: "Human-readable message"
-        data:
-          description: "Response data (varies by endpoint)"
+        active:
+          type: boolean
+          example: true
 
-    APIErrorResponse:
+    RefreshTokenRequestDTO:
       type: object
+      required:
+        - refresh_token
       properties:
-        status:
+        refresh_token:
           type: string
-          enum: ["error"]
-          example: "error"
-          description: "Response status"
-        message:
-          type: string
-          example: "An error occurred"
-          description: "Human-readable error message"
-        data:
-          type: object
-          properties:
-            code:
-              type: string
-              enum: ["BAD_REQUEST", "UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND", "CONFLICT", "INTERNAL_ERROR"]
-              example: "BAD_REQUEST"
-              description: "Error code"
-            error:
-              type: string
-              example: "Invalid input provided"
-              description: "Technical error details"
-              nullable: true
+          example: "d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6"
+          description: "Valid refresh token"
 
 paths:
   # Auth routes
@@ -336,43 +388,43 @@ paths:
   /auth/validate:
     $ref: "./paths/auth/validate.yaml"
 
-  # User routes (commented out until endpoint files are created)
-  # /user:
-  #   $ref: "./paths/user/user.yaml"
+  # User routes
+  /user:
+    $ref: "./paths/user/user.yaml"
 
-  # /user/{id}:
-  #   $ref: "./paths/user/user-by-id.yaml"
+  /user/{id}:
+    $ref: "./paths/user/user-by-id.yaml"
 
-  # /user/username/{username}:
-  #   $ref: "./paths/user/user-by-username.yaml"
+  /user/username/{username}:
+    $ref: "./paths/user/user-by-username.yaml"
 
-  # /user/email/{email}:
-  #   $ref: "./paths/user/user-by-email.yaml"
+  /user/email/{email}:
+    $ref: "./paths/user/user-by-email.yaml"
 
-  # /user/{id}/verify:
-  #   $ref: "./paths/user/user-verify.yaml"
+  /user/{id}/verify:
+    $ref: "./paths/user/user-verify.yaml"
 
-  # /user/{id}/active:
-  #   $ref: "./paths/user/user-active.yaml"
+  /user/{id}/active:
+    $ref: "./paths/user/user-active.yaml"
 
-  # Gym routes (commented out until endpoint files are created)  
-  # /gym:
-  #   $ref: "./paths/gym/gym.yaml"
+  # Gym routes
+  /gym:
+    $ref: "./paths/gym/gym.yaml"
 
-  # /gym/{id}:
-  #   $ref: "./paths/gym/gym-by-id.yaml"
+  /gym/{id}:
+    $ref: "./paths/gym/gym-by-id.yaml"
 
-  # /gym/{id}/update:
-  #   $ref: "./paths/gym/gym-update.yaml"
+  /gym/{id}/update:
+    $ref: "./paths/gym/gym-update.yaml"
 
-  # /gym/domain/{domain}:
-  #   $ref: "./paths/gym/gym-by-domain.yaml"
+  /gym/domain/{domain}:
+    $ref: "./paths/gym/gym-by-domain.yaml"
 
-  # /gym/{id}/activate:
-  #   $ref: "./paths/gym/gym-activate.yaml"
+  /gym/{id}/activate:
+    $ref: "./paths/gym/gym-activate.yaml"
 
-  # /gym/{id}/deactivate:
-  #   $ref: "./paths/gym/gym-deactivate.yaml"
+  /gym/{id}/deactivate:
+    $ref: "./paths/gym/gym-deactivate.yaml"
 
-  # /gym/{id}/delete:
-  #   $ref: "./paths/gym/gym-delete.yaml"
+  /gym/{id}/delete:
+    $ref: "./paths/gym/gym-delete.yaml"

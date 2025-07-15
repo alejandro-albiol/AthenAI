@@ -3,6 +3,7 @@ package handler
 import (
 	"encoding/json"
 	"net/http"
+	"strings"
 
 	authdto "github.com/alejandro-albiol/athenai/internal/auth/dto"
 	authinterfaces "github.com/alejandro-albiol/athenai/internal/auth/interfaces"
@@ -43,7 +44,6 @@ func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) ValidateToken(w http.ResponseWriter, r *http.Request) {
-
 	authHeader := r.Header.Get("Authorization")
 	if authHeader == "" {
 		response.WriteAPIError(w, apierror.New(
@@ -54,8 +54,10 @@ func (h *AuthHandler) ValidateToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	const bearerPrefix = "Bearer "
-	if len(authHeader) < len(bearerPrefix) || authHeader[:len(bearerPrefix)] != bearerPrefix {
+	// Improved token extraction with trimming
+	token := strings.TrimPrefix(authHeader, "Bearer ")
+	if token == authHeader {
+		// TrimPrefix didn't change the string, meaning "Bearer " prefix was not found
 		response.WriteAPIError(w, apierror.New(
 			errorcode_enum.CodeUnauthorized,
 			"Invalid authorization header format",
@@ -64,7 +66,15 @@ func (h *AuthHandler) ValidateToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	token := authHeader[len(bearerPrefix):]
+	token = strings.TrimSpace(token)
+	if token == "" {
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeUnauthorized,
+			"Empty token provided",
+			nil,
+		))
+		return
+	}
 
 	validationResp, apiErr := h.authService.ValidateToken(token)
 	if apiErr != nil {
@@ -72,7 +82,7 @@ func (h *AuthHandler) ValidateToken(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.WriteAPISuccess(w, "Token validation result", validationResp)
+	response.WriteAPISuccess(w, "Token validation successful", validationResp)
 }
 
 func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {

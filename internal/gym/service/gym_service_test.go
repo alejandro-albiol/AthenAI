@@ -2,6 +2,7 @@ package service_test
 
 import (
 	"database/sql"
+	"os"
 	"testing"
 
 	"github.com/alejandro-albiol/athenai/internal/gym/dto"
@@ -49,6 +50,15 @@ func (m *MockGymRepository) SetGymActive(id string, active bool) error {
 func (m *MockGymRepository) DeleteGym(id string) error {
 	args := m.Called(id)
 	return args.Error(0)
+}
+
+func TestMain(m *testing.M) {
+	// Set test environment to skip database operations
+	os.Setenv("APP_ENV", "test")
+	defer os.Unsetenv("APP_ENV")
+
+	// Run tests
+	m.Run()
 }
 
 func TestCreateGym(t *testing.T) {
@@ -166,10 +176,10 @@ func TestUpdateGym(t *testing.T) {
 }
 
 func TestDeleteGym(t *testing.T) {
-	mockRepo := new(MockGymRepository)
-	svc := service.NewGymService(mockRepo)
-
 	t.Run("successful deletion", func(t *testing.T) {
+		mockRepo := new(MockGymRepository)
+		svc := service.NewGymService(mockRepo)
+
 		mockRepo.On("GetGymByID", "gym123").Return(dto.GymResponseDTO{ID: "gym123"}, nil)
 		mockRepo.On("DeleteGym", "gym123").Return(nil)
 
@@ -178,6 +188,9 @@ func TestDeleteGym(t *testing.T) {
 	})
 
 	t.Run("gym not found", func(t *testing.T) {
+		mockRepo := new(MockGymRepository)
+		svc := service.NewGymService(mockRepo)
+
 		mockRepo.On("GetGymByID", "nonexistent").Return(dto.GymResponseDTO{}, sql.ErrNoRows)
 
 		err := svc.DeleteGym("nonexistent")

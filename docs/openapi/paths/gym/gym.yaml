@@ -16,7 +16,7 @@ get:
           schema:
             type: array
             items:
-              $ref: "/swagger/components/schemas.yaml#/GymResponseDTO"
+              $ref: "../../openapi.yaml#/components/schemas/GymResponseDTO"
 
 post:
   tags:
@@ -32,7 +32,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "/swagger/components/schemas.yaml#/GymCreationDTO"
+          $ref: "../../openapi.yaml#/components/schemas/GymCreationDTO"
   responses:
     "201":
       description: Gym created successfully

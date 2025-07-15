@@ -9,7 +9,7 @@ post:
     content:
       application/json:
         schema:
-          $ref: "/swagger/components/schemas.yaml#/UserActiveDTO"
+          $ref: "../../openapi.yaml#/components/schemas/UserActiveDTO"
   responses:
     "200":
       description: User active status updated successfully

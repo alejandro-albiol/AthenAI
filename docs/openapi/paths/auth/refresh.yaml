@@ -70,16 +70,16 @@ post:
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/APIErrorResponse"
+            $ref: "../../openapi.yaml#/components/schemas/APIErrorResponse"
     '401':
       description: Unauthorized - Invalid or expired refresh token
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/APIErrorResponse"
+            $ref: "../../openapi.yaml#/components/schemas/APIErrorResponse"
     '500':
       description: Internal server error
       content:
         application/json:
           schema:
-            $ref: "#/components/schemas/APIErrorResponse"
+            $ref: "../../openapi.yaml#/components/schemas/APIErrorResponse"

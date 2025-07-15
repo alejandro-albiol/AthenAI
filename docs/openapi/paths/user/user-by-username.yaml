@@ -10,6 +10,6 @@ get:
       content:
         application/json:
           schema:
-            $ref: "/swagger/components/schemas.yaml#/UserResponseDTO"
+            $ref: "../../openapi.yaml#/components/schemas/UserResponseDTO"
     "404":
       $ref: "/swagger/components/responses.yaml#/NotFound"

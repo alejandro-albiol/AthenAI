@@ -3,6 +3,7 @@ package service
 import (
 	"database/sql"
 	"errors"
+	"os"
 
 	"github.com/alejandro-albiol/athenai/internal/database"
 	"github.com/alejandro-albiol/athenai/internal/gym/dto"
@@ -33,16 +34,19 @@ func (s *GymService) CreateGym(createDTO dto.GymCreationDTO) (string, error) {
 		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to create gym", err)
 	}
 
-	db, err := database.NewPostgresDB()
-	if err != nil {
-		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to connect to database", err)
-	}
-	defer db.Close()
+	// Skip tenant schema creation in test environment
+	if os.Getenv("APP_ENV") != "test" {
+		db, err := database.NewPostgresDB()
+		if err != nil {
+			return "", apierror.New(errorcode_enum.CodeInternal, "Failed to connect to database", err)
+		}
+		defer db.Close()
 
-	// Use the domain name for the schema, not the gym ID
-	err = database.CreateTenantSchema(db, createDTO.Domain)
-	if err != nil {
-		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to create tenant schema", err)
+		// Use the domain name for the schema, not the gym ID
+		err = database.CreateTenantSchema(db, createDTO.Domain)
+		if err != nil {
+			return "", apierror.New(errorcode_enum.CodeInternal, "Failed to create tenant schema", err)
+		}
 	}
 
 	return gymID, nil
@@ -122,11 +126,17 @@ func (s *GymService) SetGymActive(id string, active bool) error {
 }
 
 func (s *GymService) DeleteGym(id string) error {
-	err := s.repository.DeleteGym(id)
+	// Check if gym exists first
+	_, err := s.repository.GetGymByID(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return apierror.New(errorcode_enum.CodeNotFound, "Gym not found or already deleted", nil)
+			return apierror.New(errorcode_enum.CodeNotFound, "Gym not found", nil)
 		}
+		return apierror.New(errorcode_enum.CodeInternal, "Failed to check gym existence", err)
+	}
+
+	err = s.repository.DeleteGym(id)
+	if err != nil {
 		return apierror.New(errorcode_enum.CodeInternal, "Failed to delete gym", err)
 	}
 

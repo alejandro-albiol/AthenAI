@@ -2,7 +2,6 @@ package repository
 
 import (
 	"database/sql"
-	"encoding/json"
 	"time"
 
 	"github.com/alejandro-albiol/athenai/internal/gym/dto"
@@ -18,10 +17,8 @@ func NewGymRepository(db *sql.DB) *GymRepository {
 
 func (r *GymRepository) CreateGym(gym dto.GymCreationDTO) (string, error) {
 	query := `
-		INSERT INTO gym (name, domain, email, address, phone,
-			business_hours, social_links, payment_methods,
-			is_active, created_at, updated_at)
-		VALUES ($1, $2, $3, $4, $5, '[]'::jsonb, '[]'::jsonb, '[]'::jsonb, true, $6, $6)
+		INSERT INTO gym (name, domain, email, address, phone, is_active, created_at, updated_at)
+		VALUES ($1, $2, $3, $4, $5, true, $6, $6)
 		RETURNING id`
 
 	var id string
@@ -44,14 +41,11 @@ func (r *GymRepository) CreateGym(gym dto.GymCreationDTO) (string, error) {
 
 func (r *GymRepository) GetGymByID(id string) (dto.GymResponseDTO, error) {
 	query := `
-		SELECT id, name, domain, email, address, phone, 
-			business_hours, social_links, payment_methods, 
-			is_active, created_at, updated_at
+		SELECT id, name, domain, email, address, phone, is_active, created_at, updated_at
 		FROM gym 
 		WHERE id = $1 AND deleted_at IS NULL`
 
 	var gym dto.GymResponseDTO
-	var businessHoursJSON, socialLinksJSON, paymentMethodsJSON []byte
 
 	err := r.db.QueryRow(query, id).Scan(
 		&gym.ID,
@@ -60,26 +54,12 @@ func (r *GymRepository) GetGymByID(id string) (dto.GymResponseDTO, error) {
 		&gym.Email,
 		&gym.Address,
 		&gym.Phone,
-		&businessHoursJSON,
-		&socialLinksJSON,
-		&paymentMethodsJSON,
 		&gym.IsActive,
 		&gym.CreatedAt,
 		&gym.UpdatedAt,
 	)
 	if err != nil {
 		return dto.GymResponseDTO{}, err
-	}
-
-	// Parse JSONB arrays
-	if err := json.Unmarshal(businessHoursJSON, &gym.BusinessHours); err != nil {
-		gym.BusinessHours = []string{} // Default to empty array on error
-	}
-	if err := json.Unmarshal(socialLinksJSON, &gym.SocialLinks); err != nil {
-		gym.SocialLinks = []string{} // Default to empty array on error
-	}
-	if err := json.Unmarshal(paymentMethodsJSON, &gym.PaymentMethods); err != nil {
-		gym.PaymentMethods = []string{} // Default to empty array on error
 	}
 
 	return gym, nil
@@ -87,15 +67,11 @@ func (r *GymRepository) GetGymByID(id string) (dto.GymResponseDTO, error) {
 
 func (r *GymRepository) GetGymByDomain(domain string) (dto.GymResponseDTO, error) {
 	query := `
-		SELECT id, name, domain, email, address, phone, 
-			business_hours, social_links, payment_methods, 
-			is_active, created_at, updated_at
+		SELECT id, name, domain, email, address, phone, is_active, created_at, updated_at
 		FROM gym 
 		WHERE domain = $1 AND deleted_at IS NULL`
 
 	var gym dto.GymResponseDTO
-	var businessHoursJSON, socialLinksJSON, paymentMethodsJSON []byte
-
 	err := r.db.QueryRow(query, domain).Scan(
 		&gym.ID,
 		&gym.Name,
@@ -103,9 +79,6 @@ func (r *GymRepository) GetGymByDomain(domain string) (dto.GymResponseDTO, error
 		&gym.Email,
 		&gym.Address,
 		&gym.Phone,
-		&businessHoursJSON,
-		&socialLinksJSON,
-		&paymentMethodsJSON,
 		&gym.IsActive,
 		&gym.CreatedAt,
 		&gym.UpdatedAt,
@@ -115,25 +88,12 @@ func (r *GymRepository) GetGymByDomain(domain string) (dto.GymResponseDTO, error
 		return dto.GymResponseDTO{}, err
 	}
 
-	// Parse JSONB arrays
-	if err := json.Unmarshal(businessHoursJSON, &gym.BusinessHours); err != nil {
-		gym.BusinessHours = []string{} // Default to empty array on error
-	}
-	if err := json.Unmarshal(socialLinksJSON, &gym.SocialLinks); err != nil {
-		gym.SocialLinks = []string{} // Default to empty array on error
-	}
-	if err := json.Unmarshal(paymentMethodsJSON, &gym.PaymentMethods); err != nil {
-		gym.PaymentMethods = []string{} // Default to empty array on error
-	}
-
 	return gym, nil
 }
 
 func (r *GymRepository) GetAllGyms() ([]dto.GymResponseDTO, error) {
 	query := `
-		SELECT id, name, domain, email, address, phone, 
-			business_hours, social_links, payment_methods, 
-			is_active, created_at, updated_at
+		SELECT id, name, domain, email, address, phone, is_active, created_at, updated_at
 		FROM gym 
 		WHERE deleted_at IS NULL
 		ORDER BY created_at DESC`
@@ -147,7 +107,6 @@ func (r *GymRepository) GetAllGyms() ([]dto.GymResponseDTO, error) {
 	var gyms []dto.GymResponseDTO
 	for rows.Next() {
 		var gym dto.GymResponseDTO
-		var businessHoursJSON, socialLinksJSON, paymentMethodsJSON []byte
 
 		err := rows.Scan(
 			&gym.ID,
@@ -156,26 +115,12 @@ func (r *GymRepository) GetAllGyms() ([]dto.GymResponseDTO, error) {
 			&gym.Email,
 			&gym.Address,
 			&gym.Phone,
-			&businessHoursJSON,
-			&socialLinksJSON,
-			&paymentMethodsJSON,
 			&gym.IsActive,
 			&gym.CreatedAt,
 			&gym.UpdatedAt,
 		)
 		if err != nil {
 			return nil, err
-		}
-
-		// Parse JSONB arrays
-		if err := json.Unmarshal(businessHoursJSON, &gym.BusinessHours); err != nil {
-			gym.BusinessHours = []string{} // Default to empty array on error
-		}
-		if err := json.Unmarshal(socialLinksJSON, &gym.SocialLinks); err != nil {
-			gym.SocialLinks = []string{} // Default to empty array on error
-		}
-		if err := json.Unmarshal(paymentMethodsJSON, &gym.PaymentMethods); err != nil {
-			gym.PaymentMethods = []string{} // Default to empty array on error
 		}
 
 		gyms = append(gyms, gym)
@@ -188,34 +133,18 @@ func (r *GymRepository) GetAllGyms() ([]dto.GymResponseDTO, error) {
 	return gyms, nil
 }
 func (r *GymRepository) UpdateGym(id string, gym dto.GymUpdateDTO) (dto.GymResponseDTO, error) {
-	// Convert arrays to JSON for JSONB storage
-	businessHoursJSON, _ := json.Marshal(gym.BusinessHours)
-	socialLinksJSON, _ := json.Marshal(gym.SocialLinks)
-	paymentMethodsJSON, _ := json.Marshal(gym.PaymentMethods)
-
 	query := `
 		UPDATE gym 
-		SET name = $1, email = $2, address = $3, phone = $4, 
-			business_hours = $5, social_links = $6, payment_methods = $7, updated_at = $8
-		WHERE id = $9 AND deleted_at IS NULL
-		RETURNING id, name, domain, email, address, phone, 
-			business_hours, social_links, payment_methods, 
-			is_active, created_at, updated_at`
+		SET name = $1, email = $2, address = $3, phone = $4, updated_at = $5
+		WHERE id = $6 AND deleted_at IS NULL
+		RETURNING id, name, domain, email, address, phone, is_active, created_at, updated_at`
 
 	var updatedGym dto.GymResponseDTO
-	var businessHoursJSONRet, socialLinksJSONRet, paymentMethodsJSONRet []byte
-
 	err := r.db.QueryRow(query,
 		gym.Name,
 		gym.Email,
 		gym.Address,
 		gym.Phone,
-		businessHoursJSON,
-		socialLinksJSON,
-		paymentMethodsJSON,
-		businessHoursJSON,
-		socialLinksJSON,
-		paymentMethodsJSON,
 		time.Now(),
 		id,
 	).Scan(
@@ -225,9 +154,6 @@ func (r *GymRepository) UpdateGym(id string, gym dto.GymUpdateDTO) (dto.GymRespo
 		&updatedGym.Email,
 		&updatedGym.Address,
 		&updatedGym.Phone,
-		&businessHoursJSONRet,
-		&socialLinksJSONRet,
-		&paymentMethodsJSONRet,
 		&updatedGym.IsActive,
 		&updatedGym.CreatedAt,
 		&updatedGym.UpdatedAt,
@@ -235,17 +161,6 @@ func (r *GymRepository) UpdateGym(id string, gym dto.GymUpdateDTO) (dto.GymRespo
 
 	if err != nil {
 		return dto.GymResponseDTO{}, err
-	}
-
-	// Parse returned JSONB arrays
-	if err := json.Unmarshal(businessHoursJSONRet, &updatedGym.BusinessHours); err != nil {
-		updatedGym.BusinessHours = []string{}
-	}
-	if err := json.Unmarshal(socialLinksJSONRet, &updatedGym.SocialLinks); err != nil {
-		updatedGym.SocialLinks = []string{}
-	}
-	if err := json.Unmarshal(paymentMethodsJSONRet, &updatedGym.PaymentMethods); err != nil {
-		updatedGym.PaymentMethods = []string{}
 	}
 
 	return updatedGym, nil
@@ -275,10 +190,11 @@ func (r *GymRepository) SetGymActive(id string, active bool) error {
 
 func (r *GymRepository) DeleteGym(id string) error {
 	query := `
-		DELETE FROM gym 
-		WHERE id = $1`
+		UPDATE gym 
+		SET deleted_at = $1
+		WHERE id = $2 AND deleted_at IS NULL`
 
-	result, err := r.db.Exec(query, id)
+	result, err := r.db.Exec(query, time.Now(), id)
 	if err != nil {
 		return err
 	}

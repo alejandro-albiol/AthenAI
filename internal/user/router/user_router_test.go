@@ -8,8 +8,8 @@ import (
 	"testing"
 
 	"github.com/alejandro-albiol/athenai/internal/user/dto"
-	"github.com/alejandro-albiol/athenai/internal/user/router"
 	userrole_enum "github.com/alejandro-albiol/athenai/internal/user/enum"
+	"github.com/alejandro-albiol/athenai/internal/user/router"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -83,12 +83,9 @@ func TestUserRoutes(t *testing.T) {
 			path:   "/",
 			gymID:  "",
 			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
-				m.On("GetAllUsers", w, "").Run(func(args mock.Arguments) {
-					w := args.Get(0).(http.ResponseWriter)
-					w.WriteHeader(http.StatusOK)
-				})
+				// No mock expectations - middleware should reject before reaching handler
 			},
-			expectedStatus: http.StatusOK,
+			expectedStatus: http.StatusBadRequest,
 		},
 		{
 			name:   "get user by id",

@@ -10,7 +10,7 @@ import (
 // AuthServiceInterface defines authentication business logic with simplified approach
 type AuthServiceInterface interface {
 	// Single login method that checks X-Gym-ID header to determine authentication type
-	Login(r *http.Request, credentials dto.LoginRequestDTO) (*dto.LoginResponseDTO, *apierror.APIError)
+	Login(r *http.Request, loginReq dto.LoginRequestDTO) (*dto.LoginResponseDTO, *apierror.APIError)
 
 	// Token operations
 	ValidateToken(token string) (*dto.TokenValidationResponseDTO, *apierror.APIError)

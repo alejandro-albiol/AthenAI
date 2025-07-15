@@ -11,7 +11,7 @@ get:
       content:
         application/json:
           schema:
-            $ref: "/swagger/components/schemas.yaml#/UserResponseDTO"
+            $ref: "../../openapi.yaml#/components/schemas/UserResponseDTO"
     "404":
       $ref: "/swagger/components/responses.yaml#/NotFound"
 
@@ -27,7 +27,7 @@ put:
     content:
       application/json:
         schema:
-          $ref: "/swagger/components/schemas.yaml#/UserUpdateDTO"
+          $ref: "../../openapi.yaml#/components/schemas/UserUpdateDTO"
   responses:
     "200":
       description: User updated successfully
