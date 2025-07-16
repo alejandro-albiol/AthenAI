@@ -2,9 +2,19 @@ get:
   tags:
     - User
   summary: Get user by ID
+  description: |
+    Retrieves a specific user by ID with automatic authorization:
+    
+    **Authorization Logic**:
+    - **Gym Admins**: Can access any user in their gym
+    - **Regular Users**: Can ONLY access their own profile
+    - **Platform Admins**: Can access any user in any gym
+    
+    **Security**: 
+    - Gym context extracted from JWT token (no headers required)
+    - User access validated based on JWT claims
   security:
     - bearerAuth: []
-      GymIdHeader: []
   responses:
     "200":
       description: User found
@@ -19,9 +29,19 @@ put:
   tags:
     - User
   summary: Update user
+  description: |
+    Updates a specific user's information with automatic authorization:
+    
+    **Authorization Logic**:
+    - **Gym Admins**: Can update any user in their gym
+    - **Regular Users**: Can ONLY update their own profile
+    - **Platform Admins**: Can update any user in any gym
+    
+    **Security**: 
+    - Gym context extracted from JWT token (no headers required)
+    - User access validated based on JWT claims
   security:
     - bearerAuth: []
-      GymIdHeader: []
   requestBody:
     required: true
     content:

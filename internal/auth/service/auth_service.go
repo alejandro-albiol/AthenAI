@@ -251,9 +251,10 @@ func (s *AuthService) RefreshToken(refreshReq authdto.RefreshTokenRequestDTO) (*
 	}
 
 	// Determine user type and get user info
-	if tokenData.UserType == "platform_admin" {
-		// Get admin info and generate new tokens
-		admin, err := s.authRepo.AuthenticatePlatformAdmin("", "") // We need to modify this
+	switch tokenData.UserType {
+	case "platform_admin":
+		// Get admin info by ID (not by authentication)
+		admin, err := s.authRepo.GetPlatformAdminByID(tokenData.UserID)
 		if err != nil {
 			return nil, apierror.New(
 				errorcode_enum.CodeUnauthorized,
@@ -284,12 +285,55 @@ func (s *AuthService) RefreshToken(refreshReq authdto.RefreshTokenRequestDTO) (*
 				GymID:    nil,
 			},
 		}, nil
+
+	case "tenant_user":
+		// Get gym domain for tenant user
+		gym, err := s.gymRepo.GetGymByID(*tokenData.GymID)
+		if err != nil {
+			return nil, apierror.New(
+				errorcode_enum.CodeNotFound,
+				"Gym not found",
+				err,
+			)
+		}
+
+		// Get tenant user info by ID
+		user, err := s.authRepo.GetTenantUserByID(gym.Domain, tokenData.UserID)
+		if err != nil {
+			return nil, apierror.New(
+				errorcode_enum.CodeUnauthorized,
+				"User not found",
+				err,
+			)
+		}
+
+		// Generate new JWT
+		newToken, err := s.generateJWT(user.ID, "tenant_user", user.Username, &user.Role, &user.GymID)
+		if err != nil {
+			return nil, apierror.New(
+				errorcode_enum.CodeInternal,
+				"Failed to generate new token",
+				err,
+			)
+		}
+
+		return &authdto.LoginResponseDTO{
+			AccessToken:  newToken,
+			RefreshToken: refreshReq.RefreshToken, // Keep same refresh token
+			UserInfo: authdto.UserInfoDTO{
+				UserID:   user.ID,
+				Username: user.Username,
+				Email:    user.Email,
+				UserType: "tenant_user",
+				Role:     &user.Role,
+				GymID:    &user.GymID,
+			},
+		}, nil
 	}
 
-	// Handle tenant user refresh (we'll implement this when we need it)
 	return nil, apierror.New(
-		errorcode_enum.CodeNotFound,
-		"Tenant user refresh not implemented yet",
+		errorcode_enum.CodeBadRequest,
+		"Invalid user type in refresh token",
 		nil,
 	)
 }
@@ -307,4 +351,13 @@ func (s *AuthService) Logout(logoutReq authdto.LogoutRequestDTO) *apierror.APIEr
 	}
 
 	return nil
+}
+
+// GetGymDomain retrieves the domain for a gym ID (used for tenant operations)
+func (s *AuthService) GetGymDomain(gymID string) (string, error) {
+	gym, err := s.gymRepo.GetGymByID(gymID)
+	if err != nil {
+		return "", err
+	}
+	return gym.Domain, nil
 }

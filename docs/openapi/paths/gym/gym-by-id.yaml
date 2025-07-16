@@ -2,14 +2,26 @@ get:
   tags:
     - Gym
   summary: Get gym by ID
-  description: Retrieves a gym by its unique ID
+  description: |
+    Retrieves a gym by its unique ID with automatic authorization:
+    
+    **Authorization Logic**:
+    - **Platform Admins**: Can access ANY gym
+    - **Tenant Users**: Can ONLY access their OWN gym (validated via JWT gym ID)
+    
+    **Security**: 
+    - Gym context extracted from JWT token (no headers required)
+    - Access validation based on JWT claims, not request headers
+  security:
+    - bearerAuth: []
   parameters:
     - in: path
       name: id
       required: true
       schema:
         type: string
-      description: The unique identifier of the gym
+        format: uuid
+      description: The unique identifier of the gym to retrieve
   responses:
     "200":
       description: Gym found

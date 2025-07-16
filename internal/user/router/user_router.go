@@ -6,7 +6,6 @@ import (
 
 	"github.com/alejandro-albiol/athenai/internal/user/dto"
 	"github.com/alejandro-albiol/athenai/internal/user/interfaces"
-	"github.com/alejandro-albiol/athenai/pkg/middleware"
 	"github.com/go-chi/chi/v5"
 )
 
@@ -16,31 +15,27 @@ func NewUsersRouter(handler interfaces.UserHandler) http.Handler {
 	// Auth middleware is applied globally at the API level
 	// All routes here already have authenticated user context with gym ID
 
-	getGymID := func(r *http.Request) string {
-		return middleware.GetGymID(r)
-	}
-
 	r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-		handler.RegisterUser(w, r, getGymID(r))
+		handler.RegisterUser(w, r)
 	})
 
 	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetAllUsers(w, getGymID(r))
+		handler.GetAllUsers(w, r)
 	})
 
 	r.Get("/{id}", func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "id")
-		handler.GetUserByID(w, getGymID(r), id)
+		handler.GetUserByID(w, r, id)
 	})
 
 	r.Get("/username/{username}", func(w http.ResponseWriter, r *http.Request) {
 		username := chi.URLParam(r, "username")
-		handler.GetUserByUsername(w, getGymID(r), username)
+		handler.GetUserByUsername(w, r, username)
 	})
 
 	r.Get("/email/{email}", func(w http.ResponseWriter, r *http.Request) {
 		email := chi.URLParam(r, "email")
-		handler.GetUserByEmail(w, getGymID(r), email)
+		handler.GetUserByEmail(w, r, email)
 	})
 
 	r.Put("/{id}", func(w http.ResponseWriter, r *http.Request) {
@@ -50,17 +45,17 @@ func NewUsersRouter(handler interfaces.UserHandler) http.Handler {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		handler.UpdateUser(w, getGymID(r), id, userDTO)
+		handler.UpdateUser(w, r, id, userDTO)
 	})
 
 	r.Delete("/{id}", func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "id")
-		handler.DeleteUser(w, getGymID(r), id)
+		handler.DeleteUser(w, r, id)
 	})
 
 	r.Post("/{id}/verify", func(w http.ResponseWriter, r *http.Request) {
 		id := chi.URLParam(r, "id")
-		handler.VerifyUser(w, getGymID(r), id)
+		handler.VerifyUser(w, r, id)
 	})
 
 	r.Post("/{id}/active", func(w http.ResponseWriter, r *http.Request) {
@@ -72,7 +67,7 @@ func NewUsersRouter(handler interfaces.UserHandler) http.Handler {
 			w.WriteHeader(http.StatusBadRequest)
 			return
 		}
-		handler.SetUserActive(w, getGymID(r), id, activeReq.Active)
+		handler.SetUserActive(w, r, id, activeReq.Active)
 	})
 
 	return r

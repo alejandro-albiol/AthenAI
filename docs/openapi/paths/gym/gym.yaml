@@ -2,9 +2,16 @@ get:
   tags:
     - Gym
   summary: Get all gyms
-  description: Retrieves all gyms (platform admin only)
-  
-  # Override global security - only JWT required, no gym ID needed
+  description: |
+    Retrieves all gyms in the system.
+    
+    **Authorization**: PLATFORM ADMINS ONLY
+    - Only users with `platform_admin` type can access this endpoint
+    - Tenant users will receive 403 Forbidden response
+    
+    **Security**: 
+    - Uses JWT token for authentication (no headers required)
+    - Authorization based on user type from JWT claims
   security:
     - bearerAuth: []
     
@@ -22,9 +29,16 @@ post:
   tags:
     - Gym
   summary: Create a new gym
-  description: Creates a new gym in the system (platform admin only)
-  
-  # Override global security - only JWT required, no gym ID needed
+  description: |
+    Creates a new gym in the system.
+    
+    **Authorization**: PLATFORM ADMINS ONLY
+    - Only users with `platform_admin` type can create gyms
+    - Automatically creates tenant schema for new gym
+    
+    **Security**: 
+    - Uses JWT token for authentication (no headers required)
+    - Authorization based on user type from JWT claims
   security:
     - bearerAuth: []
   requestBody:

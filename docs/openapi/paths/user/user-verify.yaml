@@ -2,8 +2,19 @@ post:
   tags:
     - User
   summary: Verify user
+  description: |
+    Marks a user as verified within the authenticated user's gym.
+    
+    **Authorization**: GYM ADMINS ONLY
+    - Only users with gym admin privileges can verify users
+    - Can only verify users in same gym as authenticated admin
+    - Gym context automatically extracted from JWT token
+    
+    **Security**: 
+    - Uses JWT token for authentication (no headers required)
+    - Gym context from JWT claims, not headers
   security:
-    - GymIdHeader: []
+    - bearerAuth: []
   responses:
     '200':
       description: User verified successfully

@@ -3,9 +3,17 @@ post:
     - Authentication
   summary: "Single login endpoint"
   description: |
-    Unified login endpoint that supports both platform administrators and tenant users.
-    - **Without X-Gym-ID header**: Authenticates platform administrator against public.admin table
-    - **With X-Gym-ID header**: Looks up gym and authenticates tenant user against {gym_domain}.users table
+    **SECURITY MODEL**: Unified login endpoint with automatic routing based on X-Gym-ID header presence.
+    
+    **Authentication Types**:
+    - **Platform Admin**: No X-Gym-ID header → Authenticates against `public.admin` table
+    - **Tenant User**: X-Gym-ID header present → Looks up gym domain → Authenticates against `{gym_domain}.users` table
+    
+    **Post-Login Security**:
+    - JWT token contains ALL user context (ID, type, role, gym ID)
+    - ALL subsequent requests use JWT claims for authorization
+    - NO headers required after login (gym context extracted from JWT)
+    - Tenant users can ONLY access their own gym data (validated via JWT gym ID)
   parameters:
     - name: X-Gym-ID
       in: header
@@ -13,7 +21,11 @@ post:
       schema:
         type: string
         format: uuid
-      description: "Gym ID for tenant user authentication. If not provided, attempts platform admin login."
+      description: |
+        **ONLY REQUIRED FOR TENANT USER LOGIN**
+        - Determines authentication type (presence = tenant user, absence = platform admin)
+        - Used to lookup gym domain for tenant user authentication
+        - NOT used for authorization after login (JWT claims used instead)
       example: "123e4567-e89b-12d3-a456-426614174000"
   requestBody:
     required: true

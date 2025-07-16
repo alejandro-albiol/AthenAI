@@ -15,12 +15,20 @@ components:
       type: http
       scheme: bearer
       bearerFormat: JWT
-      description: JWT token for authenticated requests
+      description: |
+        JWT token for authenticated requests. Contains user context including:
+        - User ID, type (platform_admin/tenant_user), and role
+        - Gym ID (for tenant users) - extracted from token, not headers
+        - All authorization decisions based on JWT claims
     GymIdHeader:
       type: apiKey
       in: header
       name: X-Gym-ID
-      description: Gym ID for tenant isolation and login routing
+      description: |
+        **ONLY REQUIRED FOR LOGIN ENDPOINT**
+        - Used to determine authentication type (platform admin vs tenant user)
+        - All other endpoints use gym context from JWT token
+        - NOT used for authorization after login
 
   responses:
     NotFound:

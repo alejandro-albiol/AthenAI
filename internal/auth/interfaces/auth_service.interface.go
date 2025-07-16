@@ -16,4 +16,7 @@ type AuthServiceInterface interface {
 	ValidateToken(token string) (*dto.TokenValidationResponseDTO, *apierror.APIError)
 	RefreshToken(refreshReq dto.RefreshTokenRequestDTO) (*dto.LoginResponseDTO, *apierror.APIError)
 	Logout(logoutReq dto.LogoutRequestDTO) *apierror.APIError
+
+	// Utility methods
+	GetGymDomain(gymID string) (string, error)
 }

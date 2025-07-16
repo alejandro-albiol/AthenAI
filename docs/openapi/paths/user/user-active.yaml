@@ -2,8 +2,19 @@ post:
   tags:
     - User
   summary: Set user active status
+  description: |
+    Updates the active status of a user within the authenticated user's gym.
+    
+    **Authorization**: GYM ADMINS ONLY
+    - Only users with gym admin privileges can update user status
+    - Can only update users in same gym as authenticated admin
+    - Gym context automatically extracted from JWT token
+    
+    **Security**: 
+    - Uses JWT token for authentication (no headers required)
+    - Gym context from JWT claims, not headers
   security:
-    - GymIdHeader: []
+    - bearerAuth: []
   requestBody:
     required: true
     content:

@@ -3,14 +3,18 @@ get:
     - User
   summary: Get all users
   description: |
-    Retrieves all users for the given gym.
-    Platform admins can access any gym by providing X-Gym-ID header.
-    Gym admins can only access their own gym users.
-  
-  # Require JWT + X-Gym-ID header (both in security schemes)
+    Retrieves all users in the authenticated user's gym.
+    
+    **Authorization**: GYM ADMINS ONLY
+    - Only users with gym admin privileges can list all users
+    - Gym context automatically extracted from JWT token
+    - Tenant users restricted to their own gym, platform admins can access any gym
+    
+    **Security**: 
+    - Uses JWT token for authentication (no headers required)
+    - Gym context from JWT claims, not headers
   security:
     - bearerAuth: []
-      GymIdHeader: []
   
   responses:
     "200":
@@ -33,14 +37,18 @@ post:
     - User
   summary: Register a new user
   description: |
-    Creates a new user in the system for a specific gym.
-    Platform admins can create users in any gym by providing X-Gym-ID header.
-    Gym admins can only create users in their own gym.
-  
-  # Require JWT + X-Gym-ID header (both in security schemes)
+    Creates a new user in the authenticated user's gym.
+    
+    **Authorization**: GYM ADMINS ONLY
+    - Only users with gym admin privileges can register new users
+    - New user created in same gym as authenticated admin
+    - Gym context automatically extracted from JWT token
+    
+    **Security**: 
+    - Uses JWT token for authentication (no headers required)
+    - Gym context from JWT claims, not headers
   security:
     - bearerAuth: []
-      GymIdHeader: []
   
   requestBody:
     required: true

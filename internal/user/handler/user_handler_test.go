@@ -2,6 +2,7 @@ package handler_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -12,9 +13,24 @@ import (
 	"github.com/alejandro-albiol/athenai/internal/user/handler"
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
 	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
+	"github.com/alejandro-albiol/athenai/pkg/middleware"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
+
+// Helper function to create a test request with JWT context using middleware constants
+func createTestRequest(method, url string, body []byte, gymID string) *http.Request {
+	req := httptest.NewRequest(method, url, bytes.NewBuffer(body))
+
+	// Add JWT context to the request using the same keys as middleware
+	ctx := context.WithValue(req.Context(), middleware.GymIDKey, gymID)
+	ctx = context.WithValue(ctx, middleware.UserTypeKey, "tenant_user")
+	ctx = context.WithValue(ctx, middleware.UserRoleKey, "admin")
+	ctx = context.WithValue(ctx, middleware.UserIDKey, "test-user-123")
+	req = req.WithContext(ctx)
+
+	return req
+}
 
 type MockUserService struct {
 	mock.Mock
@@ -137,10 +153,10 @@ func TestRegisterUser(t *testing.T) {
 				assert.NoError(t, err)
 			}
 
-			req := httptest.NewRequest(http.MethodPost, "/users", bytes.NewBuffer(body))
+			req := createTestRequest(http.MethodPost, "/users", body, tc.gymID)
 			w := httptest.NewRecorder()
 
-			handler.RegisterUser(w, req, tc.gymID)
+			handler.RegisterUser(w, req)
 
 			assert.Equal(t, tc.wantStatus, w.Code)
 			mockService.AssertExpectations(t)
@@ -196,7 +212,9 @@ func TestVerifyUser(t *testing.T) {
 			tc.setupMock(mockService)
 
 			w := httptest.NewRecorder()
-			handler.VerifyUser(w, tc.gymID, tc.userID)
+			req := createTestRequest(http.MethodPost, "/users/"+tc.userID+"/verify", nil, tc.gymID)
+
+			handler.VerifyUser(w, req, tc.userID)
 
 			assert.Equal(t, tc.wantStatus, w.Code)
 			mockService.AssertExpectations(t)
@@ -259,7 +277,9 @@ func TestGetAllUsers(t *testing.T) {
 			tc.setupMock(mockService)
 
 			w := httptest.NewRecorder()
-			handler.GetAllUsers(w, tc.gymID)
+			req := createTestRequest(http.MethodGet, "/user", nil, tc.gymID)
+
+			handler.GetAllUsers(w, req)
 
 			assert.Equal(t, tc.wantStatus, w.Code)
 			mockService.AssertExpectations(t)
@@ -318,7 +338,9 @@ func TestGetUserByID(t *testing.T) {
 			tc.setupMock(mockService)
 
 			w := httptest.NewRecorder()
-			handler.GetUserByID(w, tc.gymID, tc.userID)
+			req := createTestRequest(http.MethodGet, "/user/"+tc.userID, nil, tc.gymID)
+
+			handler.GetUserByID(w, req, tc.userID)
 
 			assert.Equal(t, tc.wantStatus, w.Code)
 			mockService.AssertExpectations(t)
@@ -377,7 +399,9 @@ func TestGetUserByUsername(t *testing.T) {
 			tc.setupMock(mockService)
 
 			w := httptest.NewRecorder()
-			handler.GetUserByUsername(w, tc.gymID, tc.username)
+			req := createTestRequest(http.MethodGet, "/user/username/"+tc.username, nil, tc.gymID)
+
+			handler.GetUserByUsername(w, req, tc.username)
 
 			assert.Equal(t, tc.wantStatus, w.Code)
 			mockService.AssertExpectations(t)
@@ -436,7 +460,9 @@ func TestGetUserByEmail(t *testing.T) {
 			tc.setupMock(mockService)
 
 			w := httptest.NewRecorder()
-			handler.GetUserByEmail(w, tc.gymID, tc.email)
+			req := createTestRequest(http.MethodGet, "/user/email/"+tc.email, nil, tc.gymID)
+
+			handler.GetUserByEmail(w, req, tc.email)
 
 			assert.Equal(t, tc.wantStatus, w.Code)
 			mockService.AssertExpectations(t)
@@ -516,7 +542,9 @@ func TestUpdateUser(t *testing.T) {
 			tc.setupMock(mockService)
 
 			w := httptest.NewRecorder()
-			handler.UpdateUser(w, tc.gymID, tc.userID, tc.input)
+			req := createTestRequest(http.MethodPut, "/user/"+tc.userID, nil, tc.gymID)
+
+			handler.UpdateUser(w, req, tc.userID, tc.input)
 
 			assert.Equal(t, tc.wantStatus, w.Code)
 			mockService.AssertExpectations(t)
@@ -569,7 +597,9 @@ func TestDeleteUser(t *testing.T) {
 			tc.setupMock(mockService)
 
 			w := httptest.NewRecorder()
-			handler.DeleteUser(w, tc.gymID, tc.userID)
+			req := createTestRequest(http.MethodDelete, "/user/"+tc.userID, nil, tc.gymID)
+
+			handler.DeleteUser(w, req, tc.userID)
 
 			assert.Equal(t, tc.wantStatus, w.Code)
 			mockService.AssertExpectations(t)
@@ -647,7 +677,9 @@ func TestSetUserActive(t *testing.T) {
 			tc.setupMock(mockService)
 
 			w := httptest.NewRecorder()
-			handler.SetUserActive(w, tc.gymID, tc.userID, tc.active)
+			req := createTestRequest(http.MethodPatch, "/user/"+tc.userID+"/active", nil, tc.gymID)
+
+			handler.SetUserActive(w, req, tc.userID, tc.active)
 
 			assert.Equal(t, tc.wantStatus, w.Code)
 			mockService.AssertExpectations(t)
@@ -672,10 +704,10 @@ func TestRegisterUserInternalError(t *testing.T) {
 	body, err := json.Marshal(input)
 	assert.NoError(t, err)
 
-	req := httptest.NewRequest(http.MethodPost, "/users", bytes.NewBuffer(body))
+	req := createTestRequest(http.MethodPost, "/user", body, "gym123")
 	w := httptest.NewRecorder()
 
-	handler.RegisterUser(w, req, "gym123")
+	handler.RegisterUser(w, req)
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 	mockService.AssertExpectations(t)
@@ -689,7 +721,9 @@ func TestGetAllUsersInternalError(t *testing.T) {
 	mockService.On("GetAllUsers", "gym123").Return([]dto.UserResponseDTO{}, assert.AnError)
 
 	w := httptest.NewRecorder()
-	handler.GetAllUsers(w, "gym123")
+	req := createTestRequest(http.MethodGet, "/user", nil, "gym123")
+
+	handler.GetAllUsers(w, req)
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 	mockService.AssertExpectations(t)
@@ -703,7 +737,9 @@ func TestGetUserByIDInternalError(t *testing.T) {
 	mockService.On("GetUserByID", "gym123", "user123").Return(dto.UserResponseDTO{}, assert.AnError)
 
 	w := httptest.NewRecorder()
-	handler.GetUserByID(w, "gym123", "user123")
+	req := createTestRequest(http.MethodGet, "/user/user123", nil, "gym123")
+
+	handler.GetUserByID(w, req, "user123")
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 	mockService.AssertExpectations(t)
@@ -722,7 +758,9 @@ func TestUpdateUserInternalError(t *testing.T) {
 	mockService.On("UpdateUser", "gym123", "user123", mock.AnythingOfType("dto.UserUpdateDTO")).Return(assert.AnError)
 
 	w := httptest.NewRecorder()
-	handler.UpdateUser(w, "gym123", "user123", input)
+	req := createTestRequest(http.MethodPut, "/user/user123", nil, "gym123")
+
+	handler.UpdateUser(w, req, "user123", input)
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 	mockService.AssertExpectations(t)
@@ -736,7 +774,9 @@ func TestDeleteUserInternalError(t *testing.T) {
 	mockService.On("DeleteUser", "gym123", "user123").Return(assert.AnError)
 
 	w := httptest.NewRecorder()
-	handler.DeleteUser(w, "gym123", "user123")
+	req := createTestRequest(http.MethodDelete, "/user/user123", nil, "gym123")
+
+	handler.DeleteUser(w, req, "user123")
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 	mockService.AssertExpectations(t)
@@ -750,7 +790,9 @@ func TestVerifyUserInternalError(t *testing.T) {
 	mockService.On("VerifyUser", "gym123", "user123").Return(assert.AnError)
 
 	w := httptest.NewRecorder()
-	handler.VerifyUser(w, "gym123", "user123")
+	req := createTestRequest(http.MethodPost, "/user/user123/verify", nil, "gym123")
+
+	handler.VerifyUser(w, req, "user123")
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 	mockService.AssertExpectations(t)
@@ -764,7 +806,9 @@ func TestSetUserActiveInternalError(t *testing.T) {
 	mockService.On("SetUserActive", "gym123", "user123", true).Return(assert.AnError)
 
 	w := httptest.NewRecorder()
-	handler.SetUserActive(w, "gym123", "user123", true)
+	req := createTestRequest(http.MethodPatch, "/user/user123/active", nil, "gym123")
+
+	handler.SetUserActive(w, req, "user123", true)
 
 	assert.Equal(t, http.StatusInternalServerError, w.Code)
 	mockService.AssertExpectations(t)

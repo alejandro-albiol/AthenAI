@@ -76,10 +76,9 @@ func AuthMiddleware(authService interfaces.AuthServiceInterface) func(http.Handl
 				ctx = context.WithValue(ctx, UserRoleKey, *validationResponse.Claims.Role)
 			}
 
-			// Store gym ID from header if present
-			gymID := r.Header.Get("X-Gym-ID")
-			if gymID != "" {
-				ctx = context.WithValue(ctx, GymIDKey, gymID)
+			// Store gym ID from JWT token (not from header for security)
+			if validationResponse.Claims.GymID != nil {
+				ctx = context.WithValue(ctx, GymIDKey, *validationResponse.Claims.GymID)
 			}
 
 			next.ServeHTTP(w, r.WithContext(ctx))
@@ -117,6 +116,33 @@ func GetGymID(r *http.Request) string {
 		return gymID
 	}
 	return ""
+}
+
+// GetGymDomain helper to securely get gym domain from JWT gym ID
+func GetGymDomain(r *http.Request, authService interfaces.AuthServiceInterface) (string, error) {
+	gymID := GetGymID(r)
+	if gymID == "" {
+		return "", nil // Platform admin or no gym context
+	}
+	return authService.GetGymDomain(gymID)
+}
+
+// ValidateGymAccess ensures the user has access to the requested gym
+func ValidateGymAccess(r *http.Request, requestedGymID string) bool {
+	userType := GetUserType(r)
+
+	// Platform admins have access to all gyms
+	if userType == "platform_admin" {
+		return true
+	}
+
+	// Tenant users can only access their own gym
+	if userType == "tenant_user" {
+		userGymID := GetGymID(r)
+		return userGymID == requestedGymID
+	}
+
+	return false
 }
 
 // IsPlatformAdmin checks if the current user is a platform admin

@@ -2,16 +2,32 @@
 
 ## Overview
 
-This document explains the authentication module architecture for the Athenai multi-tenant gym management platform. The auth module provides a simplified, single-endpoint authentication system that supports both platform administrators and tenant users through header-based routing.
+This document explains the **secure authentication and authorization architecture** for the Athenai multi-tenant gym management platform. The auth module provides a simplified, single-endpoint authentication system with JWT-based stateless authorization.
 
-## Architecture Decision
+## Security Model
 
-### Simplified Authentication Approach
+### Authentication Flow
 
-The auth module implements a **single login endpoint** strategy that automatically routes authentication based on the presence of the `X-Gym-ID` header:
+The auth module implements a **single login endpoint** strategy with automatic routing:
 
-- **Without `X-Gym-ID` header**: Authenticates against `public.admin` table (platform administrators)
-- **With `X-Gym-ID` header**: Looks up gym by ID, then authenticates against `{gym_domain}.users` table (tenant users)
+- **Platform Admin Login**: No `X-Gym-ID` header → Authenticates against `public.admin` table
+- **Tenant User Login**: `X-Gym-ID` header present → Looks up gym domain → Authenticates against `{gym_domain}.users` table
+
+### Authorization Model
+
+**Post-Login Security (ALL other endpoints)**:
+- **JWT contains ALL context**: User ID, type, role, gym ID (for tenant users)
+- **No headers required**: All authorization based on JWT claims
+- **Automatic access control**: 
+  - Platform admins: Access to all resources
+  - Tenant users: Access ONLY to their own gym data (validated via JWT gym ID)
+
+### Key Security Benefits
+
+✅ **Header tampering prevention**: Gym context from JWT, not manipulatable headers  
+✅ **Stateless authentication**: All authorization decisions from JWT claims  
+✅ **Multi-tenant isolation**: Users automatically restricted to their gym  
+✅ **Performance**: No database lookups for basic authorization  
 
 ## Module Structure
 
@@ -39,49 +55,59 @@ internal/auth/
 
 ## Key Design Principles
 
-### 1. **Clean Separation of Concerns**
+### 1. **JWT-Based Stateless Security**
+
+**JWT Token Contents:**
+```go
+type ClaimsDTO struct {
+    UserID   string  `json:"user_id"`
+    UserType string  `json:"user_type"` // "platform_admin" or "tenant_user"
+    Username string  `json:"username"`
+    Role     *string `json:"role,omitempty"`     // For tenant users: "admin", "user", "guest"
+    GymID    *string `json:"gym_id,omitempty"`   // For tenant users: their gym ID
+    IsActive bool    `json:"is_active"`
+}
+```
+
+**Authorization Middleware:**
+- Extracts ALL context from JWT (no headers needed)
+- Stores user context in request context
+- Validates access automatically based on user type and gym ID
+
+### 2. **Secure Access Control**
+
+**Platform Admin Access:**
+- User type: `platform_admin`
+- Access level: ALL resources across ALL gyms
+- Use cases: System administration, global operations
+
+**Tenant User Access:**
+- User type: `tenant_user`  
+- Access level: ONLY their own gym (validated via JWT gym ID)
+- Automatic isolation: Cannot access other gym data even if they try
+- Role-based permissions within their gym: admin, user, guest
+
+### 3. **Clean Separation of Concerns**
 
 **Auth Repository Responsibilities:**
 - Platform admin authentication (`public.admin` table)
-- Tenant user authentication (`{gym_domain}.users` table)
+- Tenant user authentication (`{gym_domain}.users` table)  
+- User retrieval by ID (for refresh tokens)
 - Refresh token management
 - **Pure authentication operations only**
 
 **Service Layer Orchestration:**
-- Header-based routing logic
-- Gym lookup via gym repository
-- JWT token generation and validation
-- Business logic coordination
+- Header-based login routing (`X-Gym-ID` presence detection)
+- Gym domain lookup for tenant authentication
+- JWT token generation with proper claims
+- Refresh token validation and regeneration
+- Business logic coordination with gym repository
 
-**Handler Layer:**
-- Standard response patterns (`response.WriteAPIError`, `response.WriteAPISuccess`)
-- Proper error code enums (`errorcode_enum.CodeBadRequest`, etc.)
-- Request/response transformation
-
-### 2. **Self-Contained Module Architecture**
-
-The auth module follows the established pattern of being completely self-sufficient:
-
-```go
-// api.go - Clean and consistent
-r.Mount("/auth", authmodule.NewAuthModule(db))
-r.Mount("/user", usermodule.NewUserModule(db))
-r.Mount("/gym", gymmodule.NewGymModule(db))
-```
-
-**Module Benefits:**
-- **Encapsulation**: Creates its own gym repository internally
-- **Environment-aware**: Reads JWT secret from env with fallback
-- **Consistent interface**: Only requires `*sql.DB` parameter
-- **Standard pattern**: Returns `http.Handler` like other modules
-
-### 3. **Repository Delegation Pattern**
-
-Instead of duplicating gym operations, the auth service uses the existing gym repository:
-
-```go
-// Auth service delegates gym operations
-gym, err := s.gymRepo.GetGymByID(gymID)
+**Middleware Security:**
+- JWT validation and claims extraction
+- User context injection into request
+- Access validation helpers (`ValidateGymAccess`, `IsPlatformAdmin`)
+- Domain lookup when needed (`GetGymDomain`)
 if err != nil {
     return nil, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", err)
 }
