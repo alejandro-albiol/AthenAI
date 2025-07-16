@@ -99,7 +99,7 @@ func (r *AuthRepository) AuthenticateTenantUser(domain, email, password string) 
 // StoreRefreshToken stores a refresh token for logout management
 func (r *AuthRepository) StoreRefreshToken(token *dto.RefreshTokenDTO) error {
 	query := `
-		INSERT INTO public.refresh_tokens (token, user_id, user_type, gym_id, expires_at, created_at)
+		INSERT INTO public.refresh_token (token, user_id, user_type, gym_id, expires_at, created_at)
 		VALUES ($1, $2, $3, $4, $5, NOW())
 	`
 
@@ -118,7 +118,7 @@ func (r *AuthRepository) StoreRefreshToken(token *dto.RefreshTokenDTO) error {
 func (r *AuthRepository) ValidateRefreshToken(tokenHash string) (*dto.RefreshTokenDTO, error) {
 	query := `
 		SELECT token, user_id, user_type, gym_id, expires_at, created_at
-		FROM public.refresh_tokens 
+		FROM public.refresh_token 
 		WHERE token = $1 AND expires_at > NOW()
 	`
 
@@ -137,14 +137,14 @@ func (r *AuthRepository) ValidateRefreshToken(tokenHash string) (*dto.RefreshTok
 
 // RevokeRefreshToken removes a refresh token (for logout)
 func (r *AuthRepository) RevokeRefreshToken(tokenHash string) error {
-	query := `DELETE FROM public.refresh_tokens WHERE token = $1`
+	query := `DELETE FROM public.refresh_token WHERE token = $1`
 	_, err := r.db.Exec(query, tokenHash)
 	return err
 }
 
 // RevokeAllUserTokens removes all refresh tokens for a user (for logout all devices)
 func (r *AuthRepository) RevokeAllUserTokens(userID, userType string) error {
-	query := `DELETE FROM public.refresh_tokens WHERE user_id = $1 AND user_type = $2`
+	query := `DELETE FROM public.refresh_token WHERE user_id = $1 AND user_type = $2`
 	_, err := r.db.Exec(query, userID, userType)
 	return err
 }

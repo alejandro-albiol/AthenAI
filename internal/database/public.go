@@ -102,7 +102,7 @@ func CreatePublicTables(db *sql.DB) error {
 
 	// Create refresh_tokens table for JWT refresh token management
 	_, err = db.Exec(`
-	CREATE TABLE IF NOT EXISTS public.refresh_tokens (
+	CREATE TABLE IF NOT EXISTS public.refresh_token (
 		id SERIAL PRIMARY KEY,
 		user_id VARCHAR(255) NOT NULL,
 		token TEXT NOT NULL UNIQUE,
@@ -115,20 +115,20 @@ func CreatePublicTables(db *sql.DB) error {
 		UNIQUE(user_id, user_type, gym_id)
 	)`)
 	if err != nil {
-		return fmt.Errorf("failed to create refresh_tokens table: %w", err)
+		return fmt.Errorf("failed to create refresh_token table: %w", err)
 	}
-	fmt.Println("Refresh tokens table created successfully")
+	fmt.Println("Refresh token table created successfully")
 
-	// Create indexes for refresh_tokens table
+	// Create indexes for refresh_token table
 	_, err = db.Exec(`
-		CREATE INDEX IF NOT EXISTS idx_refresh_tokens_token ON public.refresh_tokens(token);
-		CREATE INDEX IF NOT EXISTS idx_refresh_tokens_user ON public.refresh_tokens(user_id, user_type);
-		CREATE INDEX IF NOT EXISTS idx_refresh_tokens_expires ON public.refresh_tokens(expires_at);
+		CREATE INDEX IF NOT EXISTS idx_refresh_token_token ON public.refresh_token(token);
+		CREATE INDEX IF NOT EXISTS idx_refresh_token_user ON public.refresh_token(user_id, user_type);
+		CREATE INDEX IF NOT EXISTS idx_refresh_token_expires ON public.refresh_token(expires_at);
 	`)
 	if err != nil {
-		return fmt.Errorf("failed to create refresh_tokens indexes: %w", err)
+		return fmt.Errorf("failed to create refresh_token indexes: %w", err)
 	}
-	fmt.Println("Refresh tokens indexes created successfully")
+	fmt.Println("Refresh token indexes created successfully")
 
 	// Create login_history table for audit trail (optional)
 	_, err = db.Exec(`
@@ -157,9 +157,9 @@ func CreatePublicTables(db *sql.DB) error {
 	}
 	fmt.Println("Login history indexes created successfully")
 
-	// Create workout_templates table for storing workout templates
+	// Create workout_template table for storing workout templates
 	_, err = db.Exec(`
-	CREATE TABLE IF NOT EXISTS public.workout_templates (
+	CREATE TABLE IF NOT EXISTS public.workout_template (
 		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 		name TEXT NOT NULL,
 		description TEXT,
@@ -173,15 +173,15 @@ func CreatePublicTables(db *sql.DB) error {
 		updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 	)`)
 	if err != nil {
-		return fmt.Errorf("failed to create workout_templates table: %w", err)
+		return fmt.Errorf("failed to create workout_template table: %w", err)
 	}
-	fmt.Println("Workout templates table created successfully")
+	fmt.Println("Workout template table created successfully")
 
-	// Create template_blocks table for organizing exercise slots within templates
+	// Create template_block table for organizing exercise slots within templates
 	_, err = db.Exec(`
-	CREATE TABLE IF NOT EXISTS public.template_blocks (
+	CREATE TABLE IF NOT EXISTS public.template_block (
 		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-		template_id UUID NOT NULL REFERENCES public.workout_templates(id) ON DELETE CASCADE,
+		template_id UUID NOT NULL REFERENCES public.workout_template(id) ON DELETE CASCADE,
 		block_name TEXT NOT NULL, -- e.g., 'Pre-Warmup', 'Warmup', 'Main Block 1', 'Core', 'Cool Down'
 		block_type TEXT NOT NULL CHECK (block_type IN ('warmup', 'main', 'core', 'cardio', 'cooldown', 'custom')),
 		block_order INTEGER NOT NULL, -- Order of blocks in the template
@@ -194,17 +194,17 @@ func CreatePublicTables(db *sql.DB) error {
 		UNIQUE(template_id, block_order)
 	)`)
 	if err != nil {
-		return fmt.Errorf("failed to create template_blocks table: %w", err)
+		return fmt.Errorf("failed to create template_block table: %w", err)
 	}
-	fmt.Println("Template blocks table created successfully")
+	fmt.Println("Template block table created successfully")
 
 	// Create indexes for template tables
 	_, err = db.Exec(`
-		CREATE INDEX IF NOT EXISTS idx_workout_templates_active ON public.workout_templates(is_active);
-		CREATE INDEX IF NOT EXISTS idx_workout_templates_public ON public.workout_templates(is_public);
-		CREATE INDEX IF NOT EXISTS idx_workout_templates_difficulty ON public.workout_templates(difficulty_level);
-		CREATE INDEX IF NOT EXISTS idx_template_blocks_template ON public.template_blocks(template_id);
-		CREATE INDEX IF NOT EXISTS idx_template_blocks_order ON public.template_blocks(template_id, block_order);
+		CREATE INDEX IF NOT EXISTS idx_workout_template_active ON public.workout_template(is_active);
+		CREATE INDEX IF NOT EXISTS idx_workout_template_public ON public.workout_template(is_public);
+		CREATE INDEX IF NOT EXISTS idx_workout_template_difficulty ON public.workout_template(difficulty_level);
+		CREATE INDEX IF NOT EXISTS idx_template_block_template ON public.template_block(template_id);
+		CREATE INDEX IF NOT EXISTS idx_template_block_order ON public.template_block(template_id, block_order);
 	`)
 	if err != nil {
 		return fmt.Errorf("failed to create template indexes: %w", err)
