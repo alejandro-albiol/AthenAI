@@ -18,10 +18,7 @@ func CreatePublicTables(db *sql.DB) error {
 		is_active BOOLEAN NOT NULL DEFAULT TRUE,
 		deleted_at TIMESTAMP WITH TIME ZONE,
 		created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-		updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-		business_hours JSONB NOT NULL DEFAULT '[]',
-		social_links JSONB NOT NULL DEFAULT '[]',
-		payment_methods JSONB NOT NULL DEFAULT '[]'
+		updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 	)`)
 	if err != nil {
 		return fmt.Errorf("failed to create gym table: %w", err)
@@ -45,28 +42,50 @@ func CreatePublicTables(db *sql.DB) error {
 	}
 	fmt.Println("Admin table created successfully")
 
-	// Create exercise table
+	// Create exercise table (no arrays, use join tables for relations)
 	_, err = db.Exec(`
-	CREATE TABLE IF NOT EXISTS public.exercise (
-		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-		name TEXT NOT NULL,
-		synonyms TEXT[] NOT NULL DEFAULT '{}',
-		muscular_groups TEXT[] NOT NULL DEFAULT '{}',
-		equipment_needed TEXT[] NOT NULL DEFAULT '{}',
-		difficulty_level TEXT NOT NULL CHECK (difficulty_level IN ('beginner', 'intermediate', 'advanced')),
-		exercise_type TEXT NOT NULL CHECK (exercise_type IN ('strength', 'cardio', 'flexibility', 'balance', 'functional')),
-		instructions TEXT NOT NULL,
-		video_url TEXT,
-		image_url TEXT,
-		created_by UUID REFERENCES public.admin(id),
-		is_active BOOLEAN NOT NULL DEFAULT TRUE,
-		created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-		updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
-	)`)
+	   CREATE TABLE IF NOT EXISTS public.exercise (
+			   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+			   name TEXT NOT NULL,
+			   synonyms TEXT NOT NULL,
+			   difficulty_level TEXT NOT NULL CHECK (difficulty_level IN ('beginner', 'intermediate', 'advanced')),
+			   exercise_type TEXT NOT NULL CHECK (exercise_type IN ('strength', 'cardio', 'flexibility', 'balance', 'functional')),
+			   instructions TEXT NOT NULL,
+			   video_url TEXT,
+			   image_url TEXT,
+			   created_by UUID REFERENCES public.admin(id),
+			   is_active BOOLEAN NOT NULL DEFAULT TRUE,
+			   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+			   updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+	   )`)
 	if err != nil {
 		return fmt.Errorf("failed to create exercise table: %w", err)
 	}
 	fmt.Println("Exercise table created successfully")
+
+	// Create join table for exercise <-> muscular_group
+	_, err = db.Exec(`
+	   CREATE TABLE IF NOT EXISTS public.exercise_muscular_group (
+			   exercise_id UUID NOT NULL REFERENCES public.exercise(id) ON DELETE CASCADE,
+			   muscular_group_id UUID NOT NULL REFERENCES public.muscular_group(id) ON DELETE RESTRICT,
+			   PRIMARY KEY (exercise_id, muscular_group_id)
+	   )`)
+	if err != nil {
+		return fmt.Errorf("failed to create exercise_muscular_group table: %w", err)
+	}
+	fmt.Println("Exercise_muscular_group table created successfully")
+
+	// Create join table for exercise <-> equipment
+	_, err = db.Exec(`
+	   CREATE TABLE IF NOT EXISTS public.exercise_equipment (
+			   exercise_id UUID NOT NULL REFERENCES public.exercise(id) ON DELETE CASCADE,
+			   equipment_id UUID NOT NULL REFERENCES public.equipment(id) ON DELETE RESTRICT,
+			   PRIMARY KEY (exercise_id, equipment_id)
+	   )`)
+	if err != nil {
+		return fmt.Errorf("failed to create exercise_equipment table: %w", err)
+	}
+	fmt.Println("Exercise_equipment table created successfully")
 
 	// Create muscular_group table
 	_, err = db.Exec(`

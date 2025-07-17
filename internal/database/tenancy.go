@@ -35,25 +35,47 @@ func CreateTenantSchema(db *sql.DB, schemaName string) error {
 
 	// Add more table creation as needed
 
-	// Create custom_exercise table - gym-specific exercises that extend public library
+	// Create custom_exercise table - gym-specific exercises that extend public library (no arrays, use join tables)
 	_, err = db.Exec(fmt.Sprintf(`
-		CREATE TABLE IF NOT EXISTS %s.custom_exercise (
-			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-			created_by UUID NOT NULL,
-			name TEXT NOT NULL,
-			synonyms TEXT[] NOT NULL DEFAULT '{}',
-			muscular_groups TEXT[] NOT NULL DEFAULT '{}',
-			equipment_needed TEXT[] NOT NULL DEFAULT '{}',
-			difficulty_level TEXT NOT NULL CHECK (difficulty_level IN ('beginner', 'intermediate', 'advanced')),
-			exercise_type TEXT NOT NULL CHECK (exercise_type IN ('strength', 'cardio', 'flexibility', 'balance', 'functional')),
-			instructions TEXT NOT NULL,
-			video_url TEXT,
-			image_url TEXT,
-			is_active BOOLEAN NOT NULL DEFAULT TRUE
-		)
-	`, schema))
+			   CREATE TABLE IF NOT EXISTS %s.custom_exercise (
+					   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+					   created_by UUID NOT NULL,
+					   name TEXT NOT NULL,
+					   synonyms TEXT NOT NULL,
+					   difficulty_level TEXT NOT NULL CHECK (difficulty_level IN ('beginner', 'intermediate', 'advanced')),
+					   exercise_type TEXT NOT NULL CHECK (exercise_type IN ('strength', 'cardio', 'flexibility', 'balance', 'functional')),
+					   instructions TEXT NOT NULL,
+					   video_url TEXT,
+					   image_url TEXT,
+					   is_active BOOLEAN NOT NULL DEFAULT TRUE
+			   )
+	   `, schema))
 	if err != nil {
 		return fmt.Errorf("failed to create custom_exercise table: %w", err)
+	}
+
+	// Create join table for custom_exercise <-> muscular_group
+	_, err = db.Exec(fmt.Sprintf(`
+			   CREATE TABLE IF NOT EXISTS %s.custom_exercise_muscular_group (
+					   custom_exercise_id UUID NOT NULL REFERENCES %s.custom_exercise(id) ON DELETE CASCADE,
+					   muscular_group_id UUID NOT NULL REFERENCES public.muscular_group(id) ON DELETE RESTRICT,
+					   PRIMARY KEY (custom_exercise_id, muscular_group_id)
+			   )
+	   `, schema, schema))
+	if err != nil {
+		return fmt.Errorf("failed to create custom_exercise_muscular_group table: %w", err)
+	}
+
+	// Create join table for custom_exercise <-> equipment
+	_, err = db.Exec(fmt.Sprintf(`
+			   CREATE TABLE IF NOT EXISTS %s.custom_exercise_equipment (
+					   custom_exercise_id UUID NOT NULL REFERENCES %s.custom_exercise(id) ON DELETE CASCADE,
+					   equipment_id UUID NOT NULL REFERENCES public.equipment(id) ON DELETE RESTRICT,
+					   PRIMARY KEY (custom_exercise_id, equipment_id)
+			   )
+	   `, schema, schema))
+	if err != nil {
+		return fmt.Errorf("failed to create custom_exercise_equipment table: %w", err)
 	}
 
 	// Create custom_equipment table - gym-specific equipment that extends public library
