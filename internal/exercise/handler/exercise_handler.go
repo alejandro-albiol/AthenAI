@@ -66,6 +66,60 @@ func (h *ExerciseHandler) GetExerciseByID(w http.ResponseWriter, r *http.Request
 	response.WriteAPISuccess(w, "Exercise retrieved successfully", exercise)
 }
 
+func (h *ExerciseHandler) GetExerciseByName(w http.ResponseWriter, r *http.Request, name string) {
+	exercise, err := h.service.GetExerciseByName(name)
+	if err != nil {
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) {
+			response.WriteAPIError(w, apiErr)
+		} else {
+			response.WriteAPIError(w, apierror.New(
+				errorcode_enum.CodeInternal,
+				"Failed to retrieve exercise",
+				err,
+			))
+		}
+		return
+	}
+	response.WriteAPISuccess(w, "Exercise retrieved successfully", exercise)
+}
+
+func (h *ExerciseHandler) GetExerciseByEquipment(w http.ResponseWriter, r *http.Request, equipment []string) {
+	exercises, err := h.service.GetExercisesByEquipment(equipment)
+	if err != nil {
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) {
+			response.WriteAPIError(w, apiErr)
+		} else {
+			response.WriteAPIError(w, apierror.New(
+				errorcode_enum.CodeInternal,
+				"Failed to retrieve exercises by equipment",
+				err,
+			))
+		}
+		return
+	}
+	response.WriteAPISuccess(w, "Exercises retrieved successfully", exercises)
+}
+
+func (h *ExerciseHandler) GetExerciseByMuscularGroup(w http.ResponseWriter, r *http.Request, groups []string) {
+	exercises, err := h.service.GetExercisesByMuscularGroup(groups)
+	if err != nil {
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) {
+			response.WriteAPIError(w, apiErr)
+		} else {
+			response.WriteAPIError(w, apierror.New(
+				errorcode_enum.CodeInternal,
+				"Failed to retrieve exercises by muscular group",
+				err,
+			))
+		}
+		return
+	}
+	response.WriteAPISuccess(w, "Exercises retrieved successfully", exercises)
+}
+
 func (h *ExerciseHandler) GetAllExercises(w http.ResponseWriter, r *http.Request) {
 	exercises, err := h.service.GetAllExercises()
 	if err != nil {
@@ -128,4 +182,34 @@ func (h *ExerciseHandler) DeleteExercise(w http.ResponseWriter, r *http.Request,
 		return
 	}
 	response.WriteAPISuccess(w, "Exercise deleted successfully", nil)
+}
+
+func (h *ExerciseHandler) GetExercisesByFilters(w http.ResponseWriter, r *http.Request, groups []string, equipment []string) {
+	var exercises []dto.ExerciseResponseDTO
+	var err error
+
+	if len(groups) > 0 && len(equipment) > 0 {
+		exercises, err = h.service.GetExercisesByMuscularGroupAndEquipment(groups, equipment)
+	} else if len(groups) > 0 {
+		exercises, err = h.service.GetExercisesByMuscularGroup(groups)
+	} else if len(equipment) > 0 {
+		exercises, err = h.service.GetExercisesByEquipment(equipment)
+	} else {
+		exercises, err = h.service.GetAllExercises()
+	}
+
+	if err != nil {
+		var apiErr *apierror.APIError
+		if errors.As(err, &apiErr) {
+			response.WriteAPIError(w, apiErr)
+		} else {
+			response.WriteAPIError(w, apierror.New(
+				errorcode_enum.CodeInternal,
+				"Failed to retrieve exercises",
+				err,
+			))
+		}
+		return
+	}
+	response.WriteAPISuccess(w, "Exercises retrieved successfully", exercises)
 }

@@ -52,5 +52,8 @@ func (s *ExerciseEquipmentService) GetLinksByEquipmentID(equipmentID string) ([]
 	if err != nil {
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to get links by equipment ID", err)
 	}
+	if len(links) == 0 {
+		return nil, apierror.New(errorcode_enum.CodeNotFound, "No links found for the given equipment ID", nil)
+	}
 	return links, nil
 }
