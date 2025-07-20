@@ -42,3 +42,17 @@ Created:
           message:
             type: string
             example: "Resource created successfully"
+
+APIErrorResponse:
+  type: object
+  properties:
+    status:
+      type: string
+      example: error
+    message:
+      type: string
+      example: Error message
+    data:
+      type: object
+      nullable: true
+      example: null

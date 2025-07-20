@@ -1,0 +1,46 @@
+get:
+  summary: Search exercises by muscular group
+  description: Returns exercises filtered by muscular group(s).
+  tags:
+    - Exercise
+  parameters:
+    - name: group
+      in: query
+      description: Muscular group ID(s) to filter by
+      required: false
+      schema:
+        type: array
+        items:
+          type: string
+      style: form
+      explode: true
+  responses:
+    "200":
+      description: List of matching exercises
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: success
+              message:
+                type: string
+                example: Exercises retrieved successfully
+              data:
+                type: array
+                items:
+                  $ref: "../../schemas.yaml#/ExerciseResponseDTO"
+    "400":
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: "../../responses.yaml#/APIErrorResponse"
+    "404":
+      description: No exercises found
+      content:
+        application/json:
+          schema:
+            $ref: "../../responses.yaml#/APIErrorResponse"

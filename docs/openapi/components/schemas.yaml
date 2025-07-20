@@ -344,3 +344,37 @@ APIErrorResponse:
           example: "Invalid input provided"
           description: "Technical error details"
           nullable: true
+
+ExerciseResponseDTO:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+    name:
+      type: string
+    synonyms:
+      type: string
+    difficulty_level:
+      type: string
+      enum: [beginner, intermediate, advanced]
+    exercise_type:
+      type: string
+      enum: [strength, cardio, flexibility, balance, functional]
+    instructions:
+      type: string
+    video_url:
+      type: string
+    image_url:
+      type: string
+    created_by:
+      type: string
+      format: uuid
+    is_active:
+      type: boolean
+    created_at:
+      type: string
+      format: date-time
+    updated_at:
+      type: string
+      format: date-time
