@@ -116,7 +116,7 @@ func (s *AuthService) loginTenantUser(gymID string, loginReq authdto.LoginReques
 	}
 
 	// Authenticate against {domain}.users table
-	user, err := s.authRepo.AuthenticateTenantUser(gym.Domain, loginReq.Email, loginReq.Password)
+	user, err := s.authRepo.AuthenticateTenantUser(gym.ID, loginReq.Email, loginReq.Password)
 	if err != nil {
 		return nil, apierror.New(
 			errorcode_enum.CodeUnauthorized,
@@ -298,7 +298,7 @@ func (s *AuthService) RefreshToken(refreshReq authdto.RefreshTokenRequestDTO) (*
 		}
 
 		// Get tenant user info by ID
-		user, err := s.authRepo.GetTenantUserByID(gym.Domain, tokenData.UserID)
+		user, err := s.authRepo.GetTenantUserByID(gym.ID, tokenData.UserID)
 		if err != nil {
 			return nil, apierror.New(
 				errorcode_enum.CodeUnauthorized,
@@ -353,11 +353,3 @@ func (s *AuthService) Logout(logoutReq authdto.LogoutRequestDTO) *apierror.APIEr
 	return nil
 }
 
-// GetGymDomain retrieves the domain for a gym ID (used for tenant operations)
-func (s *AuthService) GetGymDomain(gymID string) (string, error) {
-	gym, err := s.gymRepo.GetGymByID(gymID)
-	if err != nil {
-		return "", err
-	}
-	return gym.Domain, nil
-}

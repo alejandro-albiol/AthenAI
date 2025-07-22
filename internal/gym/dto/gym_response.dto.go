@@ -7,7 +7,6 @@ import (
 type GymResponseDTO struct {
 	ID        string     `json:"id"`
 	Name      string     `json:"name"`
-	Domain    string     `json:"domain"`
 	Email     string     `json:"email"`
 	Address   string     `json:"address"`
 	Phone     string     `json:"phone"`

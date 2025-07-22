@@ -91,13 +91,11 @@ Reference table for exercise equipment.
 | `created_at`  | TIMESTAMP WITH TIME ZONE | NOT NULL, DEFAULT NOW() | Creation timestamp                                                |
 | `updated_at`  | TIMESTAMP WITH TIME ZONE | NOT NULL, DEFAULT NOW() | Last update timestamp                                             |
 
-
-
 ## Indexes
 
 The following indexes are created for optimal performance:
 
-- `idx_gym_domain` - Fast gym lookup by domain
+- `idx_gym_uuid` - Fast gym lookup by uuid
 - `idx_gym_active` - Filter active gyms
 - `idx_exercise_muscular_groups` - GIN index for array searches
 - `idx_exercise_equipment` - GIN index for equipment searches

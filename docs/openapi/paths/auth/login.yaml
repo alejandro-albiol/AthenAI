@@ -4,11 +4,11 @@ post:
   summary: "Single login endpoint"
   description: |
     **SECURITY MODEL**: Unified login endpoint with automatic routing based on X-Gym-ID header presence.
-    
+
     **Authentication Types**:
     - **Platform Admin**: No X-Gym-ID header → Authenticates against `public.admin` table
-    - **Tenant User**: X-Gym-ID header present → Looks up gym domain → Authenticates against `{gym_domain}.users` table
-    
+    - **Tenant User**: X-Gym-ID header present → Looks up gym uuid → Authenticates against `{gym_uuid}.users` table
+
     **Post-Login Security**:
     - JWT token contains ALL user context (ID, type, role, gym ID)
     - ALL subsequent requests use JWT claims for authorization
@@ -47,7 +47,7 @@ post:
               username: "johndoe"
               password: "userPassword123"
   responses:
-    '200':
+    "200":
       description: "Login successful"
       content:
         application/json:
@@ -89,7 +89,7 @@ post:
                     user_type: "tenant_user"
                     role: "admin"
                     gym_id: "789e0123-e89b-12d3-a456-426614174000"
-    '400':
+    "400":
       description: "Bad request - Invalid request body"
       content:
         application/json:
@@ -101,7 +101,7 @@ post:
             data:
               code: "BAD_REQUEST"
               error: "json: cannot unmarshal string into Go struct field LoginRequestDTO.email of type string"
-    '401':
+    "401":
       description: "Unauthorized - Invalid credentials"
       content:
         application/json:
@@ -124,7 +124,7 @@ post:
                 data:
                   code: "UNAUTHORIZED"
                   error: "sql: no rows in result set"
-    '403':
+    "403":
       description: "Forbidden - Gym not active"
       content:
         application/json:
@@ -135,7 +135,7 @@ post:
             message: "Gym is not active"
             data:
               code: "FORBIDDEN"
-    '404':
+    "404":
       description: "Not Found - Gym not found"
       content:
         application/json:
@@ -147,7 +147,7 @@ post:
             data:
               code: "NOT_FOUND"
               error: "sql: no rows in result set"
-    '500':
+    "500":
       description: "Internal server error"
       content:
         application/json:

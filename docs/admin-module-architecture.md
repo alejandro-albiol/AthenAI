@@ -116,9 +116,9 @@ public.equipment
 public.muscular_group
 
 -- Tenant schemas (gym/user modules)
-gym_domain.users
-gym_domain.workouts
-gym_domain.custom_exercises
+gym_uuid.users
+gym_uuid.workouts
+gym_uuid.custom_exercises
 ```
 
 ## Alternative Approaches Considered

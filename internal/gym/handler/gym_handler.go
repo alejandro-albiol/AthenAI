@@ -88,8 +88,8 @@ func (h *GymHandler) GetGymByID(w http.ResponseWriter, r *http.Request, id strin
 	response.WriteAPISuccess(w, "Gym found", gym)
 }
 
-func (h *GymHandler) GetGymByDomain(w http.ResponseWriter, r *http.Request, domain string) {
-	gym, err := h.service.GetGymByDomain(domain)
+func (h *GymHandler) GetGymByName(w http.ResponseWriter, r *http.Request, name string) {
+	gym, err := h.service.GetGymByName(name)
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {

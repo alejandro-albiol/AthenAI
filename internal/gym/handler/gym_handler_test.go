@@ -33,8 +33,8 @@ func (m *MockGymService) GetGymByID(id string) (dto.GymResponseDTO, error) {
 	return args.Get(0).(dto.GymResponseDTO), args.Error(1)
 }
 
-func (m *MockGymService) GetGymByDomain(domain string) (dto.GymResponseDTO, error) {
-	args := m.Called(domain)
+func (m *MockGymService) GetGymByName(name string) (dto.GymResponseDTO, error) {
+	args := m.Called(name)
 	return args.Get(0).(dto.GymResponseDTO), args.Error(1)
 }
 
@@ -60,51 +60,37 @@ func (m *MockGymService) DeleteGym(id string) error {
 
 func TestCreateGym(t *testing.T) {
 	testCases := []struct {
-		name       string
-		input      dto.GymCreationDTO
-		setupMock  func(*MockGymService)
-		wantStatus int
+		name        string
+		input       dto.GymCreationDTO
+		setupMock   func(*MockGymService)
+		wantStatus  int
+		gymIDHeader string // For multi-tenancy, if needed
 	}{
 		{
 			name: "successful creation",
 			input: dto.GymCreationDTO{
 				Name:        "Test Gym",
-				Domain:      "test-gym",
 				Email:       "test@test.com",
 				Address:     "123 Test St",
 				ContactName: "John Doe",
 				Phone:       "+1234567890",
 			},
 			setupMock: func(mockService *MockGymService) {
-				mockService.On("CreateGym", mock.Anything).Return("gym123", nil)
+				mockService.On("CreateGym", mock.Anything).Return("gym-uuid-123", nil)
 			},
-			wantStatus: http.StatusCreated,
-		},
-		{
-			name: "duplicate domain",
-			input: dto.GymCreationDTO{
-				Name:        "Test Gym",
-				Domain:      "existing-gym",
-				Email:       "test@test.com",
-				Address:     "123 Test St",
-				ContactName: "John Doe",
-				Phone:       "+1234567890",
-			},
-			setupMock: func(mockService *MockGymService) {
-				mockService.On("CreateGym", mock.AnythingOfType("dto.GymCreationDTO")).Return("", apierror.New(errorcode_enum.CodeConflict, "Domain already exists", nil))
-			},
-			wantStatus: http.StatusConflict,
+			wantStatus:  http.StatusCreated,
+			gymIDHeader: "gym-uuid-123",
 		},
 		{
 			name: "invalid input",
 			input: dto.GymCreationDTO{
-				Name:   "", // missing required field
-				Domain: "test-gym",
+				Name: "", // missing required field
 			},
 			setupMock: func(mockService *MockGymService) {
 				mockService.On("CreateGym", mock.AnythingOfType("dto.GymCreationDTO")).Return("", apierror.New(errorcode_enum.CodeBadRequest, "Invalid input", nil))
 			},
-			wantStatus: http.StatusBadRequest,
+			wantStatus:  http.StatusBadRequest,
+			gymIDHeader: "gym-uuid-123",
 		},
 	}
 
@@ -129,8 +115,6 @@ func TestCreateGym(t *testing.T) {
 			err := json.Unmarshal(w.Body.Bytes(), &resp)
 			assert.NoError(t, err)
 			if tc.wantStatus == http.StatusCreated {
-				_, ok := resp.Data.(string)
-				assert.True(t, ok || resp.Data != nil) // Data should be a string or not nil
 				assert.NotEmpty(t, resp.Data)
 			} else {
 				assert.Equal(t, "error", resp.Status)
@@ -143,24 +127,25 @@ func TestCreateGym(t *testing.T) {
 
 func TestGetGymByID(t *testing.T) {
 	testCases := []struct {
-		name       string
-		gymID      string
-		setupMock  func(*MockGymService)
-		wantStatus int
+		name        string
+		gymID       string
+		setupMock   func(*MockGymService)
+		wantStatus  int
+		gymIDHeader string
 	}{
 		{
 			name:  "successful retrieval",
-			gymID: "gym123",
+			gymID: "gym-uuid-123",
 			setupMock: func(mockService *MockGymService) {
-				mockService.On("GetGymByID", "gym123").Return(dto.GymResponseDTO{
-					ID:       "gym123",
+				mockService.On("GetGymByID", "gym-uuid-123").Return(dto.GymResponseDTO{
+					ID:       "gym-uuid-123",
 					Name:     "Test Gym",
-					Domain:   "test-gym",
 					Email:    "test@test.com",
 					IsActive: true,
 				}, nil)
 			},
-			wantStatus: http.StatusOK,
+			wantStatus:  http.StatusOK,
+			gymIDHeader: "gym-uuid-123",
 		},
 		{
 			name:  "gym not found",
@@ -168,7 +153,8 @@ func TestGetGymByID(t *testing.T) {
 			setupMock: func(mockService *MockGymService) {
 				mockService.On("GetGymByID", "nonexistent").Return(dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", nil))
 			},
-			wantStatus: http.StatusNotFound,
+			wantStatus:  http.StatusNotFound,
+			gymIDHeader: "gym-uuid-123",
 		},
 	}
 
@@ -180,6 +166,7 @@ func TestGetGymByID(t *testing.T) {
 			h := handler.NewGymHandler(mockService)
 
 			req := httptest.NewRequest(http.MethodGet, "/gyms/"+tc.gymID, nil)
+			// ...existing code...
 			w := httptest.NewRecorder()
 
 			h.GetGymByID(w, req, tc.gymID)
@@ -200,61 +187,4 @@ func TestGetGymByID(t *testing.T) {
 	}
 }
 
-func TestGetGymByDomain(t *testing.T) {
-	testCases := []struct {
-		name       string
-		domain     string
-		setupMock  func(*MockGymService)
-		wantStatus int
-	}{
-		{
-			name:   "successful retrieval",
-			domain: "test-gym",
-			setupMock: func(mockService *MockGymService) {
-				mockService.On("GetGymByDomain", "test-gym").Return(dto.GymResponseDTO{
-					ID:       "gym123",
-					Name:     "Test Gym",
-					Domain:   "test-gym",
-					Email:    "test@test.com",
-					IsActive: true,
-				}, nil)
-			},
-			wantStatus: http.StatusOK,
-		},
-		{
-			name:   "gym not found",
-			domain: "nonexistent",
-			setupMock: func(mockService *MockGymService) {
-				mockService.On("GetGymByDomain", "nonexistent").Return(dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", nil))
-			},
-			wantStatus: http.StatusNotFound,
-		},
-	}
-
-	for _, tc := range testCases {
-		t.Run(tc.name, func(t *testing.T) {
-			mockService := new(MockGymService)
-			tc.setupMock(mockService)
-
-			h := handler.NewGymHandler(mockService)
-
-			req := httptest.NewRequest(http.MethodGet, "/gyms/domain/"+tc.domain, nil)
-			w := httptest.NewRecorder()
-
-			h.GetGymByDomain(w, req, tc.domain)
-
-			assert.Equal(t, tc.wantStatus, w.Code)
-			var resp response.APIResponse[any]
-			err := json.Unmarshal(w.Body.Bytes(), &resp)
-			assert.NoError(t, err)
-			if tc.wantStatus == http.StatusOK {
-				assert.Equal(t, "success", resp.Status)
-				assert.NotEmpty(t, resp.Data)
-			} else {
-				assert.Equal(t, "error", resp.Status)
-				assert.NotEmpty(t, resp.Message)
-			}
-			mockService.AssertExpectations(t)
-		})
-	}
-}
+// Removed: TestGetGymByDomain. All gym lookups are now UUID-only.

@@ -118,15 +118,6 @@ func GetGymID(r *http.Request) string {
 	return ""
 }
 
-// GetGymDomain helper to securely get gym domain from JWT gym ID
-func GetGymDomain(r *http.Request, authService interfaces.AuthServiceInterface) (string, error) {
-	gymID := GetGymID(r)
-	if gymID == "" {
-		return "", nil // Platform admin or no gym context
-	}
-	return authService.GetGymDomain(gymID)
-}
-
 // ValidateGymAccess ensures the user has access to the requested gym
 func ValidateGymAccess(r *http.Request, requestedGymID string) bool {
 	userType := GetUserType(r)

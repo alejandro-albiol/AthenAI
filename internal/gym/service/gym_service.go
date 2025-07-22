@@ -21,12 +21,12 @@ func NewGymService(repository interfaces.GymRepository) *GymService {
 }
 
 func (s *GymService) CreateGym(createDTO dto.GymCreationDTO) (string, error) {
-	_, err := s.repository.GetGymByDomain(createDTO.Domain)
+	_, err := s.repository.GetGymByName(createDTO.Name)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to check domain existence", err)
+		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to check gym existence", err)
 	}
 	if err == nil {
-		return "", apierror.New(errorcode_enum.CodeConflict, "Gym with this domain already exists", nil)
+		return "", apierror.New(errorcode_enum.CodeConflict, "Gym with this name already exists", nil)
 	}
 
 	gymID, err := s.repository.CreateGym(createDTO)
@@ -42,8 +42,8 @@ func (s *GymService) CreateGym(createDTO dto.GymCreationDTO) (string, error) {
 		}
 		defer db.Close()
 
-		// Use the domain name for the schema, not the gym ID
-		err = database.CreateTenantSchema(db, createDTO.Domain)
+		// Use the gym ID for the schema, not the domain name
+		err = database.CreateTenantSchema(db, gymID)
 		if err != nil {
 			return "", apierror.New(errorcode_enum.CodeInternal, "Failed to create tenant schema", err)
 		}
@@ -64,8 +64,8 @@ func (s *GymService) GetGymByID(id string) (dto.GymResponseDTO, error) {
 	return gym, nil
 }
 
-func (s *GymService) GetGymByDomain(domain string) (dto.GymResponseDTO, error) {
-	gym, err := s.repository.GetGymByDomain(domain)
+func (s *GymService) GetGymByName(name string) (dto.GymResponseDTO, error) {
+	gym, err := s.repository.GetGymByName(name)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
 			return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", nil)
@@ -97,6 +97,17 @@ func (s *GymService) UpdateGym(id string, updateDTO dto.GymUpdateDTO) (dto.GymRe
 			return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", nil)
 		}
 		return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to check gym existence", err)
+	}
+
+	// Check if the new name is already used by another gym (if name is being updated)
+	if updateDTO.Name != "" {
+		existingGym, err := s.repository.GetGymByName(updateDTO.Name)
+		if err == nil && existingGym.ID != id {
+			return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeConflict, "Gym with this name already exists", nil)
+		}
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to check gym name uniqueness", err)
+		}
 	}
 
 	updatedGym, err := s.repository.UpdateGym(id, updateDTO)

@@ -14,9 +14,9 @@ type GymHandler interface {
 	// Returns 200 with gym data on success, 404 if not found.
 	GetGymByID(w http.ResponseWriter, r *http.Request, id string)
 
-	// GetGymByDomain handles GET requests to fetch a gym by its domain.
+	// GetGymByName handles GET requests to fetch a gym by its name.
 	// Returns 200 with gym data on success, 404 if not found.
-	GetGymByDomain(w http.ResponseWriter, r *http.Request, domain string)
+	GetGymByName(w http.ResponseWriter, r *http.Request, name string)
 
 	// GetAllGyms handles GET requests to fetch all active gyms.
 	// Returns 200 with array of gyms on success.

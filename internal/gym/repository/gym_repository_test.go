@@ -26,7 +26,6 @@ func TestCreateGym(t *testing.T) {
 	repo := repository.NewGymRepository(db)
 	gymDTO := dto.GymCreationDTO{
 		Name:        "Test Gym",
-		Domain:      "test-gym",
 		Email:       "test@gym.com",
 		Address:     "123 Test St",
 		ContactName: "John Doe",
@@ -39,7 +38,6 @@ func TestCreateGym(t *testing.T) {
 	mock.ExpectQuery("INSERT INTO gym").
 		WithArgs(
 			gymDTO.Name,
-			gymDTO.Domain,
 			gymDTO.Email,
 			gymDTO.Address,
 			gymDTO.Phone,
@@ -60,9 +58,9 @@ func TestGetGymByID(t *testing.T) {
 
 	// Test successful retrieval
 	rows := sqlmock.NewRows([]string{
-		"id", "name", "domain", "email", "address", "phone", "is_active", "created_at", "updated_at",
+		"id", "name", "email", "address", "phone", "is_active", "created_at", "updated_at",
 	}).AddRow(
-		"gym123", "Test Gym", "test-gym", "test@gym.com", "123 Test St",
+		"gym123", "Test Gym", "test@gym.com", "123 Test St",
 		"+1234567890", true, now, now)
 
 	mock.ExpectQuery("SELECT (.+) FROM gym WHERE id").
@@ -75,30 +73,6 @@ func TestGetGymByID(t *testing.T) {
 	assert.Equal(t, "Test Gym", gym.Name)
 }
 
-func TestGetGymByDomain(t *testing.T) {
-	db, mock := setupTest(t)
-	defer db.Close()
-
-	repo := repository.NewGymRepository(db)
-	now := time.Now()
-
-	// Test successful retrieval
-	rows := sqlmock.NewRows([]string{
-		"id", "name", "domain", "email", "address", "phone", "is_active", "created_at", "updated_at",
-	}).AddRow(
-		"gym123", "Test Gym", "test-gym", "test@gym.com", "123 Test St",
-		"+1234567890", true, now, now,
-	)
-
-	mock.ExpectQuery("SELECT (.+) FROM gym").
-		WithArgs("test-gym").
-		WillReturnRows(rows)
-
-	gym, err := repo.GetGymByDomain("test-gym")
-	assert.NoError(t, err)
-	assert.Equal(t, "test-gym", gym.Domain)
-}
-
 func TestGetAllGyms(t *testing.T) {
 	db, mock := setupTest(t)
 	defer db.Close()
@@ -108,12 +82,12 @@ func TestGetAllGyms(t *testing.T) {
 
 	// Test successful retrieval
 	rows := sqlmock.NewRows([]string{
-		"id", "name", "domain", "email", "address", "phone", "is_active", "created_at", "updated_at",
+		"id", "name", "email", "address", "phone", "is_active", "created_at", "updated_at",
 	}).AddRow(
-		"gym123", "Test Gym 1", "test-gym-1", "test1@gym.com", "123 Test St",
+		"gym123", "Test Gym 1", "test1@gym.com", "123 Test St",
 		"+1234567890", true, now, now,
 	).AddRow(
-		"gym456", "Test Gym 2", "test-gym-2", "test2@gym.com", "456 Test St",
+		"gym456", "Test Gym 2", "test2@gym.com", "456 Test St",
 		"+0987654321", true, now, now,
 	)
 
@@ -136,17 +110,13 @@ func TestUpdateGym(t *testing.T) {
 		Name:           "Updated Gym",
 		Email:          "updated@gym.com",
 		Address:        "456 Update St",
-		ContactName:    "Jane Doe",
 		Phone:          "+0987654321",
-		Description:    "Updated Description",
-		Currency:       "USD",
-		TimezoneOffset: 0,
 	}
 
 	rows := sqlmock.NewRows([]string{
-		"id", "name", "domain", "email", "address", "phone", "is_active", "created_at", "updated_at",
+		"id", "name", "email", "address", "phone", "is_active", "created_at", "updated_at",
 	}).AddRow(
-		"gym123", updateDTO.Name, "test-gym", updateDTO.Email, updateDTO.Address,
+		"gym123", updateDTO.Name, updateDTO.Email, updateDTO.Address,
 		updateDTO.Phone, true, time.Now(), time.Now(),
 	)
 

@@ -7,11 +7,11 @@ import "github.com/alejandro-albiol/athenai/internal/auth/dto"
 type AuthRepositoryInterface interface {
 	// Authentication methods
 	AuthenticatePlatformAdmin(email, password string) (*dto.AdminAuthDTO, error)
-	AuthenticateTenantUser(domain, email, password string) (*dto.TenantUserAuthDTO, error)
+	AuthenticateTenantUser(gymID, email, password string) (*dto.TenantUserAuthDTO, error)
 
 	// User retrieval methods (for refresh token validation)
 	GetPlatformAdminByID(adminID string) (*dto.AdminAuthDTO, error)
-	GetTenantUserByID(domain, userID string) (*dto.TenantUserAuthDTO, error)
+	GetTenantUserByID(gymID, userID string) (*dto.TenantUserAuthDTO, error)
 
 	// Refresh token operations
 	StoreRefreshToken(token *dto.RefreshTokenDTO) error

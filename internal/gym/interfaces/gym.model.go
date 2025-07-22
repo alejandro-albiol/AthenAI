@@ -5,7 +5,6 @@ import "time"
 type Gym struct {
 	ID        string     `json:"id"`
 	Name      string     `json:"name" validate:"required"`
-	Domain    string     `json:"domain" validate:"required"`
 	Email     string     `json:"email" validate:"required,email"`
 	Address   string     `json:"address" validate:"required"`
 	Phone     string     `json:"phone" validate:"required"`

@@ -22,8 +22,8 @@ func (m *MockGymHandler) GetGymByID(w http.ResponseWriter, r *http.Request, id s
 	m.Called(w, r, id)
 }
 
-func (m *MockGymHandler) GetGymByDomain(w http.ResponseWriter, r *http.Request, domain string) {
-	m.Called(w, r, domain)
+func (m *MockGymHandler) GetGymByName(w http.ResponseWriter, r *http.Request, name string) {
+	m.Called(w, r, name)
 }
 
 func (m *MockGymHandler) GetAllGyms(w http.ResponseWriter, r *http.Request) {

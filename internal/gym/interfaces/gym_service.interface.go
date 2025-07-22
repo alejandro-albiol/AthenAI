@@ -15,9 +15,9 @@ type GymService interface {
 	// Maps database errors to domain errors and validates access permissions.
 	GetGymByID(id string) (dto.GymResponseDTO, error)
 
-	// GetGymByDomain retrieves a gym by its unique domain name.
+	// GetGymByName retrieves a gym by its unique name.
 	// Maps database errors to domain errors and validates access permissions.
-	GetGymByDomain(domain string) (dto.GymResponseDTO, error)
+	GetGymByName(name string) (dto.GymResponseDTO, error)
 
 	// GetAllGyms retrieves all active gyms.
 	// Maps database errors to domain errors and applies any business filters.

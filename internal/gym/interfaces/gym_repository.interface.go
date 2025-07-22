@@ -14,9 +14,9 @@ type GymRepository interface {
 	// Returns sql.ErrNoRows if not found, or other raw database errors.
 	GetGymByID(id string) (dto.GymResponseDTO, error)
 
-	// GetGymByDomain retrieves a gym from the database by its domain.
+	// GetGymByName retrieves a gym from the database by its name.
 	// Returns sql.ErrNoRows if not found, or other raw database errors.
-	GetGymByDomain(domain string) (dto.GymResponseDTO, error)
+	GetGymByName(name string) (dto.GymResponseDTO, error)
 
 	// GetAllGyms retrieves all active gyms from the database.
 	// Returns raw database errors without any domain error mapping.

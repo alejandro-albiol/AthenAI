@@ -27,9 +27,9 @@ func NewGymRouter(handler gyminterfaces.GymHandler) http.Handler {
 		handler.GetGymByID(w, r, id)
 	})
 
-	r.Get("/domain/{domain}", func(w http.ResponseWriter, r *http.Request) {
-		domain := chi.URLParam(r, "domain")
-		handler.GetGymByDomain(w, r, domain)
+	r.Get("/name/{name}", func(w http.ResponseWriter, r *http.Request) {
+		name := chi.URLParam(r, "name")
+		handler.GetGymByName(w, r, name)
 	})
 
 	r.Put("/{id}", func(w http.ResponseWriter, r *http.Request) {

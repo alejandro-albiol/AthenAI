@@ -11,7 +11,6 @@ func CreatePublicTables(db *sql.DB) error {
 	CREATE TABLE IF NOT EXISTS public.gym (
 		id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 		name TEXT NOT NULL,
-		domain TEXT NOT NULL UNIQUE,
 		email TEXT NOT NULL,
 		address TEXT NOT NULL,
 		phone TEXT NOT NULL,

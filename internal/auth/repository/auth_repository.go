@@ -55,9 +55,9 @@ func (r *AuthRepository) AuthenticatePlatformAdmin(username, password string) (*
 }
 
 // AuthenticateTenantUser authenticates against {domain}.users table
-func (r *AuthRepository) AuthenticateTenantUser(domain, email, password string) (*dto.TenantUserAuthDTO, error) {
+func (r *AuthRepository) AuthenticateTenantUser(gymID, email, password string) (*dto.TenantUserAuthDTO, error) {
 	// Construct the table name dynamically
-	tableName := pq.QuoteIdentifier(domain) + ".user"
+	tableName := pq.QuoteIdentifier(gymID) + ".user"
 
 	query := `
 		SELECT id, username, email, password_hash, role, is_verified, is_active, gym_id

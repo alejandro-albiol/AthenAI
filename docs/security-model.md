@@ -11,16 +11,18 @@ This document outlines the comprehensive security model for the Athenai multi-te
 **Endpoint**: `POST /api/v1/auth/login`
 
 **Routing Logic**:
+
 ```
 Request Headers:
 ├── No X-Gym-ID header → Platform Admin Authentication
 │   └── Authenticate against public.admin table
 └── X-Gym-ID header present → Tenant User Authentication
     ├── Lookup gym by ID to get domain
-    └── Authenticate against {gym_domain}.users table
+    └── Authenticate against {gym_uuid}.users table
 ```
 
 **Security Benefits**:
+
 - Single point of authentication control
 - Automatic routing based on context
 - No complex endpoint management
@@ -31,6 +33,7 @@ Request Headers:
 ### JWT-Based Stateless Authorization
 
 **JWT Claims Structure**:
+
 ```json
 {
   "user_id": "uuid",
@@ -46,31 +49,33 @@ Request Headers:
 
 ### Access Control Matrix
 
-| User Type | Access Level | Restrictions | Use Cases |
-|-----------|-------------|--------------|-----------|
-| `platform_admin` | **Global Access** | None | System admin, multi-gym operations |
-| `tenant_user` | **Gym-Scoped** | Only own gym data | Gym members, trainers, gym admins |
+| User Type        | Access Level      | Restrictions      | Use Cases                          |
+| ---------------- | ----------------- | ----------------- | ---------------------------------- |
+| `platform_admin` | **Global Access** | None              | System admin, multi-gym operations |
+| `tenant_user`    | **Gym-Scoped**    | Only own gym data | Gym members, trainers, gym admins  |
 
 ### Header Usage Policy
 
 **CRITICAL SECURITY RULE**: Headers are ONLY trusted during login
 
-| Endpoint Type | X-Gym-ID Header | Authorization Source |
-|---------------|-----------------|---------------------|
+| Endpoint Type             | X-Gym-ID Header           | Authorization Source    |
+| ------------------------- | ------------------------- | ----------------------- |
 | **Login** (`/auth/login`) | Required for tenant users | Header (one-time trust) |
-| **All Other Endpoints** | **IGNORED** | JWT claims only |
+| **All Other Endpoints**   | **IGNORED**               | JWT claims only         |
 
 ## Multi-Tenant Isolation
 
 ### Database Schema Isolation
 
 **Public Schema** (`public.*`):
+
 - `admin` - Platform administrators
 - `gym` - Gym entities and metadata
 - `refresh_tokens` - Cross-tenant token storage
 - Global reference data (exercises, equipment)
 
-**Tenant Schemas** (`{gym_domain}.*`):
+**Tenant Schemas** (`{gym_uuid}.*`):
+
 - `users` - Gym-specific users
 - `user_profiles` - Personal data
 - All gym-specific operational data
@@ -78,6 +83,7 @@ Request Headers:
 ### Runtime Isolation Enforcement
 
 **Middleware Security**:
+
 ```go
 // Automatic gym access validation
 if !middleware.ValidateGymAccess(r, requestedGymID) {
@@ -89,6 +95,7 @@ domain, err := middleware.GetGymDomain(r, authService)
 ```
 
 **Repository Operations**:
+
 ```go
 // Dynamic table targeting based on JWT gym context
 tableName := fmt.Sprintf("%s.users", gymDomain)
@@ -110,7 +117,7 @@ func (h *GymHandler) GetGymByID(w http.ResponseWriter, r *http.Request, id strin
         ))
         return
     }
-    
+
     // THEN: Proceed with business logic
     gym, err := h.service.GetGymByID(id)
     // ...
@@ -126,7 +133,7 @@ func (s *UserService) CreateUser(userDTO dto.UserCreationDTO, gymID string) erro
     if err != nil {
         return apierror.New(errorcode_enum.CodeNotFound, "Gym not found", err)
     }
-    
+
     // Use domain for tenant-specific operations
     return s.userRepo.CreateUserInTenant(gym.Domain, userDTO)
 }
@@ -137,7 +144,7 @@ func (s *UserService) CreateUser(userDTO dto.UserCreationDTO, gymID string) erro
 ```go
 // Secure context helpers
 userID := middleware.GetUserID(r)        // From JWT
-userType := middleware.GetUserType(r)    // From JWT  
+userType := middleware.GetUserType(r)    // From JWT
 gymID := middleware.GetGymID(r)          // From JWT (NOT headers)
 
 // Authorization helpers
@@ -153,18 +160,22 @@ if middleware.IsGymAdmin(r) {
 ## Attack Prevention
 
 ### 1. **Header Tampering Prevention**
+
 - ❌ **Vulnerable**: Using `X-Gym-ID` header for authorization
 - ✅ **Secure**: Using gym ID from JWT claims
 
 ### 2. **Cross-Tenant Data Access Prevention**
+
 - ❌ **Vulnerable**: Direct database queries without tenant validation
 - ✅ **Secure**: `ValidateGymAccess()` before any gym-specific operations
 
 ### 3. **Privilege Escalation Prevention**
+
 - ❌ **Vulnerable**: Trusting client-provided role information
 - ✅ **Secure**: Role and permissions from JWT claims only
 
 ### 4. **Token Replay Prevention**
+
 - ✅ **Secure**: Short-lived access tokens (24h)
 - ✅ **Secure**: Refresh token rotation
 - ✅ **Secure**: Token revocation on logout
@@ -203,9 +214,9 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
   "data": { /* gym data */ }
 }
 
-// Tenant user accessing their own gym: ✅ 200 OK  
+// Tenant user accessing their own gym: ✅ 200 OK
 {
-  "status": "success", 
+  "status": "success",
   "message": "Gym found",
   "data": { /* gym data */ }
 }
@@ -221,6 +232,7 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...
 ## Best Practices for Developers
 
 ### 1. **Always Use JWT Context**
+
 ```go
 // ✅ CORRECT: Get gym ID from JWT
 gymID := middleware.GetGymID(r)
@@ -230,6 +242,7 @@ gymID := r.Header.Get("X-Gym-ID")
 ```
 
 ### 2. **Validate Access Before Operations**
+
 ```go
 // ✅ CORRECT: Validate before proceeding
 if !middleware.ValidateGymAccess(r, targetGymID) {
@@ -241,6 +254,7 @@ if !middleware.ValidateGymAccess(r, targetGymID) {
 ```
 
 ### 3. **Use Secure Domain Lookup**
+
 ```go
 // ✅ CORRECT: Get domain from JWT gym ID
 domain, err := middleware.GetGymDomain(r, authService)
