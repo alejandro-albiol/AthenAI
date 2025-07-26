@@ -148,33 +148,6 @@ func CreatePublicTables(db *sql.DB) error {
 	}
 	fmt.Println("Refresh token indexes created successfully")
 
-	// Create login_history table for audit trail (optional)
-	_, err = db.Exec(`
-	CREATE TABLE IF NOT EXISTS public.login_history (
-		id SERIAL PRIMARY KEY,
-		user_id VARCHAR(255) NOT NULL,
-		user_type VARCHAR(50) NOT NULL CHECK (user_type IN ('platform_admin', 'tenant_user')),
-		gym_domain VARCHAR(255), -- NULL for platform admins
-		ip_address INET,
-		user_agent TEXT,
-		login_successful BOOLEAN NOT NULL DEFAULT true,
-		login_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
-	)`)
-	if err != nil {
-		return fmt.Errorf("failed to create login_history table: %w", err)
-	}
-	fmt.Println("Login history table created successfully")
-
-	// Create indexes for login_history table
-	_, err = db.Exec(`
-		CREATE INDEX IF NOT EXISTS idx_login_history_user ON public.login_history(user_id, user_type);
-		CREATE INDEX IF NOT EXISTS idx_login_history_time ON public.login_history(login_at);
-	`)
-	if err != nil {
-		return fmt.Errorf("failed to create login_history indexes: %w", err)
-	}
-	fmt.Println("Login history indexes created successfully")
-
 	// Create workout_template table for storing workout templates
 	_, err = db.Exec(`
 	CREATE TABLE IF NOT EXISTS public.workout_template (
