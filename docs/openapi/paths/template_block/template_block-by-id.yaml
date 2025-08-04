@@ -1,0 +1,51 @@
+# GET/PUT/DELETE /template-blocks/{id}
+/template-blocks/{id}:
+  get:
+    summary: Get a template block by ID
+    tags:
+      - TemplateBlock
+    parameters:
+      - $ref: "../../parameters.yaml#/id"
+    responses:
+      "200":
+        description: Template block found
+        content:
+          application/json:
+            schema:
+              $ref: "../../schemas.yaml#/TemplateBlock"
+      "404":
+        $ref: "../../responses.yaml#/NotFound"
+  put:
+    summary: Update a template block
+    tags:
+      - TemplateBlock
+    parameters:
+      - $ref: "../../parameters.yaml#/id"
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../schemas.yaml#/TemplateBlockUpdate"
+    responses:
+      "200":
+        description: Template block updated
+        content:
+          application/json:
+            schema:
+              $ref: "../../schemas.yaml#/TemplateBlock"
+      "400":
+        $ref: "../../responses.yaml#/BadRequest"
+      "404":
+        $ref: "../../responses.yaml#/NotFound"
+  delete:
+    summary: Delete a template block
+    tags:
+      - TemplateBlock
+    parameters:
+      - $ref: "../../parameters.yaml#/id"
+    responses:
+      "204":
+        description: Template block deleted
+      "404":
+        $ref: "../../responses.yaml#/NotFound"

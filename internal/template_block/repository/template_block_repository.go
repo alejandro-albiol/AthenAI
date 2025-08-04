@@ -4,13 +4,14 @@ import (
 	"database/sql"
 
 	"github.com/alejandro-albiol/athenai/internal/template_block/dto"
+	"github.com/alejandro-albiol/athenai/internal/template_block/interfaces"
 )
 
 type TemplateBlockRepository struct {
 	db *sql.DB
 }
 
-func NewTemplateBlockRepository(db *sql.DB) *TemplateBlockRepository {
+func NewTemplateBlockRepository(db *sql.DB) interfaces.TemplateBlockRepository {
 	return &TemplateBlockRepository{db: db}
 }
 
@@ -90,7 +91,27 @@ func (r *TemplateBlockRepository) GetByTemplateID(templateID string) ([]dto.Temp
 	return blocks, nil
 }
 
-func (r *TemplateBlockRepository) Update(id string, block dto.TemplateBlockDTO) (dto.TemplateBlockDTO, error) {
+func (r *TemplateBlockRepository) GetByTemplateIDAndName(templateID, name string) (dto.TemplateBlockDTO, error) {
+	var block dto.TemplateBlockDTO
+	query := `SELECT id, template_id, name, type, order, exercise_count, estimated_duration_minutes, instructions, created_at FROM public.template_block WHERE template_id = $1 AND name = $2`
+	err := r.db.QueryRow(query, templateID, name).Scan(
+		&block.ID,
+		&block.TemplateID,
+		&block.Name,
+		&block.Type,
+		&block.Order,
+		&block.ExerciseCount,
+		&block.EstimatedDurationMinutes,
+		&block.Instructions,
+		&block.CreatedAt,
+	)
+	if err != nil {
+		return dto.TemplateBlockDTO{}, err
+	}
+	return block, nil
+}
+
+func (r *TemplateBlockRepository) Update(id string, block dto.UpdateTemplateBlockDTO) (dto.TemplateBlockDTO, error) {
 	query := `
 		UPDATE public.template_block
 		SET template_id = $1, name = $2, type = $3, "order" = $4, exercise_count = $5, estimated_duration_minutes = $6, instructions = $7
@@ -99,7 +120,6 @@ func (r *TemplateBlockRepository) Update(id string, block dto.TemplateBlockDTO) 
 	var updatedBlock dto.TemplateBlockDTO
 	err := r.db.QueryRow(
 		query,
-		block.TemplateID,
 		block.Name,
 		block.Type,
 		block.Order,

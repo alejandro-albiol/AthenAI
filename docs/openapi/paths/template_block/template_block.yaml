@@ -1,0 +1,23 @@
+# POST /template-blocks
+/template-blocks:
+  post:
+    summary: Create a new template block
+    tags:
+      - TemplateBlock
+    requestBody:
+      required: true
+      content:
+        application/json:
+          schema:
+            $ref: "../../schemas.yaml#/TemplateBlockCreate"
+    responses:
+      "201":
+        description: Template block created
+        content:
+          application/json:
+            schema:
+              $ref: "../../schemas.yaml#/TemplateBlock"
+      "409":
+        $ref: "../../responses.yaml#/Conflict"
+      "400":
+        $ref: "../../responses.yaml#/BadRequest"

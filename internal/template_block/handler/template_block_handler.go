@@ -1,0 +1,96 @@
+package handler
+
+import (
+	"encoding/json"
+	"net/http"
+
+	"github.com/alejandro-albiol/athenai/internal/template_block/dto"
+	"github.com/alejandro-albiol/athenai/internal/template_block/service"
+	"github.com/alejandro-albiol/athenai/pkg/apierror"
+	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
+	"github.com/alejandro-albiol/athenai/pkg/response"
+	"github.com/go-chi/chi/v5"
+)
+
+type TemplateBlockHandler struct {
+	service *service.TemplateBlockService
+}
+
+func NewTemplateBlockHandler(service *service.TemplateBlockService) *TemplateBlockHandler {
+	return &TemplateBlockHandler{service: service}
+}
+
+func (h *TemplateBlockHandler) CreateTemplateBlock(w http.ResponseWriter, r *http.Request) {
+	var block dto.CreateTemplateBlockDTO
+	if err := json.NewDecoder(r.Body).Decode(&block); err != nil {
+		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Invalid request body", err))
+		return
+	}
+	if err := h.service.CreateTemplateBlock(block); err != nil {
+		if apiErr, ok := err.(*apierror.APIError); ok {
+			response.WriteAPIError(w, apiErr)
+		} else {
+			response.WriteAPIError(w, apierror.New(errorcode_enum.CodeInternal, "Failed to create template block", err))
+		}
+		return
+	}
+	response.WriteAPISuccess(w, "Template block created successfully", nil)
+}
+
+func (h *TemplateBlockHandler) GetTemplateBlock(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Missing block ID", nil))
+		return
+	}
+	block, err := h.service.GetTemplateBlockByID(id)
+	if err != nil {
+		if apiErr, ok := err.(*apierror.APIError); ok {
+			response.WriteAPIError(w, apiErr)
+		} else {
+			response.WriteAPIError(w, apierror.New(errorcode_enum.CodeInternal, "Failed to get template block", err))
+		}
+		return
+	}
+	response.WriteAPISuccess(w, "Template block retrieved successfully", block)
+}
+
+func (h *TemplateBlockHandler) UpdateTemplateBlock(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Missing block ID", nil))
+		return
+	}
+	var update dto.UpdateTemplateBlockDTO
+	if err := json.NewDecoder(r.Body).Decode(&update); err != nil {
+		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Invalid request body", err))
+		return
+	}
+	updatedBlock, err := h.service.UpdateTemplateBlock(id, update)
+	if err != nil {
+		if apiErr, ok := err.(*apierror.APIError); ok {
+			response.WriteAPIError(w, apiErr)
+		} else {
+			response.WriteAPIError(w, apierror.New(errorcode_enum.CodeInternal, "Failed to update template block", err))
+		}
+		return
+	}
+	response.WriteAPISuccess(w, "Template block updated successfully", updatedBlock)
+}
+
+func (h *TemplateBlockHandler) DeleteTemplateBlock(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	if id == "" {
+		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Missing block ID", nil))
+		return
+	}
+	if err := h.service.DeleteTemplateBlock(id); err != nil {
+		if apiErr, ok := err.(*apierror.APIError); ok {
+			response.WriteAPIError(w, apiErr)
+		} else {
+			response.WriteAPIError(w, apierror.New(errorcode_enum.CodeInternal, "Failed to delete template block", err))
+		}
+		return
+	}
+	response.WriteAPISuccess(w, "Template block deleted successfully", nil)
+}

@@ -166,7 +166,15 @@ components:
           properties:
             code:
               type: string
-              enum: ["BAD_REQUEST", "UNAUTHORIZED", "FORBIDDEN", "NOT_FOUND", "CONFLICT", "INTERNAL_ERROR"]
+              enum:
+                [
+                  "BAD_REQUEST",
+                  "UNAUTHORIZED",
+                  "FORBIDDEN",
+                  "NOT_FOUND",
+                  "CONFLICT",
+                  "INTERNAL_ERROR",
+                ]
               example: "BAD_REQUEST"
               description: "Error code"
             error:
@@ -436,3 +444,10 @@ paths:
 
   /gym/{id}/delete:
     $ref: "./paths/gym/gym-delete.yaml"
+
+  # Template Block routes
+  /template-blocks:
+    $ref: "./paths/template_block/template_block.yaml"
+
+  /template-blocks/{id}:
+    $ref: "./paths/template_block/template_block-by-id.yaml"
