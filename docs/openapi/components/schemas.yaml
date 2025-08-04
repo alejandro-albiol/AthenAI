@@ -297,7 +297,8 @@ ClaimsDTO:
       type: integer
       format: int64
       example: 1642248000
-      description: "Token expiration timestamp"      iat:
+      description: "Token expiration timestamp"
+    iat:  
       type: integer
       format: int64
       example: 1642161600
