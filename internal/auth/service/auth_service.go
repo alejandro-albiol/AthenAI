@@ -352,4 +352,3 @@ func (s *AuthService) Logout(logoutReq authdto.LogoutRequestDTO) *apierror.APIEr
 
 	return nil
 }
-

@@ -18,7 +18,7 @@ type UserInfoDTO struct {
 	UserID   string  `json:"user_id"`
 	Username string  `json:"username"`
 	Email    string  `json:"email"`
-	UserType string  `json:"user_type"` // "platform_admin" or "tenant_user"
-	Role     *string `json:"role,omitempty"`     // For tenant users: admin, user, guest
-	GymID    *string `json:"gym_id,omitempty"`   // For tenant users
+	UserType string  `json:"user_type"`        // "platform_admin" or "tenant_user"
+	Role     *string `json:"role,omitempty"`   // For tenant users: admin, user, guest
+	GymID    *string `json:"gym_id,omitempty"` // For tenant users
 }

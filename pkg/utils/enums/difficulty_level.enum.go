@@ -5,9 +5,9 @@ type DifficultyLevel string
 
 // List of all difficulty levels.
 const (
-	Beginner   DifficultyLevel = "beginner"
+	Beginner     DifficultyLevel = "beginner"
 	Intermediate DifficultyLevel = "intermediate"
-	Advanced   DifficultyLevel = "advanced"
+	Advanced     DifficultyLevel = "advanced"
 )
 
 // AllDifficultyLevels is a slice of all valid difficulty level values for validation.

@@ -22,7 +22,6 @@ func NewUsersRepository(db *sql.DB, gymRepo gyminterfaces.GymRepository) interfa
 	}
 }
 
-
 func (r *usersRepository) CreateUser(gymID string, dto dto.UserCreationDTO) error {
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)

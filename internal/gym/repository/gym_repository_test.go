@@ -107,10 +107,10 @@ func TestUpdateGym(t *testing.T) {
 
 	repo := repository.NewGymRepository(db)
 	updateDTO := dto.GymUpdateDTO{
-		Name:           "Updated Gym",
-		Email:          "updated@gym.com",
-		Address:        "456 Update St",
-		Phone:          "+0987654321",
+		Name:    "Updated Gym",
+		Email:   "updated@gym.com",
+		Address: "456 Update St",
+		Phone:   "+0987654321",
 	}
 
 	rows := sqlmock.NewRows([]string{

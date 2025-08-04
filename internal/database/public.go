@@ -159,7 +159,7 @@ func CreatePublicTables(db *sql.DB) error {
 		target_audience TEXT, -- e.g., 'weight_loss', 'muscle_building', 'endurance', 'general_fitness'
 		created_by UUID REFERENCES public.admin(id),
 		is_active BOOLEAN NOT NULL DEFAULT TRUE,
-		is_public BOOLEAN NOT NULL DEFAULT FALSE, -- If true, available to all gyms
+		is_public BOOLEAN NOT NULL DEFAULT TRUE, -- If true, available to all gyms
 		created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
 		updated_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
 	)`)

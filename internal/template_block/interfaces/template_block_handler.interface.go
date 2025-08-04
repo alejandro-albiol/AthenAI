@@ -1,6 +1,7 @@
 package interfaces
 
 import "github.com/alejandro-albiol/athenai/internal/template_block/dto"
+
 // TemplateBlockHandlerInterface defines the interface for the template block handler
 // This should be used for dependency injection in the router layer
 // to ensure strict module boundaries and testability.
