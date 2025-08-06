@@ -7,10 +7,10 @@ type WorkoutTemplateRepository interface {
 	Create(template dto.CreateWorkoutTemplateDTO) error
 
 	// GetByID fetches a workout template by its unique ID.
-	GetByID(id string) (dto.WorkoutTemplateDTO, error)
+	GetByID(id string) (*dto.WorkoutTemplateDTO, error)
 
 	// GetByName fetches a workout template by its name.
-	GetByName(name string) (dto.WorkoutTemplateDTO, error)
+	GetByName(name string) (*dto.WorkoutTemplateDTO, error)
 
 	// GetByDifficulty fetches all workout templates with the specified difficulty.
 	GetByDifficulty(difficulty string) ([]dto.WorkoutTemplateDTO, error)
