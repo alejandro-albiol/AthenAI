@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/alejandro-albiol/athenai/internal/template_block/dto"
-	"github.com/alejandro-albiol/athenai/internal/template_block/service"
+	"github.com/alejandro-albiol/athenai/internal/template_block/interfaces"
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
 	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
 	"github.com/alejandro-albiol/athenai/pkg/response"
@@ -13,10 +13,10 @@ import (
 )
 
 type TemplateBlockHandler struct {
-	service *service.TemplateBlockService
+	service interfaces.TemplateBlockService
 }
 
-func NewTemplateBlockHandler(service *service.TemplateBlockService) *TemplateBlockHandler {
+func NewTemplateBlockHandler(service interfaces.TemplateBlockService) *TemplateBlockHandler {
 	return &TemplateBlockHandler{service: service}
 }
 

@@ -5,11 +5,11 @@ import "net/http"
 type ExerciseHandler interface {
 	// Exercise management
 	CreateExercise(w http.ResponseWriter, r *http.Request)
-	GetExerciseByID(w http.ResponseWriter, r *http.Request, id string)
-	GetExerciseByMuscularGroup(w http.ResponseWriter, r *http.Request, groups []string)
-	GetExerciseByEquipment(w http.ResponseWriter, r *http.Request, equipment []string)
+	GetExerciseByID(w http.ResponseWriter, r *http.Request)
+	GetExerciseByMuscularGroup(w http.ResponseWriter, r *http.Request)
+	GetExerciseByEquipment(w http.ResponseWriter, r *http.Request)
 	GetAllExercises(w http.ResponseWriter, r *http.Request)
-	UpdateExercise(w http.ResponseWriter, r *http.Request, id string)
-	DeleteExercise(w http.ResponseWriter, r *http.Request, id string)
-	GetExercisesByFilters(w http.ResponseWriter, r *http.Request, groups []string, equipment []string)
+	UpdateExercise(w http.ResponseWriter, r *http.Request)
+	DeleteExercise(w http.ResponseWriter, r *http.Request)
+	GetExercisesByFilters(w http.ResponseWriter, r *http.Request)
 }

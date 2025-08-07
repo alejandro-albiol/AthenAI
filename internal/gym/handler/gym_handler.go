@@ -12,6 +12,7 @@ import (
 	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
 	"github.com/alejandro-albiol/athenai/pkg/middleware"
 	"github.com/alejandro-albiol/athenai/pkg/response"
+	"github.com/go-chi/chi/v5"
 )
 
 type GymHandler struct {
@@ -60,7 +61,8 @@ func (h *GymHandler) CreateGym(w http.ResponseWriter, r *http.Request) {
 	response.WriteAPICreated(w, "Gym created successfully", id)
 }
 
-func (h *GymHandler) GetGymByID(w http.ResponseWriter, r *http.Request, id string) {
+func (h *GymHandler) GetGymByID(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
 	// Security validation: ensure user has access to this gym
 	if !middleware.ValidateGymAccess(r, id) {
 		response.WriteAPIError(w, apierror.New(
@@ -88,7 +90,8 @@ func (h *GymHandler) GetGymByID(w http.ResponseWriter, r *http.Request, id strin
 	response.WriteAPISuccess(w, "Gym found", gym)
 }
 
-func (h *GymHandler) GetGymByName(w http.ResponseWriter, r *http.Request, name string) {
+func (h *GymHandler) GetGymByName(w http.ResponseWriter, r *http.Request) {
+	name := chi.URLParam(r, "name")
 	gym, err := h.service.GetGymByName(name)
 	if err != nil {
 		var apiErr *apierror.APIError
@@ -134,7 +137,8 @@ func (h *GymHandler) GetAllGyms(w http.ResponseWriter, r *http.Request) {
 	response.WriteAPISuccess(w, "Gyms retrieved successfully", gyms)
 }
 
-func (h *GymHandler) UpdateGym(w http.ResponseWriter, r *http.Request, id string) {
+func (h *GymHandler) UpdateGym(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
 	// Security validation: ensure user has access to this gym
 	if !middleware.ValidateGymAccess(r, id) {
 		response.WriteAPIError(w, apierror.New(
@@ -172,7 +176,11 @@ func (h *GymHandler) UpdateGym(w http.ResponseWriter, r *http.Request, id string
 	response.WriteAPISuccess(w, "Gym updated successfully", updatedGym)
 }
 
-func (h *GymHandler) SetGymActive(w http.ResponseWriter, r *http.Request, id string, active bool) {
+func (h *GymHandler) SetGymActive(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
+	activeStr := r.URL.Query().Get("active")
+	active := activeStr == "true"
+
 	err := h.service.SetGymActive(id, active)
 	if err != nil {
 		var apiErr *apierror.APIError
@@ -194,7 +202,8 @@ func (h *GymHandler) SetGymActive(w http.ResponseWriter, r *http.Request, id str
 	response.WriteAPISuccess(w, fmt.Sprintf("Gym %s successfully", statusMsg), nil)
 }
 
-func (h *GymHandler) DeleteGym(w http.ResponseWriter, r *http.Request, id string) {
+func (h *GymHandler) DeleteGym(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
 	err := h.service.DeleteGym(id)
 	if err != nil {
 		var apiErr *apierror.APIError

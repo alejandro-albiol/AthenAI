@@ -18,28 +18,28 @@ func (m *MockGymHandler) CreateGym(w http.ResponseWriter, r *http.Request) {
 	m.Called(w, r)
 }
 
-func (m *MockGymHandler) GetGymByID(w http.ResponseWriter, r *http.Request, id string) {
-	m.Called(w, r, id)
+func (m *MockGymHandler) GetGymByID(w http.ResponseWriter, r *http.Request) {
+	m.Called(w, r)
 }
 
-func (m *MockGymHandler) GetGymByName(w http.ResponseWriter, r *http.Request, name string) {
-	m.Called(w, r, name)
+func (m *MockGymHandler) GetGymByName(w http.ResponseWriter, r *http.Request) {
+	m.Called(w, r)
 }
 
 func (m *MockGymHandler) GetAllGyms(w http.ResponseWriter, r *http.Request) {
 	m.Called(w, r)
 }
 
-func (m *MockGymHandler) UpdateGym(w http.ResponseWriter, r *http.Request, id string) {
-	m.Called(w, r, id)
+func (m *MockGymHandler) UpdateGym(w http.ResponseWriter, r *http.Request) {
+	m.Called(w, r)
 }
 
-func (m *MockGymHandler) SetGymActive(w http.ResponseWriter, r *http.Request, id string, active bool) {
-	m.Called(w, r, id, active)
+func (m *MockGymHandler) SetGymActive(w http.ResponseWriter, r *http.Request) {
+	m.Called(w, r)
 }
 
-func (m *MockGymHandler) DeleteGym(w http.ResponseWriter, r *http.Request, id string) {
-	m.Called(w, r, id)
+func (m *MockGymHandler) DeleteGym(w http.ResponseWriter, r *http.Request) {
+	m.Called(w, r)
 }
 
 func TestGymRouter_Routes(t *testing.T) {
@@ -82,7 +82,7 @@ func TestGymRouter_Routes(t *testing.T) {
 			method: http.MethodGet,
 			path:   "/gym123",
 			expectedCalls: func(mh *MockGymHandler) {
-				mh.On("GetGymByID", mock.Anything, mock.Anything, "gym123").Run(func(args mock.Arguments) {
+				mh.On("GetGymByID", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 					w := args.Get(0).(http.ResponseWriter)
 					w.WriteHeader(http.StatusOK)
 				})
@@ -94,7 +94,7 @@ func TestGymRouter_Routes(t *testing.T) {
 			method: http.MethodGet,
 			path:   "/domain/test-gym",
 			expectedCalls: func(mh *MockGymHandler) {
-				mh.On("GetGymByDomain", mock.Anything, mock.Anything, "test-gym").Run(func(args mock.Arguments) {
+				mh.On("GetGymByName", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 					w := args.Get(0).(http.ResponseWriter)
 					w.WriteHeader(http.StatusOK)
 				})
@@ -106,7 +106,7 @@ func TestGymRouter_Routes(t *testing.T) {
 			method: http.MethodPut,
 			path:   "/gym123",
 			expectedCalls: func(mh *MockGymHandler) {
-				mh.On("UpdateGym", mock.Anything, mock.Anything, "gym123").Run(func(args mock.Arguments) {
+				mh.On("UpdateGym", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 					w := args.Get(0).(http.ResponseWriter)
 					w.WriteHeader(http.StatusOK)
 				})
@@ -118,7 +118,7 @@ func TestGymRouter_Routes(t *testing.T) {
 			method: http.MethodPut,
 			path:   "/gym123/activate",
 			expectedCalls: func(mh *MockGymHandler) {
-				mh.On("SetGymActive", mock.Anything, mock.Anything, "gym123", true).Run(func(args mock.Arguments) {
+				mh.On("SetGymActive", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 					w := args.Get(0).(http.ResponseWriter)
 					w.WriteHeader(http.StatusOK)
 				})
@@ -130,7 +130,7 @@ func TestGymRouter_Routes(t *testing.T) {
 			method: http.MethodPut,
 			path:   "/gym123/deactivate",
 			expectedCalls: func(mh *MockGymHandler) {
-				mh.On("SetGymActive", mock.Anything, mock.Anything, "gym123", false).Run(func(args mock.Arguments) {
+				mh.On("SetGymActive", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 					w := args.Get(0).(http.ResponseWriter)
 					w.WriteHeader(http.StatusOK)
 				})
@@ -142,7 +142,7 @@ func TestGymRouter_Routes(t *testing.T) {
 			method: http.MethodDelete,
 			path:   "/gym123",
 			expectedCalls: func(mh *MockGymHandler) {
-				mh.On("DeleteGym", mock.Anything, mock.Anything, "gym123").Run(func(args mock.Arguments) {
+				mh.On("DeleteGym", mock.Anything, mock.Anything).Run(func(args mock.Arguments) {
 					w := args.Get(0).(http.ResponseWriter)
 					w.WriteHeader(http.StatusNoContent)
 				})

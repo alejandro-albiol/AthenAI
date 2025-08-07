@@ -1,10 +1,8 @@
 package router
 
 import (
-	"encoding/json"
 	"net/http"
 
-	"github.com/alejandro-albiol/athenai/internal/user/dto"
 	"github.com/alejandro-albiol/athenai/internal/user/interfaces"
 	"github.com/go-chi/chi/v5"
 )
@@ -24,50 +22,39 @@ func NewUsersRouter(handler interfaces.UserHandler) http.Handler {
 	})
 
 	r.Get("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		id := chi.URLParam(r, "id")
-		handler.GetUserByID(w, r, id)
+		handler.GetUserByID(w, r)
 	})
 
 	r.Get("/username/{username}", func(w http.ResponseWriter, r *http.Request) {
-		username := chi.URLParam(r, "username")
-		handler.GetUserByUsername(w, r, username)
+		handler.GetUserByUsername(w, r)
 	})
 
 	r.Get("/email/{email}", func(w http.ResponseWriter, r *http.Request) {
-		email := chi.URLParam(r, "email")
-		handler.GetUserByEmail(w, r, email)
+		handler.GetUserByEmail(w, r)
 	})
 
 	r.Put("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		id := chi.URLParam(r, "id")
-		var userDTO dto.UserUpdateDTO
-		if err := json.NewDecoder(r.Body).Decode(&userDTO); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		handler.UpdateUser(w, r, id, userDTO)
+		handler.UpdateUser(w, r)
 	})
 
 	r.Delete("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		id := chi.URLParam(r, "id")
-		handler.DeleteUser(w, r, id)
+		handler.DeleteUser(w, r)
 	})
 
 	r.Post("/{id}/verify", func(w http.ResponseWriter, r *http.Request) {
-		id := chi.URLParam(r, "id")
-		handler.VerifyUser(w, r, id)
+		handler.VerifyUser(w, r)
+	})
+
+	r.Delete("/{id}", func(w http.ResponseWriter, r *http.Request) {
+		handler.DeleteUser(w, r)
+	})
+
+	r.Post("/{id}/verify", func(w http.ResponseWriter, r *http.Request) {
+		handler.VerifyUser(w, r)
 	})
 
 	r.Post("/{id}/active", func(w http.ResponseWriter, r *http.Request) {
-		id := chi.URLParam(r, "id")
-		var activeReq struct {
-			Active bool `json:"active"`
-		}
-		if err := json.NewDecoder(r.Body).Decode(&activeReq); err != nil {
-			w.WriteHeader(http.StatusBadRequest)
-			return
-		}
-		handler.SetUserActive(w, r, id, activeReq.Active)
+		handler.SetUserActive(w, r)
 	})
 
 	return r

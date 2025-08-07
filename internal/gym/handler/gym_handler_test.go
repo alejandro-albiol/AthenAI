@@ -12,6 +12,7 @@ import (
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
 	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
 	"github.com/alejandro-albiol/athenai/pkg/response"
+	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -165,11 +166,14 @@ func TestGetGymByID(t *testing.T) {
 
 			h := handler.NewGymHandler(mockService)
 
-			req := httptest.NewRequest(http.MethodGet, "/gyms/"+tc.gymID, nil)
-			// ...existing code...
+			// Use chi router to set URL param for id
+			router := chi.NewRouter()
+			router.Get("/{id}", h.GetGymByID)
+
+			req := httptest.NewRequest(http.MethodGet, "/"+tc.gymID, nil)
 			w := httptest.NewRecorder()
 
-			h.GetGymByID(w, req, tc.gymID)
+			router.ServeHTTP(w, req)
 
 			assert.Equal(t, tc.wantStatus, w.Code)
 			var resp response.APIResponse[any]

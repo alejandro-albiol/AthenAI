@@ -10,6 +10,7 @@ import (
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
 	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
 	"github.com/alejandro-albiol/athenai/pkg/response"
+	"github.com/go-chi/chi/v5"
 )
 
 type ExerciseHandler struct {
@@ -48,7 +49,8 @@ func (h *ExerciseHandler) CreateExercise(w http.ResponseWriter, r *http.Request)
 	response.WriteAPICreated(w, "Exercise created successfully", id)
 }
 
-func (h *ExerciseHandler) GetExerciseByID(w http.ResponseWriter, r *http.Request, id string) {
+func (h *ExerciseHandler) GetExerciseByID(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
 	exercise, err := h.service.GetExerciseByID(id)
 	if err != nil {
 		var apiErr *apierror.APIError
@@ -66,7 +68,8 @@ func (h *ExerciseHandler) GetExerciseByID(w http.ResponseWriter, r *http.Request
 	response.WriteAPISuccess(w, "Exercise retrieved successfully", exercise)
 }
 
-func (h *ExerciseHandler) GetExerciseByName(w http.ResponseWriter, r *http.Request, name string) {
+func (h *ExerciseHandler) GetExerciseByName(w http.ResponseWriter, r *http.Request) {
+	name := chi.URLParam(r, "name")
 	exercise, err := h.service.GetExerciseByName(name)
 	if err != nil {
 		var apiErr *apierror.APIError
@@ -84,7 +87,8 @@ func (h *ExerciseHandler) GetExerciseByName(w http.ResponseWriter, r *http.Reque
 	response.WriteAPISuccess(w, "Exercise retrieved successfully", exercise)
 }
 
-func (h *ExerciseHandler) GetExerciseByEquipment(w http.ResponseWriter, r *http.Request, equipment []string) {
+func (h *ExerciseHandler) GetExerciseByEquipment(w http.ResponseWriter, r *http.Request) {
+	equipment := r.URL.Query()["equipment"]
 	exercises, err := h.service.GetExercisesByEquipment(equipment)
 	if err != nil {
 		var apiErr *apierror.APIError
@@ -102,7 +106,8 @@ func (h *ExerciseHandler) GetExerciseByEquipment(w http.ResponseWriter, r *http.
 	response.WriteAPISuccess(w, "Exercises retrieved successfully", exercises)
 }
 
-func (h *ExerciseHandler) GetExerciseByMuscularGroup(w http.ResponseWriter, r *http.Request, groups []string) {
+func (h *ExerciseHandler) GetExerciseByMuscularGroup(w http.ResponseWriter, r *http.Request) {
+	groups := r.URL.Query()["group"]
 	exercises, err := h.service.GetExercisesByMuscularGroup(groups)
 	if err != nil {
 		var apiErr *apierror.APIError
@@ -138,7 +143,8 @@ func (h *ExerciseHandler) GetAllExercises(w http.ResponseWriter, r *http.Request
 	response.WriteAPISuccess(w, "Exercises retrieved successfully", exercises)
 }
 
-func (h *ExerciseHandler) UpdateExercise(w http.ResponseWriter, r *http.Request, id string) {
+func (h *ExerciseHandler) UpdateExercise(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
 	updateDTO := dto.ExerciseUpdateDTO{}
 	if err := json.NewDecoder(r.Body).Decode(&updateDTO); err != nil {
 		response.WriteAPIError(w, apierror.New(
@@ -166,7 +172,8 @@ func (h *ExerciseHandler) UpdateExercise(w http.ResponseWriter, r *http.Request,
 	response.WriteAPISuccess(w, "Exercise updated successfully", updatedExercise)
 }
 
-func (h *ExerciseHandler) DeleteExercise(w http.ResponseWriter, r *http.Request, id string) {
+func (h *ExerciseHandler) DeleteExercise(w http.ResponseWriter, r *http.Request) {
+	id := chi.URLParam(r, "id")
 	err := h.service.DeleteExercise(id)
 	if err != nil {
 		var apiErr *apierror.APIError
@@ -184,7 +191,9 @@ func (h *ExerciseHandler) DeleteExercise(w http.ResponseWriter, r *http.Request,
 	response.WriteAPISuccess(w, "Exercise deleted successfully", nil)
 }
 
-func (h *ExerciseHandler) GetExercisesByFilters(w http.ResponseWriter, r *http.Request, groups []string, equipment []string) {
+func (h *ExerciseHandler) GetExercisesByFilters(w http.ResponseWriter, r *http.Request) {
+	groups := r.URL.Query()["group"]
+	equipment := r.URL.Query()["equipment"]
 	var exercises []dto.ExerciseResponseDTO
 	var err error
 

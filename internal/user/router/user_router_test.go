@@ -22,36 +22,36 @@ func (m *MockUserHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 	m.Called(w, r)
 }
 
-func (m *MockUserHandler) GetUserByID(w http.ResponseWriter, r *http.Request, id string) {
-	m.Called(w, r, id)
+func (m *MockUserHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
+	m.Called(w, r)
 }
 
-func (m *MockUserHandler) GetUserByUsername(w http.ResponseWriter, r *http.Request, username string) {
-	m.Called(w, r, username)
+func (m *MockUserHandler) GetUserByUsername(w http.ResponseWriter, r *http.Request) {
+	m.Called(w, r)
 }
 
-func (m *MockUserHandler) GetUserByEmail(w http.ResponseWriter, r *http.Request, email string) {
-	m.Called(w, r, email)
+func (m *MockUserHandler) GetUserByEmail(w http.ResponseWriter, r *http.Request) {
+	m.Called(w, r)
 }
 
 func (m *MockUserHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	m.Called(w, r)
 }
 
-func (m *MockUserHandler) UpdateUser(w http.ResponseWriter, r *http.Request, id string, user dto.UserUpdateDTO) {
-	m.Called(w, r, id, user)
+func (m *MockUserHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
+	m.Called(w, r)
 }
 
-func (m *MockUserHandler) DeleteUser(w http.ResponseWriter, r *http.Request, id string) {
-	m.Called(w, r, id)
+func (m *MockUserHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
+	m.Called(w, r)
 }
 
-func (m *MockUserHandler) VerifyUser(w http.ResponseWriter, r *http.Request, id string) {
-	m.Called(w, r, id)
+func (m *MockUserHandler) VerifyUser(w http.ResponseWriter, r *http.Request) {
+	m.Called(w, r)
 }
 
-func (m *MockUserHandler) SetUserActive(w http.ResponseWriter, r *http.Request, id string, active bool) {
-	m.Called(w, r, id, active)
+func (m *MockUserHandler) SetUserActive(w http.ResponseWriter, r *http.Request) {
+	m.Called(w, r)
 }
 
 func TestUserRoutes(t *testing.T) {
@@ -83,7 +83,6 @@ func TestUserRoutes(t *testing.T) {
 			path:   "/",
 			gymID:  "",
 			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
-				// Handler will be called but should handle empty/invalid gym context gracefully
 				m.On("GetAllUsers", w, mock.Anything).Run(func(args mock.Arguments) {
 					w := args.Get(0).(http.ResponseWriter)
 					w.WriteHeader(http.StatusBadRequest)
@@ -97,7 +96,7 @@ func TestUserRoutes(t *testing.T) {
 			path:   "/user123",
 			gymID:  "gym123",
 			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
-				m.On("GetUserByID", w, mock.Anything, "user123").Run(func(args mock.Arguments) {
+				m.On("GetUserByID", w, mock.Anything).Run(func(args mock.Arguments) {
 					w := args.Get(0).(http.ResponseWriter)
 					w.WriteHeader(http.StatusOK)
 				})
@@ -110,7 +109,7 @@ func TestUserRoutes(t *testing.T) {
 			path:   "/username/testuser",
 			gymID:  "gym123",
 			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
-				m.On("GetUserByUsername", w, mock.Anything, "testuser").Run(func(args mock.Arguments) {
+				m.On("GetUserByUsername", w, mock.Anything).Run(func(args mock.Arguments) {
 					w := args.Get(0).(http.ResponseWriter)
 					w.WriteHeader(http.StatusOK)
 				})
@@ -123,7 +122,7 @@ func TestUserRoutes(t *testing.T) {
 			path:   "/email/test@test.com",
 			gymID:  "gym123",
 			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
-				m.On("GetUserByEmail", w, mock.Anything, "test@test.com").Run(func(args mock.Arguments) {
+				m.On("GetUserByEmail", w, mock.Anything).Run(func(args mock.Arguments) {
 					w := args.Get(0).(http.ResponseWriter)
 					w.WriteHeader(http.StatusOK)
 				})
@@ -154,7 +153,7 @@ func TestUserRoutes(t *testing.T) {
 			method: http.MethodPost,
 			path:   "/",
 			gymID:  "gym123",
-			body:   `{"invalid": json}`, // Invalid JSON will be handled by handler
+			body:   `{"invalid": json}`,
 			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
 				m.On("RegisterUser", w, mock.Anything).Run(func(args mock.Arguments) {
 					w := args.Get(0).(http.ResponseWriter)
@@ -173,7 +172,7 @@ func TestUserRoutes(t *testing.T) {
 				Email:    "updated@test.com",
 			},
 			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
-				m.On("UpdateUser", w, mock.Anything, "user123", mock.AnythingOfType("dto.UserUpdateDTO")).Run(func(args mock.Arguments) {
+				m.On("UpdateUser", w, mock.Anything).Run(func(args mock.Arguments) {
 					w := args.Get(0).(http.ResponseWriter)
 					w.WriteHeader(http.StatusOK)
 				})
@@ -185,7 +184,7 @@ func TestUserRoutes(t *testing.T) {
 			method: http.MethodPut,
 			path:   "/user123",
 			gymID:  "gym123",
-			body:   `{"invalid": json}`, // Invalid JSON
+			body:   `{"invalid": json}`,
 			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
 				// No mock setup needed as router should handle JSON error before calling handler
 			},
@@ -197,7 +196,7 @@ func TestUserRoutes(t *testing.T) {
 			path:   "/user123",
 			gymID:  "gym123",
 			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
-				m.On("DeleteUser", w, mock.Anything, "user123").Run(func(args mock.Arguments) {
+				m.On("DeleteUser", w, mock.Anything).Run(func(args mock.Arguments) {
 					w := args.Get(0).(http.ResponseWriter)
 					w.WriteHeader(http.StatusNoContent)
 				})
@@ -210,7 +209,7 @@ func TestUserRoutes(t *testing.T) {
 			path:   "/user123/verify",
 			gymID:  "gym123",
 			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
-				m.On("VerifyUser", w, mock.Anything, "user123").Run(func(args mock.Arguments) {
+				m.On("VerifyUser", w, mock.Anything).Run(func(args mock.Arguments) {
 					w := args.Get(0).(http.ResponseWriter)
 					w.WriteHeader(http.StatusOK)
 				})
@@ -224,7 +223,7 @@ func TestUserRoutes(t *testing.T) {
 			gymID:  "gym123",
 			body:   map[string]bool{"active": true},
 			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
-				m.On("SetUserActive", w, mock.Anything, "user123", true).Run(func(args mock.Arguments) {
+				m.On("SetUserActive", w, mock.Anything).Run(func(args mock.Arguments) {
 					w := args.Get(0).(http.ResponseWriter)
 					w.WriteHeader(http.StatusOK)
 				})
@@ -238,7 +237,7 @@ func TestUserRoutes(t *testing.T) {
 			gymID:  "gym123",
 			body:   map[string]bool{"active": false},
 			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
-				m.On("SetUserActive", w, mock.Anything, "user123", false).Run(func(args mock.Arguments) {
+				m.On("SetUserActive", w, mock.Anything).Run(func(args mock.Arguments) {
 					w := args.Get(0).(http.ResponseWriter)
 					w.WriteHeader(http.StatusOK)
 				})
@@ -250,7 +249,7 @@ func TestUserRoutes(t *testing.T) {
 			method: http.MethodPost,
 			path:   "/user123/active",
 			gymID:  "gym123",
-			body:   `{"invalid": json}`, // Invalid JSON
+			body:   `{"invalid": json}`,
 			setupMock: func(m *MockUserHandler, w *httptest.ResponseRecorder) {
 				// No mock setup needed as router should handle JSON error before calling handler
 			},

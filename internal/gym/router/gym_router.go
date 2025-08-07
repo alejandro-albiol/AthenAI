@@ -23,33 +23,27 @@ func NewGymRouter(handler gyminterfaces.GymHandler) http.Handler {
 	})
 
 	r.Get("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		id := chi.URLParam(r, "id")
-		handler.GetGymByID(w, r, id)
+		handler.GetGymByID(w, r)
 	})
 
 	r.Get("/name/{name}", func(w http.ResponseWriter, r *http.Request) {
-		name := chi.URLParam(r, "name")
-		handler.GetGymByName(w, r, name)
+		handler.GetGymByName(w, r)
 	})
 
 	r.Put("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		id := chi.URLParam(r, "id")
-		handler.UpdateGym(w, r, id)
+		handler.UpdateGym(w, r)
 	})
 
 	r.Put("/{id}/activate", func(w http.ResponseWriter, r *http.Request) {
-		id := chi.URLParam(r, "id")
-		handler.SetGymActive(w, r, id, true)
+		handler.SetGymActive(w, r)
 	})
 
 	r.Put("/{id}/deactivate", func(w http.ResponseWriter, r *http.Request) {
-		id := chi.URLParam(r, "id")
-		handler.SetGymActive(w, r, id, false)
+		handler.SetGymActive(w, r)
 	})
 
 	r.Delete("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		id := chi.URLParam(r, "id")
-		handler.DeleteGym(w, r, id)
+		handler.DeleteGym(w, r)
 	})
 
 	return r

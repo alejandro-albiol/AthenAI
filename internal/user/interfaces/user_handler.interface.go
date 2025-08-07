@@ -2,27 +2,25 @@ package interfaces
 
 import (
 	"net/http"
-
-	"github.com/alejandro-albiol/athenai/internal/user/dto"
 )
 
 type UserHandler interface {
 	// RegisterUser handles user registration.
 	RegisterUser(w http.ResponseWriter, r *http.Request)
 	// GetUserByID handles retrieving a user by ID.
-	GetUserByID(w http.ResponseWriter, r *http.Request, id string)
+	GetUserByID(w http.ResponseWriter, r *http.Request)
 	// GetUserByUsername handles retrieving a user by username.
-	GetUserByUsername(w http.ResponseWriter, r *http.Request, username string)
+	GetUserByUsername(w http.ResponseWriter, r *http.Request)
 	// GetUserByEmail handles retrieving a user by email.
-	GetUserByEmail(w http.ResponseWriter, r *http.Request, email string)
+	GetUserByEmail(w http.ResponseWriter, r *http.Request)
 	// GetAllUsers retrieves all users.
 	GetAllUsers(w http.ResponseWriter, r *http.Request)
 	// UpdateUser handles updating an existing user.
-	UpdateUser(w http.ResponseWriter, r *http.Request, id string, user dto.UserUpdateDTO)
+	UpdateUser(w http.ResponseWriter, r *http.Request)
 	// DeleteUser handles removing a user by ID.
-	DeleteUser(w http.ResponseWriter, r *http.Request, id string)
+	DeleteUser(w http.ResponseWriter, r *http.Request)
 	// VerifyUser marks a user as verified.
-	VerifyUser(w http.ResponseWriter, r *http.Request, id string)
+	VerifyUser(w http.ResponseWriter, r *http.Request)
 	// SetUserActive sets a user's active status.
-	SetUserActive(w http.ResponseWriter, r *http.Request, id string, active bool)
+	SetUserActive(w http.ResponseWriter, r *http.Request)
 }

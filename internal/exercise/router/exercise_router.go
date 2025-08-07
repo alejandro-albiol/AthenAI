@@ -17,22 +17,18 @@ func NewExerciseRouter(handler interfaces.ExerciseHandler) http.Handler {
 		handler.CreateExercise(w, r)
 	})
 	r.Get("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetExerciseByID(w, r, chi.URLParam(r, "id"))
+		handler.GetExerciseByID(w, r)
 	})
 
 	r.Get("/search", func(w http.ResponseWriter, r *http.Request) {
-		groups := r.URL.Query()["group"]
-		equipment := r.URL.Query()["equipment"]
-		handler.GetExercisesByFilters(w, r, groups, equipment)
+		handler.GetExercisesByFilters(w, r)
 	})
 
 	r.Put("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		id := chi.URLParam(r, "id")
-		handler.UpdateExercise(w, r, id)
+		handler.UpdateExercise(w, r)
 	})
 	r.Delete("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		id := chi.URLParam(r, "id")
-		handler.DeleteExercise(w, r, id)
+		handler.DeleteExercise(w, r)
 	})
 	return r
 }

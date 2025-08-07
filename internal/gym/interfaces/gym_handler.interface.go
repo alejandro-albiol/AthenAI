@@ -12,11 +12,11 @@ type GymHandler interface {
 
 	// GetGymByID handles GET requests to fetch a gym by its ID.
 	// Returns 200 with gym data on success, 404 if not found.
-	GetGymByID(w http.ResponseWriter, r *http.Request, id string)
+	GetGymByID(w http.ResponseWriter, r *http.Request)
 
 	// GetGymByName handles GET requests to fetch a gym by its name.
 	// Returns 200 with gym data on success, 404 if not found.
-	GetGymByName(w http.ResponseWriter, r *http.Request, name string)
+	GetGymByName(w http.ResponseWriter, r *http.Request)
 
 	// GetAllGyms handles GET requests to fetch all active gyms.
 	// Returns 200 with array of gyms on success.
@@ -24,13 +24,13 @@ type GymHandler interface {
 
 	// UpdateGym handles PUT/PATCH requests to update an existing gym.
 	// Reads update data from request body and returns 200 on success.
-	UpdateGym(w http.ResponseWriter, r *http.Request, id string)
+	UpdateGym(w http.ResponseWriter, r *http.Request)
 
 	// SetGymActive handles PATCH requests to change a gym's active status.
 	// Returns 200 on success, 404 if gym not found.
-	SetGymActive(w http.ResponseWriter, r *http.Request, id string, active bool)
+	SetGymActive(w http.ResponseWriter, r *http.Request)
 
 	// DeleteGym handles DELETE requests to remove a gym.
 	// Returns 204 on success, 404 if gym not found.
-	DeleteGym(w http.ResponseWriter, r *http.Request, id string)
+	DeleteGym(w http.ResponseWriter, r *http.Request)
 }

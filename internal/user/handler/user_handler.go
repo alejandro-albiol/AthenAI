@@ -12,6 +12,7 @@ import (
 	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
 	"github.com/alejandro-albiol/athenai/pkg/middleware"
 	"github.com/alejandro-albiol/athenai/pkg/response"
+	"github.com/go-chi/chi/v5"
 )
 
 type UsersHandler struct {
@@ -96,11 +97,9 @@ func (h *UsersHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {
 	response.WriteAPISuccess(w, "Users retrieved successfully", users)
 }
 
-func (h *UsersHandler) GetUserByID(w http.ResponseWriter, r *http.Request, id string) {
-	// Extract gym ID from JWT token
+func (h *UsersHandler) GetUserByID(w http.ResponseWriter, r *http.Request) {
 	gymID := middleware.GetGymID(r)
-
-	// Security: Users can only access their own profile, admins can access any user in their gym
+	id := chi.URLParam(r, "id")
 	currentUserID := middleware.GetUserID(r)
 	if !middleware.IsGymAdmin(r) && currentUserID != id {
 		response.WriteAPIError(w, apierror.New(
@@ -110,7 +109,6 @@ func (h *UsersHandler) GetUserByID(w http.ResponseWriter, r *http.Request, id st
 		))
 		return
 	}
-
 	user, err := h.service.GetUserByID(gymID, id)
 	if err != nil {
 		var apiErr *apierror.APIError
@@ -129,11 +127,9 @@ func (h *UsersHandler) GetUserByID(w http.ResponseWriter, r *http.Request, id st
 	response.WriteAPISuccess(w, "User found", user)
 }
 
-func (h *UsersHandler) GetUserByUsername(w http.ResponseWriter, r *http.Request, username string) {
-	// Extract gym ID from JWT token
+func (h *UsersHandler) GetUserByUsername(w http.ResponseWriter, r *http.Request) {
 	gymID := middleware.GetGymID(r)
-
-	// Security: Only admins can search users by username
+	username := chi.URLParam(r, "username")
 	if !middleware.IsGymAdmin(r) {
 		response.WriteAPIError(w, apierror.New(
 			errorcode_enum.CodeForbidden,
@@ -142,7 +138,6 @@ func (h *UsersHandler) GetUserByUsername(w http.ResponseWriter, r *http.Request,
 		))
 		return
 	}
-
 	user, err := h.service.GetUserByUsername(gymID, username)
 	if err != nil {
 		var apiErr *apierror.APIError
@@ -161,11 +156,9 @@ func (h *UsersHandler) GetUserByUsername(w http.ResponseWriter, r *http.Request,
 	response.WriteAPISuccess(w, "User found", user)
 }
 
-func (h *UsersHandler) GetUserByEmail(w http.ResponseWriter, r *http.Request, email string) {
-	// Extract gym ID from JWT token
+func (h *UsersHandler) GetUserByEmail(w http.ResponseWriter, r *http.Request) {
 	gymID := middleware.GetGymID(r)
-
-	// Security: Only admins can search users by email
+	email := chi.URLParam(r, "email")
 	if !middleware.IsGymAdmin(r) {
 		response.WriteAPIError(w, apierror.New(
 			errorcode_enum.CodeForbidden,
@@ -174,7 +167,6 @@ func (h *UsersHandler) GetUserByEmail(w http.ResponseWriter, r *http.Request, em
 		))
 		return
 	}
-
 	user, err := h.service.GetUserByEmail(gymID, email)
 	if err != nil {
 		var apiErr *apierror.APIError
@@ -193,11 +185,9 @@ func (h *UsersHandler) GetUserByEmail(w http.ResponseWriter, r *http.Request, em
 	response.WriteAPISuccess(w, "User found", user)
 }
 
-func (h *UsersHandler) UpdateUser(w http.ResponseWriter, r *http.Request, id string, userDTO dto.UserUpdateDTO) {
-	// Extract gym ID from JWT token
+func (h *UsersHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 	gymID := middleware.GetGymID(r)
-
-	// Security: Users can only update their own profile, admins can update any user in their gym
+	id := chi.URLParam(r, "id")
 	currentUserID := middleware.GetUserID(r)
 	if !middleware.IsGymAdmin(r) && currentUserID != id {
 		response.WriteAPIError(w, apierror.New(
@@ -207,7 +197,15 @@ func (h *UsersHandler) UpdateUser(w http.ResponseWriter, r *http.Request, id str
 		))
 		return
 	}
-
+	userDTO := dto.UserUpdateDTO{}
+	if err := json.NewDecoder(r.Body).Decode(&userDTO); err != nil {
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeBadRequest,
+			"Invalid request payload",
+			err,
+		))
+		return
+	}
 	err := h.service.UpdateUser(gymID, id, userDTO)
 	if err != nil {
 		var apiErr *apierror.APIError
@@ -226,11 +224,9 @@ func (h *UsersHandler) UpdateUser(w http.ResponseWriter, r *http.Request, id str
 	response.WriteAPISuccess(w, "User updated successfully", nil)
 }
 
-func (h *UsersHandler) DeleteUser(w http.ResponseWriter, r *http.Request, id string) {
-	// Extract gym ID from JWT token
+func (h *UsersHandler) DeleteUser(w http.ResponseWriter, r *http.Request) {
 	gymID := middleware.GetGymID(r)
-
-	// Security: Only admins can delete users
+	id := chi.URLParam(r, "id")
 	if !middleware.IsGymAdmin(r) {
 		response.WriteAPIError(w, apierror.New(
 			errorcode_enum.CodeForbidden,
@@ -239,7 +235,6 @@ func (h *UsersHandler) DeleteUser(w http.ResponseWriter, r *http.Request, id str
 		))
 		return
 	}
-
 	err := h.service.DeleteUser(gymID, id)
 	if err != nil {
 		var apiErr *apierror.APIError
@@ -258,11 +253,9 @@ func (h *UsersHandler) DeleteUser(w http.ResponseWriter, r *http.Request, id str
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func (h *UsersHandler) VerifyUser(w http.ResponseWriter, r *http.Request, id string) {
-	// Extract gym ID from JWT token
+func (h *UsersHandler) VerifyUser(w http.ResponseWriter, r *http.Request) {
 	gymID := middleware.GetGymID(r)
-
-	// Security: Only admins can verify users
+	id := chi.URLParam(r, "id")
 	if !middleware.IsGymAdmin(r) {
 		response.WriteAPIError(w, apierror.New(
 			errorcode_enum.CodeForbidden,
@@ -271,7 +264,6 @@ func (h *UsersHandler) VerifyUser(w http.ResponseWriter, r *http.Request, id str
 		))
 		return
 	}
-
 	err := h.service.VerifyUser(gymID, id)
 	if err != nil {
 		var apiErr *apierror.APIError
@@ -290,11 +282,18 @@ func (h *UsersHandler) VerifyUser(w http.ResponseWriter, r *http.Request, id str
 	response.WriteAPISuccess(w, "User verified successfully", nil)
 }
 
-func (h *UsersHandler) SetUserActive(w http.ResponseWriter, r *http.Request, id string, active bool) {
-	// Extract gym ID from JWT token
+func (h *UsersHandler) SetUserActive(w http.ResponseWriter, r *http.Request) {
 	gymID := middleware.GetGymID(r)
-
-	// Security: Only admins can activate/deactivate users
+	id := chi.URLParam(r, "id")
+	var activeReq struct{ Active bool }
+	if err := json.NewDecoder(r.Body).Decode(&activeReq); err != nil {
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeBadRequest,
+			"Invalid request payload",
+			err,
+		))
+		return
+	}
 	if !middleware.IsGymAdmin(r) {
 		response.WriteAPIError(w, apierror.New(
 			errorcode_enum.CodeForbidden,
@@ -303,8 +302,7 @@ func (h *UsersHandler) SetUserActive(w http.ResponseWriter, r *http.Request, id 
 		))
 		return
 	}
-
-	err := h.service.SetUserActive(gymID, id, active)
+	err := h.service.SetUserActive(gymID, id, activeReq.Active)
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
@@ -318,9 +316,8 @@ func (h *UsersHandler) SetUserActive(w http.ResponseWriter, r *http.Request, id 
 		))
 		return
 	}
-
 	statusMsg := "deactivated"
-	if active {
+	if activeReq.Active {
 		statusMsg = "activated"
 	}
 	response.WriteAPISuccess(w, fmt.Sprintf("User %s successfully", statusMsg), nil)
