@@ -28,3 +28,4 @@ post:
       $ref: "/swagger/components/responses.yaml#/BadRequest"
     "404":
       $ref: "/swagger/components/responses.yaml#/NotFound"
+

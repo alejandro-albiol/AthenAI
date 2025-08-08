@@ -1,0 +1,38 @@
+post:
+  tags:
+    - Exercise Muscular Group Links
+  summary: Create exercise-muscular group link
+  description: Creates a link between an exercise and muscular group
+  operationId: createExerciseMuscularGroupLink
+  security:
+    - bearerAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../../openapi.yaml#/components/schemas/ExerciseMuscularGroupLinkDTO"
+        example:
+          exercise_id: "550e8400-e29b-41d4-a716-446655440001"
+          muscular_group_id: "550e8400-e29b-41d4-a716-446655440002"
+  responses:
+    "200":
+      description: Exercise-muscular group link created successfully
+      content:
+        application/json:
+          schema:
+            $ref: "../../openapi.yaml#/components/responses/SuccessResponse"
+          example:
+            status: "success"
+            message: "Exercise-muscular group link created successfully"
+            data:
+              id: "550e8400-e29b-41d4-a716-446655440000"
+    "400":
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
+    "401":
+      $ref: "../../openapi.yaml#/components/responses/Unauthorized"
+    "409":
+      $ref: "../../openapi.yaml#/components/responses/Conflict"
+    "500":
+      $ref: "../../openapi.yaml#/components/responses/InternalServerError"
+

@@ -1,0 +1,132 @@
+get:
+  tags:
+    - Equipment
+  summary: Get equipment by ID
+  description: Retrieves a specific piece of equipment by its ID
+  operationId: getEquipmentById
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Equipment ID
+      schema:
+        type: string
+        format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+  responses:
+    "200":
+      description: Equipment retrieved successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Equipment retrieved successfully"
+              data:
+                $ref: "../../openapi.yaml#/components/schemas/EquipmentResponseDTO"
+    "400":
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
+    "401":
+      $ref: "../../openapi.yaml#/components/responses/Unauthorized"
+    "404":
+      $ref: "../../openapi.yaml#/components/responses/NotFound"
+    "500":
+      $ref: "../../openapi.yaml#/components/responses/InternalServerError"
+
+put:
+  tags:
+    - Equipment
+  summary: Update equipment
+  description: Updates an existing piece of equipment
+  operationId: updateEquipment
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Equipment ID
+      schema:
+        type: string
+        format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../../openapi.yaml#/components/schemas/EquipmentUpdateDTO"
+        example:
+          name: "Olympic Barbell"
+          description: "Standard 45lb Olympic barbell for weightlifting"
+          category: "free_weights"
+          is_active: true
+  responses:
+    "200":
+      description: Equipment updated successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Equipment updated successfully"
+              data:
+                $ref: "../../openapi.yaml#/components/schemas/EquipmentResponseDTO"
+    "400":
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
+    "401":
+      $ref: "../../openapi.yaml#/components/responses/Unauthorized"
+    "404":
+      $ref: "../../openapi.yaml#/components/responses/NotFound"
+    "500":
+      $ref: "../../openapi.yaml#/components/responses/InternalServerError"
+
+delete:
+  tags:
+    - Equipment
+  summary: Delete equipment
+  description: Deletes a specific piece of equipment
+  operationId: deleteEquipment
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Equipment ID
+      schema:
+        type: string
+        format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+  responses:
+    "200":
+      description: Equipment deleted successfully
+      content:
+        application/json:
+          schema:
+            $ref: "../../openapi.yaml#/components/responses/SuccessResponse"
+          example:
+            status: "success"
+            message: "Equipment deleted successfully"
+            data: null
+    "400":
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
+    "401":
+      $ref: "../../openapi.yaml#/components/responses/Unauthorized"
+    "404":
+      $ref: "../../openapi.yaml#/components/responses/NotFound"
+    "500":
+      $ref: "../../openapi.yaml#/components/responses/InternalServerError"
+

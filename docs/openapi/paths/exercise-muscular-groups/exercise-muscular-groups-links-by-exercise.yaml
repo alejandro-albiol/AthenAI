@@ -1,0 +1,42 @@
+get:
+  tags:
+    - Exercise Muscular Group Links
+  summary: Get links by exercise ID
+  description: Retrieves all muscular group links for a specific exercise
+  operationId: getExerciseMuscularGroupLinksByExerciseId
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: exerciseID
+      in: path
+      required: true
+      description: Exercise ID
+      schema:
+        type: string
+        format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440001"
+  responses:
+    "200":
+      description: Exercise muscular group links retrieved successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Exercise muscular group links retrieved successfully"
+              data:
+                type: array
+                items:
+                  $ref: "../../openapi.yaml#/components/schemas/ExerciseMuscularGroupDTO"
+    "400":
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
+    "401":
+      $ref: "../../openapi.yaml#/components/responses/Unauthorized"
+    "500":
+      $ref: "../../openapi.yaml#/components/responses/InternalServerError"
+

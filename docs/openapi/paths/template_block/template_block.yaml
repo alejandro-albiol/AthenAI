@@ -1,23 +1,35 @@
-# POST /template-blocks
-/template-blocks:
-  post:
-    summary: Create a new template block
-    tags:
-      - TemplateBlock
-    requestBody:
-      required: true
+post:
+  summary: Create a new template block
+  tags:
+    - TemplateBlock
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../../openapi.yaml#/components/schemas/CreateTemplateBlockDTO"
+  responses:
+    "201":
+      description: Template block created
       content:
         application/json:
           schema:
-            $ref: "../../schemas.yaml#/TemplateBlockCreate"
-    responses:
-      "201":
-        description: Template block created
-        content:
-          application/json:
-            schema:
-              $ref: "../../schemas.yaml#/TemplateBlock"
-      "409":
-        $ref: "../../responses.yaml#/Conflict"
-      "400":
-        $ref: "../../responses.yaml#/BadRequest"
+            $ref: "../../openapi.yaml#/components/schemas/TemplateBlockDTO"
+    "409":
+      $ref: "../../openapi.yaml#/components/responses/Conflict"
+    "400":
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
+
+get:
+  summary: Get all template blocks
+  tags:
+    - TemplateBlock
+  responses:
+    "200":
+      description: List of template blocks
+      content:
+        application/json:
+          schema:
+            type: array
+            items:
+              $ref: "../../openapi.yaml#/components/schemas/TemplateBlockDTO"

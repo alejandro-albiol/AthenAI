@@ -22,3 +22,4 @@ post:
       $ref: '/swagger/components/responses.yaml#/NotFound'
     '409':
       description: User already verified
+

@@ -1,0 +1,38 @@
+post:
+  tags:
+    - Exercise Equipment Links
+  summary: Create exercise-equipment link
+  description: Creates a link between an exercise and equipment
+  operationId: createExerciseEquipmentLink
+  security:
+    - bearerAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../../openapi.yaml#/components/schemas/ExerciseEquipmentLinkDTO"
+        example:
+          exercise_id: "550e8400-e29b-41d4-a716-446655440001"
+          equipment_id: "550e8400-e29b-41d4-a716-446655440002"
+  responses:
+    "200":
+      description: Exercise-equipment link created successfully
+      content:
+        application/json:
+          schema:
+            $ref: "../../openapi.yaml#/components/responses/SuccessResponse"
+          example:
+            status: "success"
+            message: "Exercise-equipment link created successfully"
+            data:
+              id: "550e8400-e29b-41d4-a716-446655440000"
+    "400":
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
+    "401":
+      $ref: "../../openapi.yaml#/components/responses/Unauthorized"
+    "409":
+      $ref: "../../openapi.yaml#/components/responses/Conflict"
+    "500":
+      $ref: "../../openapi.yaml#/components/responses/InternalServerError"
+

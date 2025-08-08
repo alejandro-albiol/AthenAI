@@ -1,0 +1,135 @@
+get:
+  tags:
+    - Workout Templates
+  summary: Get workout template by ID
+  description: Retrieves a specific workout template by its ID
+  operationId: getWorkoutTemplateById
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Workout template ID
+      schema:
+        type: string
+        format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+  responses:
+    "200":
+      description: Workout template retrieved successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Workout template retrieved successfully"
+              data:
+                $ref: "../../openapi.yaml#/components/schemas/WorkoutTemplateDTO"
+    "400":
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
+    "401":
+      $ref: "../../openapi.yaml#/components/responses/Unauthorized"
+    "404":
+      $ref: "../../openapi.yaml#/components/responses/NotFound"
+    "500":
+      $ref: "../../openapi.yaml#/components/responses/InternalServerError"
+
+put:
+  tags:
+    - Workout Templates
+  summary: Update workout template
+  description: Updates an existing workout template
+  operationId: updateWorkoutTemplate
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Workout template ID
+      schema:
+        type: string
+        format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../../openapi.yaml#/components/schemas/UpdateWorkoutTemplateDTO"
+        example:
+          name: "Advanced Full Body Workout"
+          description: "An intensive full-body workout for advanced users"
+          difficulty_level: "advanced"
+          estimated_duration_minutes: 60
+          target_audience: "advanced athletes"
+          is_active: true
+          is_public: true
+  responses:
+    "200":
+      description: Workout template updated successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Workout template updated successfully"
+              data:
+                $ref: "../../openapi.yaml#/components/schemas/WorkoutTemplateDTO"
+    "400":
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
+    "401":
+      $ref: "../../openapi.yaml#/components/responses/Unauthorized"
+    "404":
+      $ref: "../../openapi.yaml#/components/responses/NotFound"
+    "500":
+      $ref: "../../openapi.yaml#/components/responses/InternalServerError"
+
+delete:
+  tags:
+    - Workout Templates
+  summary: Delete workout template
+  description: Deletes a specific workout template
+  operationId: deleteWorkoutTemplate
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Workout template ID
+      schema:
+        type: string
+        format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+  responses:
+    "200":
+      description: Workout template deleted successfully
+      content:
+        application/json:
+          schema:
+            $ref: "../../openapi.yaml#/components/responses/SuccessResponse"
+          example:
+            status: "success"
+            message: "Workout template deleted successfully"
+            data: null
+    "400":
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
+    "401":
+      $ref: "../../openapi.yaml#/components/responses/Unauthorized"
+    "404":
+      $ref: "../../openapi.yaml#/components/responses/NotFound"
+    "500":
+      $ref: "../../openapi.yaml#/components/responses/InternalServerError"
+

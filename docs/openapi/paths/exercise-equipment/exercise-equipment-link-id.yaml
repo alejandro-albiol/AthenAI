@@ -1,0 +1,79 @@
+get:
+  tags:
+    - Exercise Equipment Links
+  summary: Get exercise-equipment link by ID
+  description: Retrieves a specific exercise-equipment link by its ID
+  operationId: getExerciseEquipmentLinkById
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Exercise-equipment link ID
+      schema:
+        type: string
+        format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+  responses:
+    "200":
+      description: Exercise-equipment link retrieved successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Exercise-equipment link retrieved successfully"
+              data:
+                $ref: "../../openapi.yaml#/components/schemas/ExerciseEquipmentDTO"
+    "400":
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
+    "401":
+      $ref: "../../openapi.yaml#/components/responses/Unauthorized"
+    "404":
+      $ref: "../../openapi.yaml#/components/responses/NotFound"
+    "500":
+      $ref: "../../openapi.yaml#/components/responses/InternalServerError"
+
+delete:
+  tags:
+    - Exercise Equipment Links
+  summary: Delete exercise-equipment link
+  description: Deletes a specific exercise-equipment link
+  operationId: deleteExerciseEquipmentLink
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Exercise-equipment link ID
+      schema:
+        type: string
+        format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+  responses:
+    "200":
+      description: Exercise-equipment link deleted successfully
+      content:
+        application/json:
+          schema:
+            $ref: "../../openapi.yaml#/components/responses/SuccessResponse"
+          example:
+            status: "success"
+            message: "Exercise-equipment link deleted successfully"
+            data: null
+    "400":
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
+    "401":
+      $ref: "../../openapi.yaml#/components/responses/Unauthorized"
+    "404":
+      $ref: "../../openapi.yaml#/components/responses/NotFound"
+    "500":
+      $ref: "../../openapi.yaml#/components/responses/InternalServerError"
+

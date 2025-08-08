@@ -21,3 +21,4 @@ put:
       $ref: "../../components/responses.yaml#/BadRequest"
     "404":
       $ref: "../../components/responses.yaml#/NotFound"
+

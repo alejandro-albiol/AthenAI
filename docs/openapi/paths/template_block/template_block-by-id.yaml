@@ -1,51 +1,69 @@
-# GET/PUT/DELETE /template-blocks/{id}
-/template-blocks/{id}:
-  get:
-    summary: Get a template block by ID
-    tags:
-      - TemplateBlock
-    parameters:
-      - $ref: "../../parameters.yaml#/id"
-    responses:
-      "200":
-        description: Template block found
-        content:
-          application/json:
-            schema:
-              $ref: "../../schemas.yaml#/TemplateBlock"
-      "404":
-        $ref: "../../responses.yaml#/NotFound"
-  put:
-    summary: Update a template block
-    tags:
-      - TemplateBlock
-    parameters:
-      - $ref: "../../parameters.yaml#/id"
-    requestBody:
+get:
+  summary: Get a template block by ID
+  tags:
+    - TemplateBlock
+  parameters:
+    - name: id
+      in: path
       required: true
+      description: Template block ID
+      schema:
+        type: string
+        format: uuid
+  responses:
+    "200":
+      description: Template block found
       content:
         application/json:
           schema:
-            $ref: "../../schemas.yaml#/TemplateBlockUpdate"
-    responses:
-      "200":
-        description: Template block updated
-        content:
-          application/json:
-            schema:
-              $ref: "../../schemas.yaml#/TemplateBlock"
-      "400":
-        $ref: "../../responses.yaml#/BadRequest"
-      "404":
-        $ref: "../../responses.yaml#/NotFound"
-  delete:
-    summary: Delete a template block
-    tags:
-      - TemplateBlock
-    parameters:
-      - $ref: "../../parameters.yaml#/id"
-    responses:
-      "204":
-        description: Template block deleted
-      "404":
-        $ref: "../../responses.yaml#/NotFound"
+            $ref: "../../openapi.yaml#/components/schemas/TemplateBlockDTO"
+    "404":
+      $ref: "../../openapi.yaml#/components/responses/NotFound"
+
+put:
+  summary: Update a template block
+  tags:
+    - TemplateBlock
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Template block ID
+      schema:
+        type: string
+        format: uuid
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../../openapi.yaml#/components/schemas/UpdateTemplateBlockDTO"
+  responses:
+    "200":
+      description: Template block updated
+      content:
+        application/json:
+          schema:
+            $ref: "../../openapi.yaml#/components/schemas/TemplateBlockDTO"
+    "400":
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
+    "404":
+      $ref: "../../openapi.yaml#/components/responses/NotFound"
+
+delete:
+  summary: Delete a template block
+  tags:
+    - TemplateBlock
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Template block ID
+      schema:
+        type: string
+        format: uuid
+  responses:
+    "204":
+      description: Template block deleted
+    "404":
+      $ref: "../../openapi.yaml#/components/responses/NotFound"

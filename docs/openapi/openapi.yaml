@@ -1,9 +1,9 @@
-openapi: 3.1.0
+openapi: 3.0.3
 info:
   title: Athenai API
   description: |
     API documentation for the Athenai multi-tenant gym management platform.
-  version: 1.0.0
+  version: 2.0.0
 
 servers:
   - url: http://localhost:8080/api/v1
@@ -63,6 +63,18 @@ components:
             $ref: "#/components/schemas/APIErrorResponse"
     Created:
       description: Resource created successfully
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIResponse"
+    InternalServerError:
+      description: Internal server error
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/APIErrorResponse"
+    SuccessResponse:
+      description: Operation completed successfully
       content:
         application/json:
           schema:
@@ -167,14 +179,12 @@ components:
             code:
               type: string
               enum:
-                [
-                  "BAD_REQUEST",
-                  "UNAUTHORIZED",
-                  "FORBIDDEN",
-                  "NOT_FOUND",
-                  "CONFLICT",
-                  "INTERNAL_ERROR",
-                ]
+                - "BAD_REQUEST"
+                - "UNAUTHORIZED"
+                - "FORBIDDEN"
+                - "NOT_FOUND"
+                - "CONFLICT"
+                - "INTERNAL_ERROR"
               example: "BAD_REQUEST"
               description: "Error code"
             error:
@@ -390,6 +400,582 @@ components:
           example: "d4e5f6g7h8i9j0k1l2m3n4o5p6q7r8s9t0u1v2w3x4y5z6"
           description: "Valid refresh token"
 
+    # Equipment related schemas
+    EquipmentCreationDTO:
+      type: object
+      required:
+        - name
+        - description
+        - category
+      properties:
+        name:
+          type: string
+          example: "Barbell"
+        description:
+          type: string
+          example: "Standard Olympic barbell for weightlifting"
+        category:
+          type: string
+          example: "free_weights"
+
+    EquipmentUpdateDTO:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Barbell"
+        description:
+          type: string
+          example: "Standard Olympic barbell for weightlifting"
+        category:
+          type: string
+          example: "free_weights"
+        is_active:
+          type: boolean
+          example: true
+
+    EquipmentResponseDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        name:
+          type: string
+          example: "Barbell"
+        description:
+          type: string
+          example: "Standard Olympic barbell for weightlifting"
+        category:
+          type: string
+          example: "free_weights"
+        is_active:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+    # Muscular Group related schemas
+    CreateMuscularGroupDTO:
+      type: object
+      required:
+        - name
+        - description
+        - body_part
+      properties:
+        name:
+          type: string
+          example: "Biceps"
+        description:
+          type: string
+          example: "Front upper arm muscles"
+        body_part:
+          type: string
+          enum: ["upper_body", "lower_body", "core", "full_body"]
+          example: "upper_body"
+
+    UpdateMuscularGroupDTO:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Biceps"
+        description:
+          type: string
+          example: "Front upper arm muscles"
+        body_part:
+          type: string
+          enum: ["upper_body", "lower_body", "core", "full_body"]
+          example: "upper_body"
+        is_active:
+          type: boolean
+          example: true
+
+    MuscularGroupResponseDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        name:
+          type: string
+          example: "Biceps"
+        description:
+          type: string
+          example: "Front upper arm muscles"
+        body_part:
+          type: string
+          example: "upper_body"
+        is_active:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+    # Exercise related schemas
+    ExerciseCreationDTO:
+      type: object
+      required:
+        - name
+        - muscular_groups
+        - difficulty_level
+        - exercise_type
+        - instructions
+        - created_by
+      properties:
+        name:
+          type: string
+          example: "Push-ups"
+        synonyms:
+          type: array
+          items:
+            type: string
+          example: ["press-ups", "floor press"]
+        muscular_groups:
+          type: array
+          items:
+            type: string
+          example: ["chest", "triceps", "shoulders"]
+        equipment_needed:
+          type: array
+          items:
+            type: string
+          example: ["mat"]
+        difficulty_level:
+          type: string
+          enum: ["beginner", "intermediate", "advanced"]
+          example: "beginner"
+        exercise_type:
+          type: string
+          enum: ["strength", "cardio", "flexibility", "balance", "functional"]
+          example: "strength"
+        muscular_group_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          example: ["550e8400-e29b-41d4-a716-446655440000"]
+        equipment_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          example: ["550e8400-e29b-41d4-a716-446655440001"]
+        instructions:
+          type: string
+          example: "Start in plank position, lower body to floor, push back up"
+        video_url:
+          type: string
+          format: uri
+          example: "https://example.com/pushups-video.mp4"
+        image_url:
+          type: string
+          format: uri
+          example: "https://example.com/pushups-image.jpg"
+        created_by:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440002"
+
+    ExerciseUpdateDTO:
+      type: object
+      properties:
+        name:
+          type: string
+          example: "Push-ups"
+        synonyms:
+          type: array
+          items:
+            type: string
+          example: ["press-ups", "floor press"]
+        muscular_groups:
+          type: array
+          items:
+            type: string
+          example: ["chest", "triceps", "shoulders"]
+        equipment_needed:
+          type: array
+          items:
+            type: string
+          example: ["mat"]
+        difficulty_level:
+          type: string
+          enum: ["beginner", "intermediate", "advanced"]
+          example: "beginner"
+        muscular_group_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          example: ["550e8400-e29b-41d4-a716-446655440000"]
+        equipment_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          example: ["550e8400-e29b-41d4-a716-446655440001"]
+        exercise_type:
+          type: string
+          enum: ["strength", "cardio", "flexibility", "balance", "functional"]
+          example: "strength"
+        instructions:
+          type: string
+          example: "Start in plank position, lower body to floor, push back up"
+        video_url:
+          type: string
+          format: uri
+          example: "https://example.com/pushups-video.mp4"
+        image_url:
+          type: string
+          format: uri
+          example: "https://example.com/pushups-image.jpg"
+        is_active:
+          type: boolean
+          example: true
+
+    ExerciseResponseDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        name:
+          type: string
+          example: "Push-ups"
+        synonyms:
+          type: array
+          items:
+            type: string
+          example: ["press-ups", "floor press"]
+        muscular_groups:
+          type: array
+          items:
+            type: string
+          example: ["chest", "triceps", "shoulders"]
+        equipment_needed:
+          type: array
+          items:
+            type: string
+          example: ["mat"]
+        difficulty_level:
+          type: string
+          enum: ["beginner", "intermediate", "advanced"]
+          example: "beginner"
+        exercise_type:
+          type: string
+          enum: ["strength", "cardio", "flexibility", "balance", "functional"]
+          example: "strength"
+        instructions:
+          type: string
+          example: "Start in plank position, lower body to floor, push back up"
+        muscular_group_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          example: ["550e8400-e29b-41d4-a716-446655440000"]
+        equipment_ids:
+          type: array
+          items:
+            type: string
+            format: uuid
+          example: ["550e8400-e29b-41d4-a716-446655440001"]
+        video_url:
+          type: string
+          format: uri
+          example: "https://example.com/pushups-video.mp4"
+        image_url:
+          type: string
+          format: uri
+          example: "https://example.com/pushups-image.jpg"
+        created_by:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440002"
+        is_active:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+    # Workout Template related schemas
+    CreateWorkoutTemplateDTO:
+      type: object
+      required:
+        - name
+        - difficulty_level
+        - created_by
+      properties:
+        name:
+          type: string
+          example: "Full Body Beginner Workout"
+        description:
+          type: string
+          example: "A complete full-body workout suitable for beginners"
+        difficulty_level:
+          type: string
+          enum: ["beginner", "intermediate", "advanced"]
+          example: "beginner"
+        estimated_duration_minutes:
+          type: integer
+          example: 45
+        target_audience:
+          type: string
+          example: "beginners"
+        created_by:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440002"
+
+    UpdateWorkoutTemplateDTO:
+      type: object
+      required:
+        - name
+        - difficulty_level
+      properties:
+        name:
+          type: string
+          example: "Full Body Beginner Workout"
+        description:
+          type: string
+          example: "A complete full-body workout suitable for beginners"
+        difficulty_level:
+          type: string
+          enum: ["beginner", "intermediate", "advanced"]
+          example: "beginner"
+        estimated_duration_minutes:
+          type: integer
+          example: 45
+        target_audience:
+          type: string
+          example: "beginners"
+        is_active:
+          type: boolean
+          example: true
+        is_public:
+          type: boolean
+          example: true
+
+    WorkoutTemplateDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        name:
+          type: string
+          example: "Full Body Beginner Workout"
+        description:
+          type: string
+          example: "A complete full-body workout suitable for beginners"
+        difficulty_level:
+          type: string
+          enum: ["beginner", "intermediate", "advanced"]
+          example: "beginner"
+        estimated_duration_minutes:
+          type: integer
+          example: 45
+        target_audience:
+          type: string
+          example: "beginners"
+        created_by:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440002"
+        is_active:
+          type: boolean
+          example: true
+        is_public:
+          type: boolean
+          example: true
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+        updated_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
+    # Exercise Equipment Join related schemas
+    ExerciseEquipmentDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        exercise_id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        equipment_id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440002"
+
+    ExerciseEquipmentLinkDTO:
+      type: object
+      required:
+        - exercise_id
+        - equipment_id
+      properties:
+        exercise_id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        equipment_id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440002"
+
+    # Exercise Muscular Group Join related schemas
+    ExerciseMuscularGroupDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        exercise_id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        muscular_group_id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440002"
+
+    ExerciseMuscularGroupLinkDTO:
+      type: object
+      required:
+        - exercise_id
+        - muscular_group_id
+      properties:
+        exercise_id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        muscular_group_id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440002"
+
+    # Template Block related schemas
+    CreateTemplateBlockDTO:
+      type: object
+      required:
+        - template_id
+        - name
+        - type
+        - order
+        - exercise_count
+      properties:
+        template_id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        name:
+          type: string
+          example: "Warm-up Block"
+        type:
+          type: string
+          example: "warmup"
+        order:
+          type: integer
+          example: 1
+        exercise_count:
+          type: integer
+          example: 3
+        estimated_duration_minutes:
+          type: integer
+          example: 10
+        instructions:
+          type: string
+          example: "Start with light movements to prepare your body"
+
+    UpdateTemplateBlockDTO:
+      type: object
+      properties:
+        template_id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        name:
+          type: string
+          example: "Warm-up Block"
+        type:
+          type: string
+          example: "warmup"
+        order:
+          type: integer
+          example: 1
+        exercise_count:
+          type: integer
+          example: 3
+        estimated_duration_minutes:
+          type: integer
+          example: 10
+        instructions:
+          type: string
+          example: "Start with light movements to prepare your body"
+
+    TemplateBlockDTO:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440000"
+        template_id:
+          type: string
+          format: uuid
+          example: "550e8400-e29b-41d4-a716-446655440001"
+        name:
+          type: string
+          example: "Warm-up Block"
+        type:
+          type: string
+          example: "warmup"
+        order:
+          type: integer
+          example: 1
+        exercise_count:
+          type: integer
+          example: 3
+        estimated_duration_minutes:
+          type: integer
+          example: 10
+        instructions:
+          type: string
+          example: "Start with light movements to prepare your body"
+        created_at:
+          type: string
+          format: date-time
+          example: "2024-01-15T10:30:00Z"
+
 paths:
   # Auth routes
   /auth/login:
@@ -451,3 +1037,69 @@ paths:
 
   /template-blocks/{id}:
     $ref: "./paths/template_block/template_block-by-id.yaml"
+
+  # Equipment routes
+  /equipment:
+    $ref: "./paths/equipment/equipment.yaml"
+
+  /equipment/{id}:
+    $ref: "./paths/equipment/equipment-id.yaml"
+
+  # Muscular Groups routes
+  /muscular-groups:
+    $ref: "./paths/muscular-groups/muscular-groups.yaml"
+
+  /muscular-groups/{id}:
+    $ref: "./paths/muscular-groups/muscular-groups-id.yaml"
+
+  # Exercise routes
+  /exercises:
+    $ref: "./paths/exercises/exercises.yaml"
+
+  /exercises/search:
+    $ref: "./paths/exercises/exercises-search.yaml"
+
+  /exercises/{id}:
+    $ref: "./paths/exercises/exercises-id.yaml"
+
+  # Workout Template routes
+  /workout-templates:
+    $ref: "./paths/workout-templates/workout-templates.yaml"
+
+  /workout-templates/{id}:
+    $ref: "./paths/workout-templates/workout-templates-id.yaml"
+
+  /workout-templates/name/{name}:
+    $ref: "./paths/workout-templates/workout-templates-name.yaml"
+
+  /workout-templates/difficulty/{difficulty}:
+    $ref: "./paths/workout-templates/workout-templates-difficulty.yaml"
+
+  /workout-templates/target-audience/{targetAudience}:
+    $ref: "./paths/workout-templates/workout-templates-target-audience.yaml"
+
+  # Exercise Equipment Link routes
+  /exercise-equipment/link:
+    $ref: "./paths/exercise-equipment/exercise-equipment-link.yaml"
+
+  /exercise-equipment/link/{id}:
+    $ref: "./paths/exercise-equipment/exercise-equipment-link-id.yaml"
+
+  /exercise-equipment/exercise/{exerciseID}/links:
+    $ref: "./paths/exercise-equipment/exercise-equipment-links-by-exercise.yaml"
+
+  /exercise-equipment/equipment/{equipmentID}/links:
+    $ref: "./paths/exercise-equipment/exercise-equipment-links-by-equipment.yaml"
+
+  # Exercise Muscular Group Link routes
+  /exercise-muscular-groups/link:
+    $ref: "./paths/exercise-muscular-groups/exercise-muscular-groups-link.yaml"
+
+  /exercise-muscular-groups/link/{id}:
+    $ref: "./paths/exercise-muscular-groups/exercise-muscular-groups-link-id.yaml"
+
+  /exercise-muscular-groups/exercise/{exerciseID}/links:
+    $ref: "./paths/exercise-muscular-groups/exercise-muscular-groups-links-by-exercise.yaml"
+
+  /exercise-muscular-groups/muscular-group/{muscularGroupID}/links:
+    $ref: "./paths/exercise-muscular-groups/exercise-muscular-groups-links-by-muscular-group.yaml"

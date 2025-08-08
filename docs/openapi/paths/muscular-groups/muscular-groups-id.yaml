@@ -1,0 +1,132 @@
+get:
+  tags:
+    - Muscular Groups
+  summary: Get muscular group by ID
+  description: Retrieves a specific muscular group by its ID
+  operationId: getMuscularGroupById
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Muscular group ID
+      schema:
+        type: string
+        format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+  responses:
+    "200":
+      description: Muscular group retrieved successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Muscular group retrieved successfully"
+              data:
+                $ref: "../../openapi.yaml#/components/schemas/MuscularGroupResponseDTO"
+    "400":
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
+    "401":
+      $ref: "../../openapi.yaml#/components/responses/Unauthorized"
+    "404":
+      $ref: "../../openapi.yaml#/components/responses/NotFound"
+    "500":
+      $ref: "../../openapi.yaml#/components/responses/InternalServerError"
+
+put:
+  tags:
+    - Muscular Groups
+  summary: Update muscular group
+  description: Updates an existing muscular group
+  operationId: updateMuscularGroup
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Muscular group ID
+      schema:
+        type: string
+        format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../../openapi.yaml#/components/schemas/UpdateMuscularGroupDTO"
+        example:
+          name: "Biceps Brachii"
+          description: "Primary front upper arm muscles"
+          body_part: "upper_body"
+          is_active: true
+  responses:
+    "200":
+      description: Muscular group updated successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Muscular group updated successfully"
+              data:
+                $ref: "../../openapi.yaml#/components/schemas/MuscularGroupResponseDTO"
+    "400":
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
+    "401":
+      $ref: "../../openapi.yaml#/components/responses/Unauthorized"
+    "404":
+      $ref: "../../openapi.yaml#/components/responses/NotFound"
+    "500":
+      $ref: "../../openapi.yaml#/components/responses/InternalServerError"
+
+delete:
+  tags:
+    - Muscular Groups
+  summary: Delete muscular group
+  description: Deletes a specific muscular group
+  operationId: deleteMuscularGroup
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Muscular group ID
+      schema:
+        type: string
+        format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+  responses:
+    "200":
+      description: Muscular group deleted successfully
+      content:
+        application/json:
+          schema:
+            $ref: "../../openapi.yaml#/components/responses/SuccessResponse"
+          example:
+            status: "success"
+            message: "Muscular group deleted successfully"
+            data: null
+    "400":
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
+    "401":
+      $ref: "../../openapi.yaml#/components/responses/Unauthorized"
+    "404":
+      $ref: "../../openapi.yaml#/components/responses/NotFound"
+    "500":
+      $ref: "../../openapi.yaml#/components/responses/InternalServerError"
+

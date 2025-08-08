@@ -1,0 +1,66 @@
+get:
+  tags:
+    - Exercises
+  summary: Search exercises by filters
+  description: Retrieves exercises filtered by various criteria
+  operationId: getExercisesByFilters
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: difficulty_level
+      in: query
+      description: Filter by difficulty level
+      schema:
+        type: string
+        enum: ["beginner", "intermediate", "advanced"]
+      example: "beginner"
+    - name: exercise_type
+      in: query
+      description: Filter by exercise type
+      schema:
+        type: string
+        enum: ["strength", "cardio", "flexibility", "balance", "functional"]
+      example: "strength"
+    - name: muscular_group
+      in: query
+      description: Filter by muscular group name
+      schema:
+        type: string
+      example: "chest"
+    - name: equipment
+      in: query
+      description: Filter by equipment name
+      schema:
+        type: string
+      example: "barbell"
+    - name: name
+      in: query
+      description: Search by exercise name (partial match)
+      schema:
+        type: string
+      example: "push"
+  responses:
+    "200":
+      description: Filtered exercises retrieved successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Filtered exercises retrieved successfully"
+              data:
+                type: array
+                items:
+                  $ref: "../../openapi.yaml#/components/schemas/ExerciseResponseDTO"
+    "400":
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
+    "401":
+      $ref: "../../openapi.yaml#/components/responses/Unauthorized"
+    "500":
+      $ref: "../../openapi.yaml#/components/responses/InternalServerError"
+

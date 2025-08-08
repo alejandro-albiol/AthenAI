@@ -43,16 +43,124 @@ Created:
             type: string
             example: "Resource created successfully"
 
+# Standard API Response Templates
+SuccessResponse:
+  type: object
+  properties:
+    status:
+      type: string
+      enum: ["success"]
+      example: "success"
+    message:
+      type: string
+      example: "Operation completed successfully"
+    data:
+      description: "Response data (varies by endpoint)"
+
+BadRequestResponse:
+  description: Bad Request
+  content:
+    application/json:
+      schema:
+        $ref: "#/APIErrorResponse"
+      example:
+        status: "error"
+        message: "Invalid request parameters"
+        data:
+          code: "BAD_REQUEST"
+          error: "Validation failed"
+
+UnauthorizedResponse:
+  description: Unauthorized
+  content:
+    application/json:
+      schema:
+        $ref: "#/APIErrorResponse"
+      example:
+        status: "error"
+        message: "Authentication required"
+        data:
+          code: "UNAUTHORIZED"
+          error: "Invalid or missing token"
+
+ForbiddenResponse:
+  description: Forbidden
+  content:
+    application/json:
+      schema:
+        $ref: "#/APIErrorResponse"
+      example:
+        status: "error"
+        message: "Access denied"
+        data:
+          code: "FORBIDDEN"
+          error: "Insufficient permissions"
+
+NotFoundResponse:
+  description: Not Found
+  content:
+    application/json:
+      schema:
+        $ref: "#/APIErrorResponse"
+      example:
+        status: "error"
+        message: "Resource not found"
+        data:
+          code: "NOT_FOUND"
+          error: "The requested resource does not exist"
+
+ConflictResponse:
+  description: Conflict
+  content:
+    application/json:
+      schema:
+        $ref: "#/APIErrorResponse"
+      example:
+        status: "error"
+        message: "Resource conflict"
+        data:
+          code: "CONFLICT"
+          error: "Resource already exists"
+
+InternalServerErrorResponse:
+  description: Internal Server Error
+  content:
+    application/json:
+      schema:
+        $ref: "#/APIErrorResponse"
+      example:
+        status: "error"
+        message: "Internal server error"
+        data:
+          code: "INTERNAL_ERROR"
+          error: "An unexpected error occurred"
+
 APIErrorResponse:
   type: object
   properties:
     status:
       type: string
-      example: error
+      enum: ["error"]
+      example: "error"
     message:
       type: string
-      example: Error message
+      example: "Error message"
     data:
       type: object
-      nullable: true
-      example: null
+      properties:
+        code:
+          type: string
+          enum:
+            [
+              "BAD_REQUEST",
+              "UNAUTHORIZED",
+              "FORBIDDEN",
+              "NOT_FOUND",
+              "CONFLICT",
+              "INTERNAL_ERROR",
+            ]
+          example: "BAD_REQUEST"
+        error:
+          type: string
+          example: "Detailed error information"
+          nullable: true

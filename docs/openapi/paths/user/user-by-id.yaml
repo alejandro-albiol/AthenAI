@@ -69,3 +69,4 @@ delete:
       description: User deleted successfully
     "404":
       $ref: "/swagger/components/responses.yaml#/NotFound"
+

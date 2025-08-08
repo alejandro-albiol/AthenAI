@@ -1,0 +1,42 @@
+get:
+  tags:
+    - Workout Templates
+  summary: Get workout templates by difficulty
+  description: Retrieves workout templates filtered by difficulty level
+  operationId: getWorkoutTemplatesByDifficulty
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: difficulty
+      in: path
+      required: true
+      description: Difficulty level
+      schema:
+        type: string
+        enum: ["beginner", "intermediate", "advanced"]
+      example: "beginner"
+  responses:
+    "200":
+      description: Workout templates retrieved successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Workout templates retrieved successfully"
+              data:
+                type: array
+                items:
+                  $ref: "../../openapi.yaml#/components/schemas/WorkoutTemplateDTO"
+    "400":
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
+    "401":
+      $ref: "../../openapi.yaml#/components/responses/Unauthorized"
+    "500":
+      $ref: "../../openapi.yaml#/components/responses/InternalServerError"
+

@@ -1,0 +1,136 @@
+get:
+  tags:
+    - Exercises
+  summary: Get exercise by ID
+  description: Retrieves a specific exercise by its ID
+  operationId: getExerciseById
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Exercise ID
+      schema:
+        type: string
+        format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+  responses:
+    "200":
+      description: Exercise retrieved successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Exercise retrieved successfully"
+              data:
+                $ref: "../../openapi.yaml#/components/schemas/ExerciseResponseDTO"
+    "400":
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
+    "401":
+      $ref: "../../openapi.yaml#/components/responses/Unauthorized"
+    "404":
+      $ref: "../../openapi.yaml#/components/responses/NotFound"
+    "500":
+      $ref: "../../openapi.yaml#/components/responses/InternalServerError"
+
+put:
+  tags:
+    - Exercises
+  summary: Update exercise
+  description: Updates an existing exercise
+  operationId: updateExercise
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Exercise ID
+      schema:
+        type: string
+        format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../../openapi.yaml#/components/schemas/ExerciseUpdateDTO"
+        example:
+          name: "Modified Push-ups"
+          synonyms: ["press-ups", "floor press", "push-up"]
+          muscular_groups: ["chest", "triceps", "shoulders", "core"]
+          equipment_needed: ["mat"]
+          difficulty_level: "intermediate"
+          exercise_type: "strength"
+          instructions: "Start in plank position, lower body slowly to floor, push back up with control"
+          is_active: true
+  responses:
+    "200":
+      description: Exercise updated successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Exercise updated successfully"
+              data:
+                $ref: "../../openapi.yaml#/components/schemas/ExerciseResponseDTO"
+    "400":
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
+    "401":
+      $ref: "../../openapi.yaml#/components/responses/Unauthorized"
+    "404":
+      $ref: "../../openapi.yaml#/components/responses/NotFound"
+    "500":
+      $ref: "../../openapi.yaml#/components/responses/InternalServerError"
+
+delete:
+  tags:
+    - Exercises
+  summary: Delete exercise
+  description: Deletes a specific exercise
+  operationId: deleteExercise
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Exercise ID
+      schema:
+        type: string
+        format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+  responses:
+    "200":
+      description: Exercise deleted successfully
+      content:
+        application/json:
+          schema:
+            $ref: "../../openapi.yaml#/components/responses/SuccessResponse"
+          example:
+            status: "success"
+            message: "Exercise deleted successfully"
+            data: null
+    "400":
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
+    "401":
+      $ref: "../../openapi.yaml#/components/responses/Unauthorized"
+    "404":
+      $ref: "../../openapi.yaml#/components/responses/NotFound"
+    "500":
+      $ref: "../../openapi.yaml#/components/responses/InternalServerError"
+

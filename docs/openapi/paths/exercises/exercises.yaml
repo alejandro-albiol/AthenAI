@@ -1,0 +1,77 @@
+post:
+  tags:
+    - Exercises
+  summary: Create new exercise
+  description: Creates a new exercise in the system
+  operationId: createExercise
+  security:
+    - bearerAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../../openapi.yaml#/components/schemas/ExerciseCreationDTO"
+        example:
+          name: "Push-ups"
+          synonyms: ["press-ups", "floor press"]
+          muscular_groups: ["chest", "triceps", "shoulders"]
+          equipment_needed: ["mat"]
+          difficulty_level: "beginner"
+          exercise_type: "strength"
+          muscular_group_ids: ["550e8400-e29b-41d4-a716-446655440000"]
+          equipment_ids: ["550e8400-e29b-41d4-a716-446655440001"]
+          instructions: "Start in plank position, lower body to floor, push back up"
+          video_url: "https://example.com/pushups-video.mp4"
+          image_url: "https://example.com/pushups-image.jpg"
+          created_by: "550e8400-e29b-41d4-a716-446655440002"
+  responses:
+    "200":
+      description: Exercise created successfully
+      content:
+        application/json:
+          schema:
+            $ref: "../../openapi.yaml#/components/responses/SuccessResponse"
+          example:
+            status: "success"
+            message: "Exercise created successfully"
+            data:
+              id: "550e8400-e29b-41d4-a716-446655440000"
+    "400":
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
+    "401":
+      $ref: "../../openapi.yaml#/components/responses/Unauthorized"
+    "500":
+      $ref: "../../openapi.yaml#/components/responses/InternalServerError"
+
+get:
+  tags:
+    - Exercises
+  summary: List all exercises
+  description: Retrieves a list of all exercises in the system
+  operationId: getAllExercises
+  security:
+    - bearerAuth: []
+  responses:
+    "200":
+      description: Exercises list retrieved successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Exercises list retrieved successfully"
+              data:
+                type: array
+                items:
+                  $ref: "../../openapi.yaml#/components/schemas/ExerciseResponseDTO"
+    "401":
+      $ref: "../../openapi.yaml#/components/responses/Unauthorized"
+    "500":
+      $ref: "../../openapi.yaml#/components/responses/InternalServerError"
+

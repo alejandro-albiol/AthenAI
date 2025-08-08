@@ -1,0 +1,42 @@
+get:
+  tags:
+    - Exercise Equipment Links
+  summary: Get links by equipment ID
+  description: Retrieves all exercise links for a specific equipment
+  operationId: getExerciseEquipmentLinksByEquipmentId
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: equipmentID
+      in: path
+      required: true
+      description: Equipment ID
+      schema:
+        type: string
+        format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440002"
+  responses:
+    "200":
+      description: Equipment exercise links retrieved successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Equipment exercise links retrieved successfully"
+              data:
+                type: array
+                items:
+                  $ref: "../../openapi.yaml#/components/schemas/ExerciseEquipmentDTO"
+    "400":
+      $ref: "../../openapi.yaml#/components/responses/BadRequest"
+    "401":
+      $ref: "../../openapi.yaml#/components/responses/Unauthorized"
+    "500":
+      $ref: "../../openapi.yaml#/components/responses/InternalServerError"
+
