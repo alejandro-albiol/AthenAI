@@ -94,3 +94,21 @@ func (h *TemplateBlockHandler) DeleteTemplateBlock(w http.ResponseWriter, r *htt
 	}
 	response.WriteAPISuccess(w, "Template block deleted successfully", nil)
 }
+
+func (h *TemplateBlockHandler) ListTemplateBlocksByTemplateID(w http.ResponseWriter, r *http.Request) {
+	templateID := chi.URLParam(r, "templateId")
+	if templateID == "" {
+		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Missing template ID", nil))
+		return
+	}
+	blocks, err := h.service.ListTemplateBlocksByTemplateID(templateID)
+	if err != nil {
+		if apiErr, ok := err.(*apierror.APIError); ok {
+			response.WriteAPIError(w, apiErr)
+		} else {
+			response.WriteAPIError(w, apierror.New(errorcode_enum.CodeInternal, "Failed to list template blocks", err))
+		}
+		return
+	}
+	response.WriteAPISuccess(w, "Template blocks retrieved successfully", blocks)
+}
