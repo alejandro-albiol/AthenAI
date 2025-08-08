@@ -10,21 +10,12 @@ import (
 func NewExerciseMuscularGroupRouter(handler interfaces.ExerciseMuscularGroupHandler) http.Handler {
 	r := chi.NewRouter()
 
-	r.Post("/link", func(w http.ResponseWriter, r *http.Request) {
-		handler.CreateLink(w, r)
-	})
-	r.Delete("/link/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.DeleteLink(w, r)
-	})
-	r.Get("/link/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetLinkByID(w, r)
-	})
-	r.Get("/exercise/{exerciseID}/links", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetLinksByExerciseID(w, r)
-	})
-	r.Get("/muscular-group/{muscularGroupID}/links", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetLinksByMuscularGroupID(w, r)
-	})
+	// Exercise-Muscular Group link endpoints
+	r.Post("/link", handler.CreateLink)                                                 // POST /exercise-muscular-groups/link
+	r.Get("/link/{id}", handler.GetLinkByID)                                            // GET /exercise-muscular-groups/link/{id}
+	r.Delete("/link/{id}", handler.DeleteLink)                                          // DELETE /exercise-muscular-groups/link/{id}
+	r.Get("/exercise/{exerciseID}/links", handler.GetLinksByExerciseID)                 // GET /exercise-muscular-groups/exercise/{exerciseID}/links
+	r.Get("/muscular-group/{muscularGroupID}/links", handler.GetLinksByMuscularGroupID) // GET /exercise-muscular-groups/muscular-group/{muscularGroupID}/links
 
 	return r
 }

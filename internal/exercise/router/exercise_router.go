@@ -8,27 +8,15 @@ import (
 )
 
 func NewExerciseRouter(handler interfaces.ExerciseHandler) http.Handler {
-
 	r := chi.NewRouter()
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetAllExercises(w, r)
-	})
-	r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-		handler.CreateExercise(w, r)
-	})
-	r.Get("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetExerciseByID(w, r)
-	})
 
-	r.Get("/search", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetExercisesByFilters(w, r)
-	})
+	// Exercise CRUD endpoints
+	r.Post("/", handler.CreateExercise)             // POST /exercises
+	r.Get("/", handler.GetAllExercises)             // GET /exercises
+	r.Get("/search", handler.GetExercisesByFilters) // GET /exercises/search
+	r.Get("/{id}", handler.GetExerciseByID)         // GET /exercises/{id}
+	r.Put("/{id}", handler.UpdateExercise)          // PUT /exercises/{id}
+	r.Delete("/{id}", handler.DeleteExercise)       // DELETE /exercises/{id}
 
-	r.Put("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.UpdateExercise(w, r)
-	})
-	r.Delete("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.DeleteExercise(w, r)
-	})
 	return r
 }

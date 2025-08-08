@@ -10,41 +10,15 @@ import (
 func NewWorkoutTemplateRouter(handler interfaces.WorkoutTemplateHandler) http.Handler {
 	r := chi.NewRouter()
 
-	r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-		handler.CreateWorkoutTemplate(w, r)
-	})
-
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetAllWorkoutTemplates(w, r)
-	})
-
-	r.Get("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetWorkoutTemplateByID(w, r)
-	})
-
-	r.Get("/name/{name}", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetWorkoutTemplateByName(w, r)
-	})
-
-	r.Get("difficulty/{difficulty}", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetWorkoutTemplatesByDifficulty(w, r)
-	})
-
-	r.Get("target-audience/{targetAudience}", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetWorkoutTemplatesByTargetAudience(w, r)
-	})
-
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetAllWorkoutTemplates(w, r)
-	})
-
-	r.Put("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.UpdateWorkoutTemplate(w, r)
-	})
-
-	r.Delete("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.DeleteWorkoutTemplate(w, r)
-	})
+	// Workout template CRUD endpoints
+	r.Post("/", handler.CreateWorkoutTemplate)                                              // POST /workout-templates
+	r.Get("/", handler.GetAllWorkoutTemplates)                                              // GET /workout-templates
+	r.Get("/{id}", handler.GetWorkoutTemplateByID)                                          // GET /workout-templates/{id}
+	r.Get("/name/{name}", handler.GetWorkoutTemplateByName)                                 // GET /workout-templates/name/{name}
+	r.Get("/difficulty/{difficulty}", handler.GetWorkoutTemplatesByDifficulty)              // GET /workout-templates/difficulty/{difficulty}
+	r.Get("/target-audience/{targetAudience}", handler.GetWorkoutTemplatesByTargetAudience) // GET /workout-templates/target-audience/{targetAudience}
+	r.Put("/{id}", handler.UpdateWorkoutTemplate)                                           // PUT /workout-templates/{id}
+	r.Delete("/{id}", handler.DeleteWorkoutTemplate)                                        // DELETE /workout-templates/{id}
 
 	return r
 }

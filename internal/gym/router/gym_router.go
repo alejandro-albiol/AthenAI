@@ -14,37 +14,15 @@ func NewGymRouter(handler gyminterfaces.GymHandler) http.Handler {
 	// All routes here already have authenticated user context
 	// Authorization logic is handled in the handlers themselves
 
-	r.Get("/", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetAllGyms(w, r)
-	})
-
-	r.Post("/", func(w http.ResponseWriter, r *http.Request) {
-		handler.CreateGym(w, r)
-	})
-
-	r.Get("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetGymByID(w, r)
-	})
-
-	r.Get("/name/{name}", func(w http.ResponseWriter, r *http.Request) {
-		handler.GetGymByName(w, r)
-	})
-
-	r.Put("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.UpdateGym(w, r)
-	})
-
-	r.Put("/{id}/activate", func(w http.ResponseWriter, r *http.Request) {
-		handler.SetGymActive(w, r)
-	})
-
-	r.Put("/{id}/deactivate", func(w http.ResponseWriter, r *http.Request) {
-		handler.SetGymActive(w, r)
-	})
-
-	r.Delete("/{id}", func(w http.ResponseWriter, r *http.Request) {
-		handler.DeleteGym(w, r)
-	})
+	// Gym CRUD endpoints
+	r.Post("/", handler.CreateGym)                  // POST /gyms
+	r.Get("/", handler.GetAllGyms)                  // GET /gyms
+	r.Get("/{id}", handler.GetGymByID)              // GET /gyms/{id}
+	r.Get("/name/{name}", handler.GetGymByName)     // GET /gyms/name/{name}
+	r.Put("/{id}", handler.UpdateGym)               // PUT /gyms/{id}
+	r.Put("/{id}/activate", handler.SetGymActive)   // PUT /gyms/{id}/activate
+	r.Put("/{id}/deactivate", handler.SetGymActive) // PUT /gyms/{id}/deactivate
+	r.Delete("/{id}", handler.DeleteGym)            // DELETE /gyms/{id}
 
 	return r
 }
