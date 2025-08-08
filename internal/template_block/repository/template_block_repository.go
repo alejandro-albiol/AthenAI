@@ -15,13 +15,14 @@ func NewTemplateBlockRepository(db *sql.DB) interfaces.TemplateBlockRepository {
 	return &TemplateBlockRepository{db: db}
 }
 
-func (r *TemplateBlockRepository) Create(block dto.CreateTemplateBlockDTO) error {
+func (r *TemplateBlockRepository) Create(block dto.CreateTemplateBlockDTO) (string, error) {
 	query := `
 		INSERT INTO public.template_block 
 			(template_id, name, type, "order", exercise_count, estimated_duration_minutes, instructions)
 		VALUES ($1, $2, $3, $4, $5, $6, $7)
 		RETURNING id`
-	_, err := r.db.Exec(
+	var id string
+	err := r.db.QueryRow(
 		query,
 		block.TemplateID,
 		block.Name,
@@ -30,11 +31,11 @@ func (r *TemplateBlockRepository) Create(block dto.CreateTemplateBlockDTO) error
 		block.ExerciseCount,
 		block.EstimatedDurationMinutes,
 		block.Instructions,
-	)
+	).Scan(&id)
 	if err != nil {
-		return err
+		return "", err
 	}
-	return nil
+	return id, nil
 }
 
 func (r *TemplateBlockRepository) GetByID(id string) (dto.TemplateBlockDTO, error) {

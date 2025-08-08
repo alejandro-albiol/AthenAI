@@ -31,7 +31,8 @@ func (h *ExerciseMuscularGroupHandler) CreateLink(w http.ResponseWriter, r *http
 		))
 		return
 	}
-	if err := h.service.CreateLink(link); err != nil {
+	linkID, err := h.service.CreateLink(link)
+	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
 			response.WriteAPIError(w, apiErr)
@@ -44,7 +45,7 @@ func (h *ExerciseMuscularGroupHandler) CreateLink(w http.ResponseWriter, r *http
 		}
 		return
 	}
-	response.WriteAPICreated(w, "Link created successfully", nil)
+	response.WriteAPICreated(w, "Link created successfully", map[string]string{"id": linkID})
 }
 
 func (h *ExerciseMuscularGroupHandler) DeleteLink(w http.ResponseWriter, r *http.Request) {

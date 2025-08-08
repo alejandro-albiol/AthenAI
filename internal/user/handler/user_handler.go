@@ -47,7 +47,7 @@ func (h *UsersHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	err := h.service.RegisterUser(gymID, dto)
+	userID, err := h.service.RegisterUser(gymID, dto)
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
@@ -62,7 +62,7 @@ func (h *UsersHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.WriteAPICreated(w, "User registered successfully", dto)
+	response.WriteAPICreated(w, "User registered successfully", map[string]string{"id": userID})
 }
 
 func (h *UsersHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {

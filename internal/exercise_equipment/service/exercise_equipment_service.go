@@ -15,12 +15,12 @@ func NewExerciseEquipmentService(repository interfaces.ExerciseEquipmentReposito
 	return &ExerciseEquipmentService{repository: repository}
 }
 
-func (s *ExerciseEquipmentService) CreateLink(link dto.ExerciseEquipment) error {
-	_, err := s.repository.CreateLink(link)
+func (s *ExerciseEquipmentService) CreateLink(link dto.ExerciseEquipment) (string, error) {
+	linkID, err := s.repository.CreateLink(link)
 	if err != nil {
-		return apierror.New(errorcode_enum.CodeInternal, "Failed to create exercise-equipment link", err)
+		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to create exercise-equipment link", err)
 	}
-	return nil
+	return linkID, nil
 }
 
 func (s *ExerciseEquipmentService) DeleteLink(id string) error {

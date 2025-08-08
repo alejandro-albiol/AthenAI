@@ -26,7 +26,8 @@ func (h *TemplateBlockHandler) CreateTemplateBlock(w http.ResponseWriter, r *htt
 		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Invalid request body", err))
 		return
 	}
-	if err := h.service.CreateTemplateBlock(block); err != nil {
+	blockID, err := h.service.CreateTemplateBlock(block)
+	if err != nil {
 		if apiErr, ok := err.(*apierror.APIError); ok {
 			response.WriteAPIError(w, apiErr)
 		} else {
@@ -34,7 +35,7 @@ func (h *TemplateBlockHandler) CreateTemplateBlock(w http.ResponseWriter, r *htt
 		}
 		return
 	}
-	response.WriteAPISuccess(w, "Template block created successfully", nil)
+	response.WriteAPICreated(w, "Template block created successfully", map[string]string{"id": blockID})
 }
 
 func (h *TemplateBlockHandler) GetTemplateBlock(w http.ResponseWriter, r *http.Request) {

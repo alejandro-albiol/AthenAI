@@ -13,9 +13,9 @@ type MockUserRepository struct {
 	mock.Mock
 }
 
-func (m *MockUserRepository) CreateUser(gymID string, user dto.UserCreationDTO) error {
+func (m *MockUserRepository) CreateUser(gymID string, user dto.UserCreationDTO) (string, error) {
 	args := m.Called(gymID, user)
-	return args.Error(0)
+	return args.String(0), args.Error(1)
 }
 
 func (m *MockUserRepository) GetUserByID(gymID, id string) (dto.UserResponseDTO, error) {
@@ -88,7 +88,7 @@ func TestRegisterUser(t *testing.T) {
 			mockSetup: func(mockRepo *MockUserRepository) {
 				mockRepo.On("GetUserByUsername", "gym123", "testuser").Return(dto.UserResponseDTO{}, nil)
 				mockRepo.On("GetUserByEmail", "gym123", "test@test.com").Return(dto.UserResponseDTO{}, nil)
-				mockRepo.On("CreateUser", "gym123", mock.AnythingOfType("dto.UserCreationDTO")).Return(nil)
+				mockRepo.On("CreateUser", "gym123", mock.AnythingOfType("dto.UserCreationDTO")).Return("user-123", nil)
 			},
 			wantErr: false,
 		},
@@ -124,11 +124,13 @@ func TestRegisterUser(t *testing.T) {
 			mockRepo := new(MockUserRepository)
 			service := NewUsersService(mockRepo)
 			tc.mockSetup(mockRepo)
-			err := service.RegisterUser(tc.gymID, tc.userDTO)
+			userID, err := service.RegisterUser(tc.gymID, tc.userDTO)
 			if tc.wantErr {
 				assert.Error(t, err)
+				assert.Empty(t, userID)
 			} else {
 				assert.NoError(t, err)
+				assert.NotEmpty(t, userID)
 			}
 		})
 	}

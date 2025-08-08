@@ -4,7 +4,7 @@ import dto "github.com/alejandro-albiol/athenai/internal/user/dto"
 
 type UserRepository interface {
 	// CreateUser creates a new user in the database for a specific gym.
-	CreateUser(gymID string, dto dto.UserCreationDTO) error
+	CreateUser(gymID string, dto dto.UserCreationDTO) (string, error)
 	// GetUserByID retrieves a user by their ID and gym.
 	GetUserByID(gymID, id string) (dto.UserResponseDTO, error)
 	// GetUserByUsername retrieves a user by their username and gym.

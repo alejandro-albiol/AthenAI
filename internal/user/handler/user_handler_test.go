@@ -14,6 +14,7 @@ import (
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
 	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
 	"github.com/alejandro-albiol/athenai/pkg/middleware"
+	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
 	"github.com/stretchr/testify/mock"
 )
@@ -32,13 +33,27 @@ func createTestRequest(method, url string, body []byte, gymID string) *http.Requ
 	return req
 }
 
+// Helper function to create a test request with URL parameters for chi router
+func createTestRequestWithParams(method, url string, body []byte, gymID string, params map[string]string) *http.Request {
+	req := createTestRequest(method, url, body, gymID)
+
+	// Set chi URL params
+	rctx := chi.NewRouteContext()
+	for key, value := range params {
+		rctx.URLParams.Add(key, value)
+	}
+	req = req.WithContext(context.WithValue(req.Context(), chi.RouteCtxKey, rctx))
+
+	return req
+}
+
 type MockUserService struct {
 	mock.Mock
 }
 
-func (m *MockUserService) RegisterUser(gymID string, user dto.UserCreationDTO) error {
+func (m *MockUserService) RegisterUser(gymID string, user dto.UserCreationDTO) (string, error) {
 	args := m.Called(gymID, user)
-	return args.Error(0)
+	return args.String(0), args.Error(1)
 }
 
 func (m *MockUserService) GetUserByID(gymID, id string) (dto.UserResponseDTO, error) {
@@ -109,7 +124,7 @@ func TestRegisterUser(t *testing.T) {
 				Role:     userrole_enum.User,
 			},
 			setupMock: func(mockService *MockUserService) {
-				mockService.On("RegisterUser", "gym123", mock.AnythingOfType("dto.UserCreationDTO")).Return(nil)
+				mockService.On("RegisterUser", "gym123", mock.AnythingOfType("dto.UserCreationDTO")).Return("user-123", nil)
 			},
 			wantStatus: http.StatusCreated,
 		},
@@ -122,7 +137,7 @@ func TestRegisterUser(t *testing.T) {
 			},
 			setupMock: func(mockService *MockUserService) {
 				mockService.On("RegisterUser", "gym123", mock.AnythingOfType("dto.UserCreationDTO")).Return(
-					apierror.New(errorcode_enum.CodeConflict, "Username already exists", nil),
+					"", apierror.New(errorcode_enum.CodeConflict, "Username already exists", nil),
 				)
 			},
 			wantStatus: http.StatusConflict,
@@ -212,7 +227,7 @@ func TestVerifyUser(t *testing.T) {
 			tc.setupMock(mockService)
 
 			w := httptest.NewRecorder()
-			req := createTestRequest(http.MethodPost, "/users/"+tc.userID+"/verify", nil, tc.gymID)
+			req := createTestRequestWithParams(http.MethodPost, "/users/"+tc.userID+"/verify", nil, tc.gymID, map[string]string{"id": tc.userID})
 
 			handler.VerifyUser(w, req)
 
@@ -338,7 +353,7 @@ func TestGetUserByID(t *testing.T) {
 			tc.setupMock(mockService)
 
 			w := httptest.NewRecorder()
-			req := createTestRequest(http.MethodGet, "/user/"+tc.userID, nil, tc.gymID)
+			req := createTestRequestWithParams(http.MethodGet, "/user/"+tc.userID, nil, tc.gymID, map[string]string{"id": tc.userID})
 
 			handler.GetUserByID(w, req)
 
@@ -399,7 +414,7 @@ func TestGetUserByUsername(t *testing.T) {
 			tc.setupMock(mockService)
 
 			w := httptest.NewRecorder()
-			req := createTestRequest(http.MethodGet, "/user/username/"+tc.username, nil, tc.gymID)
+			req := createTestRequestWithParams(http.MethodGet, "/user/username/"+tc.username, nil, tc.gymID, map[string]string{"username": tc.username})
 
 			handler.GetUserByUsername(w, req)
 
@@ -460,7 +475,7 @@ func TestGetUserByEmail(t *testing.T) {
 			tc.setupMock(mockService)
 
 			w := httptest.NewRecorder()
-			req := createTestRequest(http.MethodGet, "/user/email/"+tc.email, nil, tc.gymID)
+			req := createTestRequestWithParams(http.MethodGet, "/user/email/"+tc.email, nil, tc.gymID, map[string]string{"email": tc.email})
 
 			handler.GetUserByEmail(w, req)
 
@@ -543,7 +558,7 @@ func TestUpdateUser(t *testing.T) {
 
 			w := httptest.NewRecorder()
 			body, _ := json.Marshal(tc.input)
-			req := createTestRequest(http.MethodPut, "/user/"+tc.userID, body, tc.gymID)
+			req := createTestRequestWithParams(http.MethodPut, "/user/"+tc.userID, body, tc.gymID, map[string]string{"id": tc.userID})
 
 			handler.UpdateUser(w, req)
 
@@ -598,7 +613,7 @@ func TestDeleteUser(t *testing.T) {
 			tc.setupMock(mockService)
 
 			w := httptest.NewRecorder()
-			req := createTestRequest(http.MethodDelete, "/user/"+tc.userID, nil, tc.gymID)
+			req := createTestRequestWithParams(http.MethodDelete, "/user/"+tc.userID, nil, tc.gymID, map[string]string{"id": tc.userID})
 
 			handler.DeleteUser(w, req)
 
@@ -679,7 +694,7 @@ func TestSetUserActive(t *testing.T) {
 
 			w := httptest.NewRecorder()
 			body, _ := json.Marshal(map[string]bool{"active": tc.active})
-			req := createTestRequest(http.MethodPatch, "/user/"+tc.userID+"/active", body, tc.gymID)
+			req := createTestRequestWithParams(http.MethodPatch, "/user/"+tc.userID+"/active", body, tc.gymID, map[string]string{"id": tc.userID})
 
 			handler.SetUserActive(w, req)
 
@@ -701,7 +716,7 @@ func TestRegisterUserInternalError(t *testing.T) {
 	}
 
 	// Mock service returns a non-APIError
-	mockService.On("RegisterUser", "gym123", mock.AnythingOfType("dto.UserCreationDTO")).Return(assert.AnError)
+	mockService.On("RegisterUser", "gym123", mock.AnythingOfType("dto.UserCreationDTO")).Return("", assert.AnError)
 
 	body, err := json.Marshal(input)
 	assert.NoError(t, err)
@@ -739,7 +754,7 @@ func TestGetUserByIDInternalError(t *testing.T) {
 	mockService.On("GetUserByID", "gym123", "user123").Return(dto.UserResponseDTO{}, assert.AnError)
 
 	w := httptest.NewRecorder()
-	req := createTestRequest(http.MethodGet, "/user/user123", nil, "gym123")
+	req := createTestRequestWithParams(http.MethodGet, "/user/user123", nil, "gym123", map[string]string{"id": "user123"})
 
 	handler.GetUserByID(w, req)
 
@@ -754,8 +769,9 @@ func TestUpdateUserInternalError(t *testing.T) {
 	// Mock service returns a non-APIError
 	mockService.On("UpdateUser", "gym123", "user123", mock.AnythingOfType("dto.UserUpdateDTO")).Return(assert.AnError)
 
+	body, _ := json.Marshal(dto.UserUpdateDTO{Username: "test"})
 	w := httptest.NewRecorder()
-	req := createTestRequest(http.MethodPut, "/user/user123", nil, "gym123")
+	req := createTestRequestWithParams(http.MethodPut, "/user/user123", body, "gym123", map[string]string{"id": "user123"})
 
 	handler.UpdateUser(w, req)
 
@@ -771,7 +787,7 @@ func TestDeleteUserInternalError(t *testing.T) {
 	mockService.On("DeleteUser", "gym123", "user123").Return(assert.AnError)
 
 	w := httptest.NewRecorder()
-	req := createTestRequest(http.MethodDelete, "/user/user123", nil, "gym123")
+	req := createTestRequestWithParams(http.MethodDelete, "/user/user123", nil, "gym123", map[string]string{"id": "user123"})
 
 	handler.DeleteUser(w, req)
 
@@ -787,7 +803,7 @@ func TestVerifyUserInternalError(t *testing.T) {
 	mockService.On("VerifyUser", "gym123", "user123").Return(assert.AnError)
 
 	w := httptest.NewRecorder()
-	req := createTestRequest(http.MethodPost, "/user/user123/verify", nil, "gym123")
+	req := createTestRequestWithParams(http.MethodPost, "/user/user123/verify", nil, "gym123", map[string]string{"id": "user123"})
 
 	handler.VerifyUser(w, req)
 
@@ -802,8 +818,9 @@ func TestSetUserActiveInternalError(t *testing.T) {
 	// Mock service returns a non-APIError
 	mockService.On("SetUserActive", "gym123", "user123", true).Return(assert.AnError)
 
+	body, _ := json.Marshal(map[string]bool{"active": true})
 	w := httptest.NewRecorder()
-	req := createTestRequest(http.MethodPatch, "/user/user123/active", nil, "gym123")
+	req := createTestRequestWithParams(http.MethodPatch, "/user/user123/active", body, "gym123", map[string]string{"id": "user123"})
 
 	handler.SetUserActive(w, req)
 

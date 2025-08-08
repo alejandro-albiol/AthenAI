@@ -6,7 +6,7 @@ import "github.com/alejandro-albiol/athenai/internal/template_block/dto"
 // This should be used for dependency injection in handler and module layers
 // to ensure strict module boundaries and testability.
 type TemplateBlockService interface {
-	CreateTemplateBlock(block dto.CreateTemplateBlockDTO) error
+	CreateTemplateBlock(block dto.CreateTemplateBlockDTO) (string, error)
 	GetTemplateBlockByID(id string) (*dto.TemplateBlockDTO, error)
 	ListTemplateBlocksByTemplateID(templateID string) ([]dto.TemplateBlockDTO, error)
 	UpdateTemplateBlock(id string, update dto.UpdateTemplateBlockDTO) (*dto.TemplateBlockDTO, error)

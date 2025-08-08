@@ -3,7 +3,7 @@ package interfaces
 import "github.com/alejandro-albiol/athenai/internal/template_block/dto"
 
 type TemplateBlockRepository interface {
-	Create(block dto.CreateTemplateBlockDTO) error
+	Create(block dto.CreateTemplateBlockDTO) (string, error)
 	GetByID(id string) (dto.TemplateBlockDTO, error)
 	GetByTemplateID(templateID string) ([]dto.TemplateBlockDTO, error)
 	GetByTemplateIDAndName(templateID, name string) (dto.TemplateBlockDTO, error)

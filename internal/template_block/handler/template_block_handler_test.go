@@ -21,9 +21,9 @@ type MockTemplateBlockService struct {
 	mock.Mock
 }
 
-func (m *MockTemplateBlockService) CreateTemplateBlock(block dto.CreateTemplateBlockDTO) error {
+func (m *MockTemplateBlockService) CreateTemplateBlock(block dto.CreateTemplateBlockDTO) (string, error) {
 	args := m.Called(block)
-	return args.Error(0)
+	return args.String(0), args.Error(1)
 }
 
 func (m *MockTemplateBlockService) GetTemplateBlockByID(id string) (*dto.TemplateBlockDTO, error) {
@@ -63,9 +63,9 @@ func TestCreateTemplateBlock(t *testing.T) {
 				ExerciseCount: 3,
 			},
 			setupMock: func(mockService *MockTemplateBlockService) {
-				mockService.On("CreateTemplateBlock", mock.AnythingOfType("dto.CreateTemplateBlockDTO")).Return(nil)
+				mockService.On("CreateTemplateBlock", mock.AnythingOfType("dto.CreateTemplateBlockDTO")).Return("block-123", nil)
 			},
-			wantStatus: http.StatusOK,
+			wantStatus: http.StatusCreated,
 		},
 		{
 			name: "duplicate name conflict",
@@ -78,7 +78,7 @@ func TestCreateTemplateBlock(t *testing.T) {
 			},
 			setupMock: func(mockService *MockTemplateBlockService) {
 				mockService.On("CreateTemplateBlock", mock.AnythingOfType("dto.CreateTemplateBlockDTO")).Return(
-					apierror.New(errorcode_enum.CodeConflict, "Template block with name 'Warm-up' already exists in template", nil),
+					"", apierror.New(errorcode_enum.CodeConflict, "Template block with name 'Warm-up' already exists in template", nil),
 				)
 			},
 			wantStatus: http.StatusConflict,
@@ -102,7 +102,7 @@ func TestCreateTemplateBlock(t *testing.T) {
 			var resp response.APIResponse[any]
 			err := json.Unmarshal(w.Body.Bytes(), &resp)
 			assert.NoError(t, err)
-			if tc.wantStatus == http.StatusOK {
+			if tc.wantStatus == http.StatusCreated {
 				assert.Equal(t, "success", resp.Status)
 			} else {
 				assert.Equal(t, "error", resp.Status)

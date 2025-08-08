@@ -15,12 +15,12 @@ func NewExerciseMuscularGroupService(repository interfaces.ExerciseMuscularGroup
 	return &ExerciseMuscularGroupService{repository: repository}
 }
 
-func (s *ExerciseMuscularGroupService) CreateLink(link dto.ExerciseMuscularGroup) error {
-	_, err := s.repository.CreateLink(link)
+func (s *ExerciseMuscularGroupService) CreateLink(link dto.ExerciseMuscularGroup) (string, error) {
+	linkID, err := s.repository.CreateLink(link)
 	if err != nil {
-		return apierror.New(errorcode_enum.CodeInternal, "Failed to create exercise-muscular group link", err)
+		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to create exercise-muscular group link", err)
 	}
-	return nil
+	return linkID, nil
 }
 
 func (s *ExerciseMuscularGroupService) DeleteLink(id string) error {

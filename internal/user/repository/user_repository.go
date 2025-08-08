@@ -22,11 +22,11 @@ func NewUsersRepository(db *sql.DB, gymRepo gyminterfaces.GymRepository) interfa
 	}
 }
 
-func (r *usersRepository) CreateUser(gymID string, dto dto.UserCreationDTO) error {
+func (r *usersRepository) CreateUser(gymID string, dto dto.UserCreationDTO) (string, error) {
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)
 	if err != nil {
-		return fmt.Errorf("failed to get gym: %w", err)
+		return "", fmt.Errorf("failed to get gym: %w", err)
 	}
 	// Construct tenant-specific table name
 	tableName := pq.QuoteIdentifier(gym.ID) + ".user"
@@ -38,10 +38,14 @@ func (r *usersRepository) CreateUser(gymID string, dto dto.UserCreationDTO) erro
         ) VALUES (
             $1, $2, $3, $4, $5, 
             false, true, NOW(), NOW()
-        )`, tableName)
+        ) RETURNING id`, tableName)
 
-	_, err = r.db.Exec(query, dto.Username, dto.Email, dto.Password, dto.Role, gymID)
-	return err
+	var userID string
+	err = r.db.QueryRow(query, dto.Username, dto.Email, dto.Password, dto.Role, gymID).Scan(&userID)
+	if err != nil {
+		return "", err
+	}
+	return userID, nil
 }
 
 func (r *usersRepository) GetUserByID(gymID, id string) (dto.UserResponseDTO, error) {

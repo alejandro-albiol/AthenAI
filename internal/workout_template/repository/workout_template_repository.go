@@ -16,11 +16,15 @@ func NewWorkoutTemplateRepository(db *sql.DB) *WorkoutTemplateRepository {
 }
 
 // Create a new workout template in the database
-func (r *WorkoutTemplateRepository) Create(template dto.CreateWorkoutTemplateDTO) error {
-	query := `INSERT INTO public.workout_template (name, description, difficulty_level, estimated_duration_minutes, target_audience, created_by) VALUES ($1, $2, $3, $4, $5, $6)`
-	_, err := r.db.Exec(query, template.Name, template.Description, template.DifficultyLevel,
-		template.EstimatedDurationMinutes, template.TargetAudience, template.CreatedBy)
-	return err
+func (r *WorkoutTemplateRepository) Create(template dto.CreateWorkoutTemplateDTO) (string, error) {
+	query := `INSERT INTO public.workout_template (name, description, difficulty_level, estimated_duration_minutes, target_audience, created_by) VALUES ($1, $2, $3, $4, $5, $6) RETURNING id`
+	var id string
+	err := r.db.QueryRow(query, template.Name, template.Description, template.DifficultyLevel,
+		template.EstimatedDurationMinutes, template.TargetAudience, template.CreatedBy).Scan(&id)
+	if err != nil {
+		return "", err
+	}
+	return id, nil
 }
 
 // Get a workout template by its ID from the database

@@ -36,7 +36,7 @@ func (h *WorkoutTemplateHandler) CreateWorkoutTemplate(w http.ResponseWriter, r 
 		))
 		return
 	}
-	err := h.Service.CreateWorkoutTemplate(input)
+	templateID, err := h.Service.CreateWorkoutTemplate(input)
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
@@ -50,7 +50,7 @@ func (h *WorkoutTemplateHandler) CreateWorkoutTemplate(w http.ResponseWriter, r 
 		))
 		return
 	}
-	response.WriteAPICreated(w, "Workout template created successfully", input)
+	response.WriteAPICreated(w, "Workout template created successfully", map[string]string{"id": templateID})
 }
 
 // GetWorkoutTemplateByID handles HTTP requests to retrieve a workout template by ID.
