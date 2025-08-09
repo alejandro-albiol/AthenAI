@@ -34,14 +34,17 @@ func (r *usersRepository) CreateUser(gymID string, dto dto.UserCreationDTO) (str
 	query := fmt.Sprintf(`
         INSERT INTO %s (
             username, email, password_hash, role, gym_id, 
-            is_verified, is_active, created_at, updated_at
+            is_verified, is_active, description, training_phase, motivation, special_situation,
+            created_at, updated_at
         ) VALUES (
             $1, $2, $3, $4, $5, 
-            false, true, NOW(), NOW()
+            false, true, $6, $7, $8, $9,
+            NOW(), NOW()
         ) RETURNING id`, tableName)
 
 	var userID string
-	err = r.db.QueryRow(query, dto.Username, dto.Email, dto.Password, dto.Role, gymID).Scan(&userID)
+	err = r.db.QueryRow(query, dto.Username, dto.Email, dto.Password, dto.Role, gymID,
+		dto.Description, dto.TrainingPhase, dto.Motivation, dto.SpecialSituation).Scan(&userID)
 	if err != nil {
 		return "", err
 	}
@@ -59,7 +62,9 @@ func (r *usersRepository) GetUserByID(gymID, id string) (dto.UserResponseDTO, er
 	tableName := pq.QuoteIdentifier(gym.ID) + ".user"
 
 	query := fmt.Sprintf(`
-        SELECT id, username, email, password_hash, role, is_verified, is_active, gym_id, created_at, updated_at 
+        SELECT id, username, email, password_hash, role, is_verified, is_active, gym_id,
+               description, training_phase, motivation, special_situation,
+               created_at, updated_at 
         FROM %s 
         WHERE id = $1 AND deleted_at IS NULL`, tableName)
 
@@ -68,7 +73,9 @@ func (r *usersRepository) GetUserByID(gymID, id string) (dto.UserResponseDTO, er
 	var passwordHash string // We don't return this in the DTO
 	err = row.Scan(
 		&user.ID, &user.Username, &user.Email, &passwordHash, &user.Role,
-		&user.Verified, &user.IsActive, &user.GymID, &user.CreatedAt, &user.UpdatedAt,
+		&user.Verified, &user.IsActive, &user.GymID,
+		&user.Description, &user.TrainingPhase, &user.Motivation, &user.SpecialSituation,
+		&user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
 		return dto.UserResponseDTO{}, err
@@ -86,7 +93,12 @@ func (r *usersRepository) GetUserByUsername(gymID, username string) (dto.UserRes
 	// Construct tenant-specific table name
 	tableName := pq.QuoteIdentifier(gym.ID) + ".user"
 
-	query := fmt.Sprintf("SELECT id, username, email, password_hash, role, is_verified, is_active, gym_id, created_at, updated_at FROM %s WHERE username = $1 AND deleted_at IS NULL", tableName)
+	query := fmt.Sprintf(`
+        SELECT id, username, email, password_hash, role, is_verified, is_active, gym_id,
+               description, training_phase, motivation, special_situation,
+               created_at, updated_at 
+        FROM %s 
+        WHERE username = $1 AND deleted_at IS NULL`, tableName)
 	row := r.db.QueryRow(query, username)
 	var user dto.UserResponseDTO
 	var passwordHash string // We don't return this in the DTO
@@ -144,7 +156,11 @@ func (r *usersRepository) GetAllUsers(gymID string) ([]dto.UserResponseDTO, erro
 	for rows.Next() {
 		var user dto.UserResponseDTO
 		var passwordHash string // We don't return this in the DTO
-		if err := rows.Scan(&user.ID, &user.Username, &user.Email, &passwordHash, &user.Role, &user.Verified, &user.IsActive, &user.GymID, &user.CreatedAt, &user.UpdatedAt); err != nil {
+		if err := rows.Scan(
+			&user.ID, &user.Username, &user.Email, &passwordHash, &user.Role,
+			&user.Verified, &user.IsActive, &user.GymID,
+			&user.Description, &user.TrainingPhase, &user.Motivation, &user.SpecialSituation,
+			&user.CreatedAt, &user.UpdatedAt); err != nil {
 			return nil, err
 		}
 		users = append(users, user)
@@ -182,8 +198,43 @@ func (r *usersRepository) UpdateUser(gymID string, id string, user dto.UserUpdat
 	// Construct tenant-specific table name
 	tableName := pq.QuoteIdentifier(gym.ID) + ".user"
 
-	query := fmt.Sprintf("UPDATE %s SET username = $1, email = $2, updated_at = NOW() WHERE id = $3 AND deleted_at IS NULL", tableName)
-	_, err = r.db.Exec(query, user.Username, user.Email, id)
+	setClause := "SET updated_at = NOW()"
+	params := []interface{}{id} // Start with ID for WHERE clause
+	paramCount := 1
+
+	if user.Username != "" {
+		paramCount++
+		setClause += fmt.Sprintf(", username = $%d", paramCount)
+		params = append(params, user.Username)
+	}
+	if user.Email != "" {
+		paramCount++
+		setClause += fmt.Sprintf(", email = $%d", paramCount)
+		params = append(params, user.Email)
+	}
+	if user.Description != nil {
+		paramCount++
+		setClause += fmt.Sprintf(", description = $%d", paramCount)
+		params = append(params, user.Description)
+	}
+	if user.TrainingPhase != nil {
+		paramCount++
+		setClause += fmt.Sprintf(", training_phase = $%d", paramCount)
+		params = append(params, user.TrainingPhase)
+	}
+	if user.Motivation != nil {
+		paramCount++
+		setClause += fmt.Sprintf(", motivation = $%d", paramCount)
+		params = append(params, user.Motivation)
+	}
+	if user.SpecialSituation != nil {
+		paramCount++
+		setClause += fmt.Sprintf(", special_situation = $%d", paramCount)
+		params = append(params, user.SpecialSituation)
+	}
+
+	query := fmt.Sprintf("UPDATE %s %s WHERE id = $1 AND deleted_at IS NULL", tableName, setClause)
+	_, err = r.db.Exec(query, params...)
 	return err
 }
 

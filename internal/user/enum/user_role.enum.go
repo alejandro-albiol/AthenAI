@@ -1,4 +1,4 @@
-package userrole_enum
+package enum
 
 type UserRole string
 

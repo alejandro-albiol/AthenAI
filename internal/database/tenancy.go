@@ -25,6 +25,10 @@ func CreateTenantSchema(db *sql.DB, schemaName string) error {
 			is_active BOOLEAN NOT NULL DEFAULT true,
 			password_hash TEXT NOT NULL,
 			role TEXT NOT NULL,
+			description TEXT,
+			training_phase TEXT CHECK (training_phase IN ('weight_loss', 'muscle_gain', 'cardio_improve', 'maintenance')),
+			motivation TEXT CHECK (motivation IN ('medical_recommendation', 'self_improvement', 'competition', 'rehabilitation', 'wellbeing')),
+			special_situation TEXT CHECK (special_situation IN ('pregnancy', 'post_partum', 'injury_recovery', 'chronic_condition', 'elderly_population', 'physical_limitation', 'none')),
 			created_at TIMESTAMP NOT NULL DEFAULT NOW(),
 			updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 		)

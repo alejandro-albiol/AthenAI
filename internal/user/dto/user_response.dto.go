@@ -7,14 +7,18 @@ import (
 )
 
 type UserResponseDTO struct {
-	ID        string                 `json:"id"`
-	Username  string                 `json:"username"`
-	Email     string                 `json:"email"`
-	Role      userrole_enum.UserRole `json:"role"`
-	GymID     string                 `json:"gym_id"`
-	Verified  bool                   `json:"verified"`
-	IsActive  bool                   `json:"is_active"`
-	Phone     string                 `json:"phone"`
-	CreatedAt time.Time              `json:"created_at"`
-	UpdatedAt time.Time              `json:"updated_at"`
+	ID               string                 `json:"id"`
+	Username         string                 `json:"username"`
+	Email            string                 `json:"email"`
+	Role             userrole_enum.UserRole `json:"role"`
+	GymID            string                 `json:"gym_id"`
+	Verified         bool                   `json:"verified"`
+	IsActive         bool                   `json:"is_active"`
+	Phone            string                 `json:"phone"`
+	Description      *string                `json:"description,omitempty"`
+	TrainingPhase    string                 `json:"training_phase"`
+	Motivation       string                 `json:"motivation"`
+	SpecialSituation string                 `json:"special_situation"`
+	CreatedAt        time.Time              `json:"created_at"`
+	UpdatedAt        time.Time              `json:"updated_at"`
 }
