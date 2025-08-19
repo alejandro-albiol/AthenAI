@@ -3,6 +3,7 @@ package service
 import (
 	"crypto/rand"
 	"encoding/hex"
+	"encoding/json"
 	"fmt"
 	"net/http"
 	"time"
@@ -209,7 +210,7 @@ func (s *AuthService) generateRefreshToken(userID, userType string, gymID *strin
 
 // ValidateToken validates a JWT token and returns claims
 func (s *AuthService) ValidateToken(tokenString string) (*authdto.TokenValidationResponseDTO, *apierror.APIError) {
-	token, err := jwt.ParseWithClaims(tokenString, &authdto.ClaimsDTO{}, func(token *jwt.Token) (interface{}, error) {
+	token, err := jwt.Parse(tokenString, func(token *jwt.Token) (interface{}, error) {
 		if _, ok := token.Method.(*jwt.SigningMethodHMAC); !ok {
 			return nil, fmt.Errorf("unexpected signing method: %v", token.Header["alg"])
 		}
@@ -224,10 +225,60 @@ func (s *AuthService) ValidateToken(tokenString string) (*authdto.TokenValidatio
 		)
 	}
 
-	if claims, ok := token.Claims.(*authdto.ClaimsDTO); ok && token.Valid {
+	var claims authdto.ClaimsDTO
+	if tokenClaims, ok := token.Claims.(jwt.MapClaims); ok && token.Valid {
+		// Unmarshal custom claims from MapClaims
+		if v, ok := tokenClaims["user_id"]; ok {
+			claims.UserID = fmt.Sprintf("%v", v)
+		}
+		if v, ok := tokenClaims["username"]; ok {
+			claims.Username = fmt.Sprintf("%v", v)
+		}
+		if v, ok := tokenClaims["user_type"]; ok {
+			claims.UserType = fmt.Sprintf("%v", v)
+		}
+		if v, ok := tokenClaims["is_active"]; ok {
+			switch val := v.(type) {
+			case bool:
+				claims.IsActive = val
+			case string:
+				claims.IsActive = val == "true"
+			}
+		}
+		if v, ok := tokenClaims["role"]; ok {
+			str := fmt.Sprintf("%v", v)
+			claims.Role = &str
+		}
+		if v, ok := tokenClaims["gym_id"]; ok {
+			str := fmt.Sprintf("%v", v)
+			claims.GymID = &str
+		}
+		// RegisteredClaims
+		if v, ok := tokenClaims["exp"]; ok {
+			switch val := v.(type) {
+			case float64:
+				claims.ExpiresAt = jwt.NewNumericDate(time.Unix(int64(val), 0))
+			case int64:
+				claims.ExpiresAt = jwt.NewNumericDate(time.Unix(val, 0))
+			case json.Number:
+				i, _ := val.Int64()
+				claims.ExpiresAt = jwt.NewNumericDate(time.Unix(i, 0))
+			}
+		}
+		if v, ok := tokenClaims["iat"]; ok {
+			switch val := v.(type) {
+			case float64:
+				claims.IssuedAt = jwt.NewNumericDate(time.Unix(int64(val), 0))
+			case int64:
+				claims.IssuedAt = jwt.NewNumericDate(time.Unix(val, 0))
+			case json.Number:
+				i, _ := val.Int64()
+				claims.IssuedAt = jwt.NewNumericDate(time.Unix(i, 0))
+			}
+		}
 		return &authdto.TokenValidationResponseDTO{
 			Valid:  true,
-			Claims: *claims,
+			Claims: claims,
 		}, nil
 	}
 

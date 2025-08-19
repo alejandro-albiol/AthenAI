@@ -25,12 +25,10 @@ func TestCreateGym(t *testing.T) {
 
 	repo := repository.NewGymRepository(db)
 	gymDTO := dto.GymCreationDTO{
-		Name:        "Test Gym",
-		Email:       "test@gym.com",
-		Address:     "123 Test St",
-		ContactName: "John Doe",
-		Phone:       "+1234567890",
-		LogoURL:     "https://example.com/logo.png",
+		Name:    "Test Gym",
+		Email:   "test@gym.com",
+		Address: "123 Test St",
+		Phone:   "+1234567890",
 	}
 
 	// Test successful creation

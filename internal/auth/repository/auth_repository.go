@@ -19,17 +19,17 @@ func NewAuthRepository(db *sql.DB) interfaces.AuthRepositoryInterface {
 }
 
 // AuthenticatePlatformAdmin authenticates against public.admin table
-func (r *AuthRepository) AuthenticatePlatformAdmin(username, password string) (*dto.AdminAuthDTO, error) {
+func (r *AuthRepository) AuthenticatePlatformAdmin(email, password string) (*dto.AdminAuthDTO, error) {
 	query := `
 		SELECT id, username, email, password_hash, is_active 
 		FROM public.admin 
-		WHERE username = $1 AND is_active IS true
+		WHERE email = $1 AND is_active IS true
 	`
 
 	var admin dto.AdminAuthDTO
 	var passwordHash string
 
-	err := r.db.QueryRow(query, username).Scan(
+	err := r.db.QueryRow(query, email).Scan(
 		&admin.ID,
 		&admin.Username,
 		&admin.Email,

@@ -36,6 +36,13 @@ post:
     - Only users with `platform_admin` type can create gyms
     - Automatically creates tenant schema for new gym
     
+    **Required fields:**
+    - name (string)
+    - email (string)
+    - address (string)
+    - phone (string)
+    - is_active (boolean, optional)
+    
     **Security**: 
     - Uses JWT token for authentication (no headers required)
     - Authorization based on user type from JWT claims
@@ -47,11 +54,19 @@ post:
       application/json:
         schema:
           $ref: "../../openapi.yaml#/components/schemas/GymCreationDTO"
+        example:
+          name: "AthenAI"
+          email: "contact@athenai.com"
+          address: "123 Main St, City, State 12345"
+          phone: "+1-555-123-4567"
   responses:
     "201":
       description: Gym created successfully
+      content:
+        application/json:
+          schema:
+            $ref: "../../openapi.yaml#/components/schemas/GymResponseDTO"
     "400":
       $ref: "/swagger/components/responses.yaml#/BadRequest"
     "409":
       $ref: "/swagger/components/responses.yaml#/Conflict"
-

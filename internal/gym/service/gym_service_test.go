@@ -63,11 +63,10 @@ func TestMain(m *testing.M) {
 
 func TestCreateGym(t *testing.T) {
 	gymDTO := dto.GymCreationDTO{
-		Name:        "Test Gym",
-		Email:       "test@gym.com",
-		Address:     "123 Test St",
-		ContactName: "John Doe",
-		Phone:       "+1234567890",
+		Name:    "Test Gym",
+		Email:   "test@gym.com",
+		Address: "123 Test St",
+		Phone:   "+1234567890",
 	}
 
 	t.Run("successful creation", func(t *testing.T) {

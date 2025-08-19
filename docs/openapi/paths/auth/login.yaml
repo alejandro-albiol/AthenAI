@@ -14,19 +14,7 @@ post:
     - ALL subsequent requests use JWT claims for authorization
     - NO headers required after login (gym context extracted from JWT)
     - Tenant users can ONLY access their own gym data (validated via JWT gym ID)
-  parameters:
-    - name: X-Gym-ID
-      in: header
-      required: false
-      schema:
-        type: string
-        format: uuid
-      description: |
-        **ONLY REQUIRED FOR TENANT USER LOGIN**
-        - Determines authentication type (presence = tenant user, absence = platform admin)
-        - Used to lookup gym domain for tenant user authentication
-        - NOT used for authorization after login (JWT claims used instead)
-      example: "123e4567-e89b-12d3-a456-426614174000"
+
   requestBody:
     required: true
     content:
@@ -38,13 +26,13 @@ post:
             summary: "Platform Admin Login"
             description: "Login as platform administrator (no X-Gym-ID header)"
             value:
-              username: "admin"
+              email: "admin@mail.com"
               password: "adminPassword123"
           tenant_user:
             summary: "Tenant User Login"
             description: "Login as gym user (requires X-Gym-ID header)"
             value:
-              username: "johndoe"
+              email: "johndoe@mail.com"
               password: "userPassword123"
   responses:
     "200":

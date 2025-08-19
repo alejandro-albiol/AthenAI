@@ -15,14 +15,14 @@ func NewGymRouter(handler gyminterfaces.GymHandler) http.Handler {
 	// Authorization logic is handled in the handlers themselves
 
 	// Gym CRUD endpoints
-	r.Post("/", handler.CreateGym)                  // POST /gyms
-	r.Get("/", handler.GetAllGyms)                  // GET /gyms
-	r.Get("/{id}", handler.GetGymByID)              // GET /gyms/{id}
-	r.Get("/name/{name}", handler.GetGymByName)     // GET /gyms/name/{name}
-	r.Put("/{id}", handler.UpdateGym)               // PUT /gyms/{id}
-	r.Put("/{id}/activate", handler.SetGymActive)   // PUT /gyms/{id}/activate
-	r.Put("/{id}/deactivate", handler.SetGymActive) // PUT /gyms/{id}/deactivate
-	r.Delete("/{id}", handler.DeleteGym)            // DELETE /gyms/{id}
+	r.Post("/", handler.CreateGym)                  // POST /gym
+	r.Get("/", handler.GetAllGyms)                  // GET /gym
+	r.Get("/{id}", handler.GetGymByID)              // GET /gym/{id}
+	r.Get("/name/{name}", handler.GetGymByName)     // GET /gym/name/{name}
+	r.Put("/{id}", handler.UpdateGym)               // PUT /gym/{id}
+	r.Put("/{id}/activate", handler.SetGymActive)   // PUT /gym/{id}/activate
+	r.Put("/{id}/deactivate", handler.SetGymActive) // PUT /gym/{id}/deactivate
+	r.Delete("/{id}", handler.DeleteGym)            // DELETE /gym/{id}
 
 	return r
 }

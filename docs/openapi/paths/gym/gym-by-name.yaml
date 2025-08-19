@@ -1,15 +1,15 @@
 get:
   tags:
     - Gym
-  summary: Get gym by domain
-  description: Retrieves a gym by its unique domain
+  summary: Get gym by name
+  description: Retrieves a gym by its unique name
   parameters:
     - in: path
-      name: domain
+      name: name
       required: true
       schema:
         type: string
-      description: The unique domain of the gym
+      description: The unique name of the gym
   responses:
     "200":
       description: Gym found

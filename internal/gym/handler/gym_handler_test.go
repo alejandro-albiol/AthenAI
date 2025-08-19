@@ -70,11 +70,10 @@ func TestCreateGym(t *testing.T) {
 		{
 			name: "successful creation",
 			input: dto.GymCreationDTO{
-				Name:        "Test Gym",
-				Email:       "test@test.com",
-				Address:     "123 Test St",
-				ContactName: "John Doe",
-				Phone:       "+1234567890",
+				Name:    "Test Gym",
+				Email:   "test@test.com",
+				Address: "123 Test St",
+				Phone:   "+1234567890",
 			},
 			setupMock: func(mockService *MockGymService) {
 				mockService.On("CreateGym", mock.Anything).Return("gym-uuid-123", nil)

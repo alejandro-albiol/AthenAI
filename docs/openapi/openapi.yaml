@@ -320,33 +320,30 @@ components:
       type: object
       required:
         - name
-        - domain
-        - admin_username
-        - admin_email
-        - admin_password
+        - email
+        - address
+        - phone
       properties:
         name:
           type: string
           example: "Fitness First"
           description: "Gym name"
-        domain:
-          type: string
-          example: "fitnessfirst"
-          description: "Unique domain identifier for the gym"
-        admin_username:
-          type: string
-          example: "admin"
-          description: "Username for the gym admin"
-        admin_email:
+        email:
           type: string
           format: email
-          example: "admin@fitnessfirst.com"
-          description: "Email for the gym admin"
-        admin_password:
+          example: "contact@fitnessfirst.com"
+          description: "Gym contact email"
+        address:
           type: string
-          format: password
-          example: "securePassword123"
-          description: "Password for the gym admin"
+          example: "123 Main St, City, State 12345"
+          description: "Gym address"
+        phone:
+          type: string
+          example: "+1-555-123-4567"
+          description: "Gym contact phone"
+        is_active:
+          type: boolean
+          example: true
 
     GymUpdateDTO:
       type: object
@@ -1019,17 +1016,11 @@ paths:
   /gym/{id}/update:
     $ref: "./paths/gym/gym-update.yaml"
 
-  /gym/domain/{domain}:
-    $ref: "./paths/gym/gym-by-domain.yaml"
-
   /gym/{id}/activate:
     $ref: "./paths/gym/gym-activate.yaml"
 
   /gym/{id}/deactivate:
     $ref: "./paths/gym/gym-deactivate.yaml"
-
-  /gym/{id}/delete:
-    $ref: "./paths/gym/gym-delete.yaml"
 
   # Template Block routes
   /template-blocks:

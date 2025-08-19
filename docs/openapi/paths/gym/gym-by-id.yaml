@@ -34,3 +34,37 @@ get:
     "404":
       $ref: "../../components/responses.yaml#/NotFound"
 
+delete:
+  tags:
+    - Gym
+  summary: Delete a gym by ID
+  description: |
+    Deletes a gym by its unique ID.
+    
+    **Authorization**: PLATFORM ADMINS ONLY
+    - Only users with `platform_admin` type can delete gyms
+    - Tenant users will receive 403 Forbidden response
+    
+    **Security**: 
+    - Uses JWT token for authentication (no headers required)
+    - Authorization based on user type from JWT claims
+  security:
+    - bearerAuth: []
+  parameters:
+    - in: path
+      name: id
+      required: true
+      schema:
+        type: string
+      description: The unique identifier of the gym to delete
+  responses:
+    "200":
+      description: Gym deleted successfully
+      content:
+        application/json:
+          schema:
+            $ref: "../../openapi.yaml#/components/schemas/APIResponse"
+    "400":
+      $ref: "../../components/responses.yaml#/BadRequest"
+    "404":
+      $ref: "../../components/responses.yaml#/NotFound"

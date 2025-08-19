@@ -10,6 +10,10 @@ import (
 // CreateTenantSchema creates a new schema and users table for a tenant (gym)
 func CreateTenantSchema(db *sql.DB, schemaName string) error {
 	schema := pq.QuoteIdentifier(schemaName)
+	// Helper to quote table names with schema
+	qt := func(table string) string {
+		return fmt.Sprintf("%s.%s", schema, pq.QuoteIdentifier(table))
+	}
 	_, err := db.Exec(fmt.Sprintf("CREATE SCHEMA IF NOT EXISTS %s", schema))
 	if err != nil {
 		return fmt.Errorf("failed to create schema: %w", err)
@@ -39,7 +43,7 @@ func CreateTenantSchema(db *sql.DB, schemaName string) error {
 
 	// Add more table creation as needed
 
-	// Create custom_exercise table - gym-specific exercises that extend public library (no arrays, use join tables)
+	// Create custom_exercise table for gym-specific exercises
 	_, err = db.Exec(fmt.Sprintf(`
 			   CREATE TABLE IF NOT EXISTS %s.custom_exercise (
 					   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -58,7 +62,7 @@ func CreateTenantSchema(db *sql.DB, schemaName string) error {
 		return fmt.Errorf("failed to create custom_exercise table: %w", err)
 	}
 
-	// Create join table for custom_exercise <-> muscular_group
+	// Create join table for custom_exercise and muscular_group
 	_, err = db.Exec(fmt.Sprintf(`
 			   CREATE TABLE IF NOT EXISTS %s.custom_exercise_muscular_group (
 					   custom_exercise_id UUID NOT NULL REFERENCES %s.custom_exercise(id) ON DELETE CASCADE,
@@ -70,7 +74,7 @@ func CreateTenantSchema(db *sql.DB, schemaName string) error {
 		return fmt.Errorf("failed to create custom_exercise_muscular_group table: %w", err)
 	}
 
-	// Create join table for custom_exercise <-> equipment
+	// Create join table for custom_exercise and equipment
 	_, err = db.Exec(fmt.Sprintf(`
 			   CREATE TABLE IF NOT EXISTS %s.custom_exercise_equipment (
 					   custom_exercise_id UUID NOT NULL REFERENCES %s.custom_exercise(id) ON DELETE CASCADE,
@@ -82,7 +86,7 @@ func CreateTenantSchema(db *sql.DB, schemaName string) error {
 		return fmt.Errorf("failed to create custom_exercise_equipment table: %w", err)
 	}
 
-	// Create custom_equipment table - gym-specific equipment that extends public library
+	// Create custom_equipment table for gym-specific equipment
 	_, err = db.Exec(fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s.custom_equipment (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -97,7 +101,7 @@ func CreateTenantSchema(db *sql.DB, schemaName string) error {
 		return fmt.Errorf("failed to create custom_equipment table: %w", err)
 	}
 
-	// Create workout_template table - gym-specific templates (similar to public.workout_template)
+	// Create workout_template table for gym-specific templates
 	_, err = db.Exec(fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s.workout_template (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -114,37 +118,34 @@ func CreateTenantSchema(db *sql.DB, schemaName string) error {
 		return fmt.Errorf("failed to create workout_template table: %w", err)
 	}
 
-	// Create template_block table - blocks for gym-specific templates
+	// Create template_block table for gym-specific templates
 	_, err = db.Exec(fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s.template_block (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			created_by UUID NOT NULL,
 			template_id UUID NOT NULL REFERENCES %s.workout_template(id) ON DELETE CASCADE,
-			block_name TEXT NOT NULL, -- e.g., 'Warmup', 'Main Block 1', 'Core', 'Cool Down'
+			block_name TEXT NOT NULL,
 			block_type TEXT NOT NULL CHECK (block_type IN ('warmup', 'main', 'core', 'cardio', 'cooldown', 'custom')),
-			block_order INTEGER NOT NULL, -- Order of blocks in the template
-			exercise_count INTEGER NOT NULL, -- Number of exercises for this block
-			estimated_duration_minutes INTEGER, -- Optional estimated time for this block
-			instructions TEXT -- Special instructions for this block type
+			block_order INTEGER NOT NULL,
+			exercise_count INTEGER NOT NULL,
+			estimated_duration_minutes INTEGER,
+			instructions TEXT
 		)
 	`, schema, schema))
 	if err != nil {
 		return fmt.Errorf("failed to create template_block table: %w", err)
 	}
 
-	// Create workout_instance table - actual workouts created from templates
+	// Create workout_instance table for actual workouts created from templates
 	_, err = db.Exec(fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s.workout_instance (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			created_by UUID NOT NULL,
 			name TEXT NOT NULL,
 			description TEXT,
-			
 			template_source TEXT NOT NULL CHECK (template_source IN ('public', 'gym')),
-			public_template_id UUID, -- References public.workout_template if template_source='public'
-			gym_template_id UUID,    -- References {gym}.workout_template if template_source='gym'
-			
-			-- Workout metadata
+			public_template_id UUID,
+			gym_template_id UUID,
 			difficulty_level TEXT NOT NULL CHECK (difficulty_level IN ('beginner', 'intermediate', 'advanced')),
 			estimated_duration_minutes INTEGER
 		)
@@ -153,23 +154,17 @@ func CreateTenantSchema(db *sql.DB, schemaName string) error {
 		return fmt.Errorf("failed to create workout_instance table: %w", err)
 	}
 
-	// Create workout_exercise table - exercises assigned to workout instances
+	// Create workout_exercise table for exercises assigned to workout instances
 	_, err = db.Exec(fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s.workout_exercise (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			created_by UUID NOT NULL,
 			workout_instance_id UUID NOT NULL REFERENCES %s.workout_instance(id) ON DELETE CASCADE,
-			
-			-- Exercise source (can be public or gym-specific)
 			exercise_source TEXT NOT NULL CHECK (exercise_source IN ('public', 'gym')),
-			public_exercise_id UUID,  -- References public.exercise if exercise_source='public'
-			gym_exercise_id UUID,     -- References {gym}.custom_exercise if exercise_source='gym'
-			
-			-- Exercise configuration
-			block_name TEXT NOT NULL, -- Which block this exercise belongs to
-			exercise_order INTEGER NOT NULL, -- Order within the block
-			
-			-- Exercise parameters (can override defaults)
+			public_exercise_id UUID,
+			gym_exercise_id UUID,
+			block_name TEXT NOT NULL,
+			exercise_order INTEGER NOT NULL,
 			sets INTEGER,
 			reps_min INTEGER,
 			reps_max INTEGER,
@@ -177,14 +172,10 @@ func CreateTenantSchema(db *sql.DB, schemaName string) error {
 			duration_seconds INTEGER,
 			rest_seconds INTEGER,
 			notes TEXT,
-			
-			-- Ensure only one exercise source is set
 			CHECK (
 				(exercise_source = 'public' AND public_exercise_id IS NOT NULL AND gym_exercise_id IS NULL) OR
 				(exercise_source = 'gym' AND gym_exercise_id IS NOT NULL AND public_exercise_id IS NULL)
 			),
-			
-			-- Ensure unique order per block per workout
 			UNIQUE(workout_instance_id, block_name, exercise_order)
 		)
 	`, schema, schema))
@@ -192,23 +183,21 @@ func CreateTenantSchema(db *sql.DB, schemaName string) error {
 		return fmt.Errorf("failed to create workout_exercise table: %w", err)
 	}
 
-	// Create member_workout table - member workout sessions
+	// Create member_workout table for member workout sessions
 	_, err = db.Exec(fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s.member_workout (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			created_by UUID NOT NULL,
-			member_id UUID NOT NULL, -- References {gym}.user (the member)
+			member_id UUID NOT NULL,
 			workout_instance_id UUID NOT NULL REFERENCES %s.workout_instance(id),
 			
-			-- Session details
 			scheduled_date DATE,
 			started_at TIMESTAMP WITH TIME ZONE,
 			completed_at TIMESTAMP WITH TIME ZONE,
 			status TEXT NOT NULL CHECK (status IN ('scheduled', 'in_progress', 'completed', 'skipped', 'cancelled')),
 			
-			-- Session metadata
 			notes TEXT,
-			rating INTEGER CHECK (rating >= 1 AND rating <= 5) -- Member's workout rating
+			rating INTEGER CHECK (rating >= 1 AND rating <= 5)
 		)
 	`, schema, schema))
 	if err != nil {
@@ -216,51 +205,34 @@ func CreateTenantSchema(db *sql.DB, schemaName string) error {
 	}
 
 	// Create indexes for better performance
-	_, err = db.Exec(fmt.Sprintf(`
-		-- Indexes for custom_exercises
-		CREATE INDEX IF NOT EXISTS idx_%s_custom_exercises_active ON %s.custom_exercises(is_active);
-		CREATE INDEX IF NOT EXISTS idx_%s_custom_exercises_type ON %s.custom_exercises(exercise_type);
-		CREATE INDEX IF NOT EXISTS idx_%s_custom_exercises_difficulty ON %s.custom_exercises(difficulty_level);
-		
-		-- Indexes for custom_equipment
-		CREATE INDEX IF NOT EXISTS idx_%s_custom_equipment_active ON %s.custom_equipment(is_active);
-		CREATE INDEX IF NOT EXISTS idx_%s_custom_equipment_category ON %s.custom_equipment(category);
-		
-		-- Indexes for workout_template
-		CREATE INDEX IF NOT EXISTS idx_%s_workout_template_active ON %s.workout_template(is_active);
-		CREATE INDEX IF NOT EXISTS idx_%s_workout_template_difficulty ON %s.workout_template(difficulty_level);
-		
-		-- Indexes for template_block
-		CREATE INDEX IF NOT EXISTS idx_%s_template_block_template ON %s.template_block(template_id);
-		CREATE INDEX IF NOT EXISTS idx_%s_template_block_order ON %s.template_block(template_id, block_order);
-		
-		-- Indexes for workout_instance
-		CREATE INDEX IF NOT EXISTS idx_%s_workout_instance_active ON %s.workout_instance(is_active);
-		CREATE INDEX IF NOT EXISTS idx_%s_workout_instance_public_template ON %s.workout_instance(public_template_id);
-		CREATE INDEX IF NOT EXISTS idx_%s_workout_instance_gym_template ON %s.workout_instance(gym_template_id);
-		
-		-- Indexes for workout_exercise
-		CREATE INDEX IF NOT EXISTS idx_%s_workout_exercise_instance ON %s.workout_exercise(workout_instance_id);
-		CREATE INDEX IF NOT EXISTS idx_%s_workout_exercise_public ON %s.workout_exercise(public_exercise_id);
-		CREATE INDEX IF NOT EXISTS idx_%s_workout_exercise_gym ON %s.workout_exercise(gym_exercise_id);
-		CREATE INDEX IF NOT EXISTS idx_%s_workout_exercise_block ON %s.workout_exercise(workout_instance_id, block_name);
-		
-		-- Indexes for member_workout
-		CREATE INDEX IF NOT EXISTS idx_%s_member_workout_member ON %s.member_workout(member_id);
-		CREATE INDEX IF NOT EXISTS idx_%s_member_workout_instance ON %s.member_workout(workout_instance_id);
-		CREATE INDEX IF NOT EXISTS idx_%s_member_workout_status ON %s.member_workout(status);
-		CREATE INDEX IF NOT EXISTS idx_%s_member_workout_date ON %s.member_workout(scheduled_date);
-	`,
-		schema, schema, // custom_exercises
-		schema, schema, schema, schema, // custom_exercises type & difficulty
-		schema, schema, schema, schema, // custom_equipment
-		schema, schema, schema, schema, // workout_template
-		schema, schema, schema, schema, // template_block
-		schema, schema, schema, schema, schema, schema, // workout_instance
-		schema, schema, schema, schema, schema, schema, schema, schema, // workout_exercise
-		schema, schema, schema, schema, schema, schema, schema, schema)) // member_workout
-	if err != nil {
-		return fmt.Errorf("failed to create tenant indexes: %w", err)
+	quoteIdx := func(name string) string { return pq.QuoteIdentifier(name) }
+	indexStmts := []string{
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(is_active);", quoteIdx("idx_"+schemaName+"_custom_exercise_active"), qt("custom_exercise")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(exercise_type);", quoteIdx("idx_"+schemaName+"_custom_exercise_type"), qt("custom_exercise")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(difficulty_level);", quoteIdx("idx_"+schemaName+"_custom_exercise_difficulty"), qt("custom_exercise")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(is_active);", quoteIdx("idx_"+schemaName+"_custom_equipment_active"), qt("custom_equipment")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(category);", quoteIdx("idx_"+schemaName+"_custom_equipment_category"), qt("custom_equipment")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(is_active);", quoteIdx("idx_"+schemaName+"_workout_template_active"), qt("workout_template")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(difficulty_level);", quoteIdx("idx_"+schemaName+"_workout_template_difficulty"), qt("workout_template")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(template_id);", quoteIdx("idx_"+schemaName+"_template_block_template"), qt("template_block")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(template_id, block_order);", quoteIdx("idx_"+schemaName+"_template_block_order"), qt("template_block")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(public_template_id);", quoteIdx("idx_"+schemaName+"_workout_instance_public_template"), qt("workout_instance")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(gym_template_id);", quoteIdx("idx_"+schemaName+"_workout_instance_gym_template"), qt("workout_instance")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(workout_instance_id);", quoteIdx("idx_"+schemaName+"_workout_exercise_instance"), qt("workout_exercise")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(public_exercise_id);", quoteIdx("idx_"+schemaName+"_workout_exercise_public"), qt("workout_exercise")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(gym_exercise_id);", quoteIdx("idx_"+schemaName+"_workout_exercise_gym"), qt("workout_exercise")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(workout_instance_id, block_name);", quoteIdx("idx_"+schemaName+"_workout_exercise_block"), qt("workout_exercise")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(member_id);", quoteIdx("idx_"+schemaName+"_member_workout_member"), qt("member_workout")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(workout_instance_id);", quoteIdx("idx_"+schemaName+"_member_workout_instance"), qt("member_workout")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(status);", quoteIdx("idx_"+schemaName+"_member_workout_status"), qt("member_workout")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(scheduled_date);", quoteIdx("idx_"+schemaName+"_member_workout_date"), qt("member_workout")),
+	}
+	for _, stmt := range indexStmts {
+		fmt.Printf("[DEBUG] Executing index SQL: %s\n", stmt)
+		if _, err := db.Exec(stmt); err != nil {
+			fmt.Printf("[ERROR] Index creation failed: %v\n", err)
+			return fmt.Errorf("failed to create tenant index: %w", err)
+		}
 	}
 
 	return nil
