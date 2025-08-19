@@ -43,7 +43,7 @@ func (s *WorkoutTemplateService) GetWorkoutTemplateByID(id string) (dto.WorkoutT
 	if err != nil {
 		return dto.WorkoutTemplateDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve workout template by ID", err)
 	}
-	return *template, nil
+	return template, nil
 }
 
 // GetWorkoutTemplateByName retrieves a workout template by its name.
@@ -55,7 +55,7 @@ func (s *WorkoutTemplateService) GetWorkoutTemplateByName(name string) (dto.Work
 	if err != nil {
 		return dto.WorkoutTemplateDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve workout template by name", err)
 	}
-	return *template, nil
+	return template, nil
 }
 
 // GetWorkoutTemplatesByDifficulty retrieves all workout templates matching a given difficulty level.

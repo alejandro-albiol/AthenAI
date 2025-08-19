@@ -6,6 +6,9 @@ import (
 
 	"github.com/alejandro-albiol/athenai/internal/workout_generator/dto"
 	"github.com/alejandro-albiol/athenai/internal/workout_generator/interfaces"
+	"github.com/alejandro-albiol/athenai/pkg/apierror"
+	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
+	"github.com/alejandro-albiol/athenai/pkg/response"
 )
 
 // WorkoutGeneratorHandler implements interfaces.WorkoutGeneratorHandler
@@ -21,18 +24,19 @@ func NewWorkoutGeneratorHandler(service interfaces.WorkoutGeneratorService) *Wor
 func (h *WorkoutGeneratorHandler) GenerateWorkout(w http.ResponseWriter, r *http.Request) {
 	var req dto.WorkoutGeneratorRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		w.WriteHeader(http.StatusBadRequest)
-		json.NewEncoder(w).Encode(map[string]string{"error": "invalid request"})
+		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "invalid request", err))
 		return
 	}
 
 	resp, err := h.service.GenerateWorkout(req)
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
-		json.NewEncoder(w).Encode(map[string]string{"error": err.Error()})
+		if apiErr, ok := err.(*apierror.APIError); ok {
+			response.WriteAPIError(w, apiErr)
+		} else {
+			response.WriteAPIError(w, apierror.New(errorcode_enum.CodeInternal, "unexpected error", err))
+		}
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
-	json.NewEncoder(w).Encode(resp)
+	response.WriteAPISuccess(w, "workout generated", resp)
 }

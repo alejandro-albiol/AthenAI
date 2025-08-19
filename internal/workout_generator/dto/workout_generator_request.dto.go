@@ -6,5 +6,5 @@ type WorkoutGeneratorRequest struct {
 	TrainingPhase    string   `json:"training_phase"`
 	Motivation       string   `json:"motivation"`
 	SpecialSituation string   `json:"special_situation"`
-	TemplateType     string   `json:"template_type"`
+	TemplateName     string   `json:"template_name"`
 }

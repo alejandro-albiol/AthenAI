@@ -28,7 +28,7 @@ func (r *WorkoutTemplateRepository) Create(template dto.CreateWorkoutTemplateDTO
 }
 
 // Get a workout template by its ID from the database
-func (r *WorkoutTemplateRepository) GetByID(id string) (*dto.WorkoutTemplateDTO, error) {
+func (r *WorkoutTemplateRepository) GetByID(id string) (dto.WorkoutTemplateDTO, error) {
 	query := `SELECT id, name, description, difficulty_level, estimated_duration_minutes, target_audience, created_by, is_active, is_public, created_at, updated_at FROM public.workout_template WHERE id = $1`
 	var template dto.WorkoutTemplateDTO
 	err := r.db.QueryRow(query, id).Scan(&template.ID, &template.Name, &template.Description,
@@ -36,14 +36,14 @@ func (r *WorkoutTemplateRepository) GetByID(id string) (*dto.WorkoutTemplateDTO,
 		&template.TargetAudience, &template.CreatedBy, &template.IsActive,
 		&template.IsPublic, &template.CreatedAt, &template.UpdatedAt)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get workout template by ID: %w", err)
+		return dto.WorkoutTemplateDTO{}, fmt.Errorf("failed to get workout template by ID: %w", err)
 	}
 
-	return &template, nil
+	return template, nil
 }
 
 // Get a workout template by its name from the database
-func (r *WorkoutTemplateRepository) GetByName(name string) (*dto.WorkoutTemplateDTO, error) {
+func (r *WorkoutTemplateRepository) GetByName(name string) (dto.WorkoutTemplateDTO, error) {
 	query := `SELECT id, name, description, difficulty_level, estimated_duration_minutes, target_audience, created_by, is_active, is_public, created_at, updated_at FROM public.workout_template WHERE name = $1`
 	var template dto.WorkoutTemplateDTO
 	err := r.db.QueryRow(query, name).Scan(&template.ID, &template.Name, &template.Description,
@@ -51,9 +51,9 @@ func (r *WorkoutTemplateRepository) GetByName(name string) (*dto.WorkoutTemplate
 		&template.TargetAudience, &template.CreatedBy, &template.IsActive,
 		&template.IsPublic, &template.CreatedAt, &template.UpdatedAt)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get workout template by name: %w", err)
+		return dto.WorkoutTemplateDTO{}, fmt.Errorf("failed to get workout template by name: %w", err)
 	}
-	return &template, nil
+	return template, nil
 }
 
 // Get workout templates by difficulty from the database
@@ -161,7 +161,7 @@ func (r *WorkoutTemplateRepository) Update(id string, template dto.UpdateWorkout
 		return dto.WorkoutTemplateDTO{}, fmt.Errorf("failed to retrieve updated workout template: %w", err)
 	}
 
-	return *updatedWorkoutTemplate, nil
+	return updatedWorkoutTemplate, nil
 }
 
 // Delete a workout template from the database

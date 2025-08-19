@@ -61,7 +61,7 @@ func main() {
 	log.Printf("📚 Swagger UI available at: http://localhost:%s/swagger-ui/", port)
 
 	// Mount API under /api/v1
-	rootRouter.Mount("/api/v1", api.NewAPIModule(db))
+	rootRouter.Mount("/api/v1", api.NewAPIRouter(db))
 	log.Printf("🔌 API mounted at: http://localhost:%s/api/v1", port)
 
 	// Serve static frontend files
