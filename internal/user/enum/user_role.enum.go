@@ -8,6 +8,14 @@ const (
 	Guest UserRole = "guest"
 )
 
+func (r UserRole) IsValid() bool {
+	switch r {
+	case Admin, User, Guest:
+		return true
+	}
+	return false
+}
+
 type UserVerificationStatus string
 
 const (
@@ -15,3 +23,11 @@ const (
 	Unverified UserVerificationStatus = "unverified"
 	Demo       UserVerificationStatus = "demo"
 )
+
+func (v UserVerificationStatus) IsValid() bool {
+	switch v {
+	case Verified, Unverified, Demo:
+		return true
+	}
+	return false
+}

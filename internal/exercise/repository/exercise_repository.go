@@ -25,7 +25,7 @@ func (r *ExerciseRepository) CreateExercise(exercise dto.ExerciseCreationDTO) (s
 	var id string
 	err := r.db.QueryRow(query,
 		exercise.Name,
-		exercise.Synonyms, // comma-separated string
+		pq.Array(exercise.Synonyms), // store as TEXT[]
 		exercise.DifficultyLevel,
 		exercise.ExerciseType,
 		exercise.Instructions,
@@ -134,7 +134,7 @@ func (r *ExerciseRepository) UpdateExercise(id string, update dto.ExerciseUpdate
 	err := r.db.QueryRow(query,
 		id,
 		update.Name,
-		update.Synonyms,
+		pq.Array(update.Synonyms),
 		update.DifficultyLevel,
 		update.ExerciseType,
 		update.Instructions,

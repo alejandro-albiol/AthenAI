@@ -27,7 +27,7 @@ CREATE TABLE IF NOT EXISTS public.admin (
 CREATE TABLE IF NOT EXISTS public.exercise (
     id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     name TEXT NOT NULL,
-    synonyms TEXT NOT NULL,
+    synonyms TEXT[] NOT NULL,
     difficulty_level TEXT NOT NULL CHECK (difficulty_level IN ('beginner', 'intermediate', 'advanced')),
     exercise_type TEXT NOT NULL CHECK (exercise_type IN ('strength', 'cardio', 'flexibility', 'balance', 'functional')),
     instructions TEXT NOT NULL,

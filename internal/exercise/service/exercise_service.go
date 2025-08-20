@@ -17,6 +17,27 @@ func NewExerciseService(repo interfaces.ExerciseRepository) *ExerciseService {
 }
 
 func (s *ExerciseService) CreateExercise(exercise dto.ExerciseCreationDTO) (string, error) {
+	// Validate enums
+	if !exercise.DifficultyLevel.IsValid() {
+		return "", apierror.New(errorcode_enum.CodeBadRequest, "Invalid difficulty level", nil)
+	}
+	if !exercise.ExerciseType.IsValid() {
+		return "", apierror.New(errorcode_enum.CodeBadRequest, "Invalid exercise type", nil)
+	}
+	// Validate synonyms
+	if exercise.Synonyms == nil {
+		return "", apierror.New(errorcode_enum.CodeBadRequest, "Synonyms must be provided as an array", nil)
+	}
+	seen := make(map[string]struct{})
+	for _, syn := range exercise.Synonyms {
+		if syn == "" {
+			return "", apierror.New(errorcode_enum.CodeBadRequest, "Synonyms cannot contain empty strings", nil)
+		}
+		if _, exists := seen[syn]; exists {
+			return "", apierror.New(errorcode_enum.CodeBadRequest, "Synonyms must be unique", nil)
+		}
+		seen[syn] = struct{}{}
+	}
 	existingExercise, err := s.repository.GetExerciseByName(exercise.Name)
 	if err == nil && existingExercise.ID != "" {
 		return "", apierror.New(errorcode_enum.CodeConflict, "Exercise with this name already exists", err)
@@ -85,6 +106,26 @@ func (s *ExerciseService) UpdateExercise(id string, exercise dto.ExerciseUpdateD
 	_, err := s.repository.GetExerciseByID(id)
 	if err != nil {
 		return dto.ExerciseResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Exercise with ID "+id+" not found", err)
+	}
+	// Validate enums if provided
+	if exercise.DifficultyLevel != "" && !exercise.DifficultyLevel.IsValid() {
+		return dto.ExerciseResponseDTO{}, apierror.New(errorcode_enum.CodeBadRequest, "Invalid difficulty level", nil)
+	}
+	if exercise.ExerciseType != "" && !exercise.ExerciseType.IsValid() {
+		return dto.ExerciseResponseDTO{}, apierror.New(errorcode_enum.CodeBadRequest, "Invalid exercise type", nil)
+	}
+	// Validate synonyms if provided
+	if exercise.Synonyms != nil {
+		seen := make(map[string]struct{})
+		for _, syn := range exercise.Synonyms {
+			if syn == "" {
+				return dto.ExerciseResponseDTO{}, apierror.New(errorcode_enum.CodeBadRequest, "Synonyms cannot contain empty strings", nil)
+			}
+			if _, exists := seen[syn]; exists {
+				return dto.ExerciseResponseDTO{}, apierror.New(errorcode_enum.CodeBadRequest, "Synonyms must be unique", nil)
+			}
+			seen[syn] = struct{}{}
+		}
 	}
 	updatedExercise, err := s.repository.UpdateExercise(id, exercise)
 	if err != nil {
