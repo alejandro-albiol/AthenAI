@@ -7,6 +7,7 @@ import "github.com/alejandro-albiol/athenai/internal/exercise_muscular_group/dto
 type ExerciseMuscularGroupService interface {
 	CreateLink(link dto.ExerciseMuscularGroup) (string, error)
 	DeleteLink(id string) error
+	RemoveAllLinksForExercise(exerciseID string) error
 	GetLinkByID(id string) (dto.ExerciseMuscularGroup, error)
 	GetLinksByExerciseID(exerciseID string) ([]dto.ExerciseMuscularGroup, error)
 	GetLinksByMuscularGroupID(muscularGroupID string) ([]dto.ExerciseMuscularGroup, error)

@@ -31,6 +31,12 @@ func (r *ExerciseEquipmentRepositoryImpl) DeleteLink(id string) error {
 	return err
 }
 
+func (r *ExerciseEquipmentRepositoryImpl) RemoveAllLinksForExercise(exerciseID string) error {
+	query := `DELETE FROM exercise_equipment WHERE exercise_id = $1`
+	_, err := r.db.Exec(query, exerciseID)
+	return err
+}
+
 func (r *ExerciseEquipmentRepositoryImpl) FindByID(id string) (dto.ExerciseEquipment, error) {
 	query := `SELECT exercise_id, equipment_id FROM exercise_equipment WHERE id = $1`
 	var link dto.ExerciseEquipment

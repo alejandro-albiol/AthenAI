@@ -31,6 +31,14 @@ func (s *ExerciseEquipmentService) DeleteLink(id string) error {
 	return nil
 }
 
+func (s *ExerciseEquipmentService) RemoveAllLinksForExercise(exerciseID string) error {
+	err := s.repository.RemoveAllLinksForExercise(exerciseID)
+	if err != nil {
+		return apierror.New(errorcode_enum.CodeInternal, "Failed to remove all links for exercise", err)
+	}
+	return nil
+}
+
 func (s *ExerciseEquipmentService) GetLinkByID(id string) (dto.ExerciseEquipment, error) {
 	link, err := s.repository.FindByID(id)
 	if err != nil {

@@ -3,16 +3,26 @@ package service
 import (
 	"github.com/alejandro-albiol/athenai/internal/exercise/dto"
 	"github.com/alejandro-albiol/athenai/internal/exercise/interfaces"
+	exerciseEquipmentDTO "github.com/alejandro-albiol/athenai/internal/exercise_equipment/dto"
+	equipmentIF "github.com/alejandro-albiol/athenai/internal/exercise_equipment/interfaces"
+	exerciseMuscularGroupDTO "github.com/alejandro-albiol/athenai/internal/exercise_muscular_group/dto"
+	muscularGroupIF "github.com/alejandro-albiol/athenai/internal/exercise_muscular_group/interfaces"
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
 	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
 )
 
 type ExerciseService struct {
-	repository interfaces.ExerciseRepository
+	repository                   interfaces.ExerciseRepository
+	exerciseEquipmentService     equipmentIF.ExerciseEquipmentService
+	exerciseMuscularGroupService muscularGroupIF.ExerciseMuscularGroupService
 }
 
-func NewExerciseService(repo interfaces.ExerciseRepository) *ExerciseService {
-	return &ExerciseService{repository: repo}
+func NewExerciseService(repo interfaces.ExerciseRepository, equipmentService equipmentIF.ExerciseEquipmentService, muscularGroupService muscularGroupIF.ExerciseMuscularGroupService) *ExerciseService {
+	return &ExerciseService{
+		repository:                   repo,
+		exerciseEquipmentService:     equipmentService,
+		exerciseMuscularGroupService: muscularGroupService,
+	}
 
 }
 
@@ -45,6 +55,32 @@ func (s *ExerciseService) CreateExercise(exercise dto.ExerciseCreationDTO) (stri
 	id, err := s.repository.CreateExercise(exercise)
 	if err != nil {
 		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to create exercise", err)
+	}
+
+	// Create links in join tables
+	if s.exerciseEquipmentService != nil && len(exercise.EquipmentIDs) > 0 {
+		for _, eqID := range exercise.EquipmentIDs {
+			link := exerciseEquipmentDTO.ExerciseEquipment{
+				ExerciseID:  id,
+				EquipmentID: eqID,
+			}
+			_, err := s.exerciseEquipmentService.CreateLink(link)
+			if err != nil {
+				return "", apierror.New(errorcode_enum.CodeInternal, "Failed to link equipment to exercise", err)
+			}
+		}
+	}
+	if s.exerciseMuscularGroupService != nil && len(exercise.MuscularGroupIDs) > 0 {
+		for _, mgID := range exercise.MuscularGroupIDs {
+			link := exerciseMuscularGroupDTO.ExerciseMuscularGroup{
+				ExerciseID:      id,
+				MuscularGroupID: mgID,
+			}
+			_, err := s.exerciseMuscularGroupService.CreateLink(link)
+			if err != nil {
+				return "", apierror.New(errorcode_enum.CodeInternal, "Failed to link muscular group to exercise", err)
+			}
+		}
 	}
 	return id, nil
 }
@@ -131,6 +167,37 @@ func (s *ExerciseService) UpdateExercise(id string, exercise dto.ExerciseUpdateD
 	if err != nil {
 		return dto.ExerciseResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to update exercise", err)
 	}
+	// Update join tables: remove all links, then add new ones if provided
+	if s.exerciseEquipmentService != nil {
+		_ = s.exerciseEquipmentService.RemoveAllLinksForExercise(id)
+		if exercise.EquipmentIDs != nil {
+			for _, eqID := range exercise.EquipmentIDs {
+				link := exerciseEquipmentDTO.ExerciseEquipment{
+					ExerciseID:  id,
+					EquipmentID: eqID,
+				}
+				_, err := s.exerciseEquipmentService.CreateLink(link)
+				if err != nil {
+					return dto.ExerciseResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to update equipment links", err)
+				}
+			}
+		}
+	}
+	if s.exerciseMuscularGroupService != nil {
+		_ = s.exerciseMuscularGroupService.RemoveAllLinksForExercise(id)
+		if exercise.MuscularGroupIDs != nil {
+			for _, mgID := range exercise.MuscularGroupIDs {
+				link := exerciseMuscularGroupDTO.ExerciseMuscularGroup{
+					ExerciseID:      id,
+					MuscularGroupID: mgID,
+				}
+				_, err := s.exerciseMuscularGroupService.CreateLink(link)
+				if err != nil {
+					return dto.ExerciseResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to update muscular group links", err)
+				}
+			}
+		}
+	}
 	return updatedExercise, nil
 }
 
@@ -143,6 +210,13 @@ func (s *ExerciseService) DeleteExercise(id string) error {
 	err = s.repository.DeleteExercise(id)
 	if err != nil {
 		return apierror.New(errorcode_enum.CodeInternal, "Failed to delete exercise", err)
+	}
+	// Remove all join table links
+	if s.exerciseEquipmentService != nil {
+		_ = s.exerciseEquipmentService.RemoveAllLinksForExercise(id)
+	}
+	if s.exerciseMuscularGroupService != nil {
+		_ = s.exerciseMuscularGroupService.RemoveAllLinksForExercise(id)
 	}
 	return nil
 }
