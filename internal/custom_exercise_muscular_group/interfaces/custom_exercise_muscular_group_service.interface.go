@@ -3,9 +3,10 @@ package interfaces
 import "github.com/alejandro-albiol/athenai/internal/custom_exercise_muscular_group/dto"
 
 type CustomExerciseMuscularGroupService interface {
-	CreateLink(link dto.CustomExerciseMuscularGroup) (string, error)
-	DeleteLink(id string) error
-	GetLinkByID(id string) (dto.CustomExerciseMuscularGroup, error)
-	GetLinksByCustomExerciseID(customExerciseID string) ([]dto.CustomExerciseMuscularGroup, error)
-	GetLinksByMuscularGroupID(muscularGroupID string) ([]dto.CustomExerciseMuscularGroup, error)
+	CreateLink(gymID string, link dto.CustomExerciseMuscularGroup) (string, error)
+	DeleteLink(gymID, id string) error
+	RemoveAllLinksForExercise(gymID, id string) error
+	GetLinkByID(gymID, id string) (dto.CustomExerciseMuscularGroup, error)
+	GetLinksByCustomExerciseID(gymID, customExerciseID string) ([]dto.CustomExerciseMuscularGroup, error)
+	GetLinksByMuscularGroupID(gymID, muscularGroupID string) ([]dto.CustomExerciseMuscularGroup, error)
 }

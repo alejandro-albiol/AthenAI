@@ -58,8 +58,8 @@ func (s *ExerciseService) CreateExercise(exercise dto.ExerciseCreationDTO) (stri
 	}
 
 	// Create links in join tables
-	if s.exerciseEquipmentService != nil && len(exercise.EquipmentIDs) > 0 {
-		for _, eqID := range exercise.EquipmentIDs {
+	if s.exerciseEquipmentService != nil && len(exercise.Equipment) > 0 {
+		for _, eqID := range exercise.Equipment {
 			link := exerciseEquipmentDTO.ExerciseEquipment{
 				ExerciseID:  id,
 				EquipmentID: eqID,
@@ -70,8 +70,8 @@ func (s *ExerciseService) CreateExercise(exercise dto.ExerciseCreationDTO) (stri
 			}
 		}
 	}
-	if s.exerciseMuscularGroupService != nil && len(exercise.MuscularGroupIDs) > 0 {
-		for _, mgID := range exercise.MuscularGroupIDs {
+	if s.exerciseMuscularGroupService != nil && len(exercise.MuscularGroups) > 0 {
+		for _, mgID := range exercise.MuscularGroups {
 			link := exerciseMuscularGroupDTO.ExerciseMuscularGroup{
 				ExerciseID:      id,
 				MuscularGroupID: mgID,
@@ -170,8 +170,8 @@ func (s *ExerciseService) UpdateExercise(id string, exercise dto.ExerciseUpdateD
 	// Update join tables: remove all links, then add new ones if provided
 	if s.exerciseEquipmentService != nil {
 		_ = s.exerciseEquipmentService.RemoveAllLinksForExercise(id)
-		if exercise.EquipmentIDs != nil {
-			for _, eqID := range exercise.EquipmentIDs {
+		if exercise.Equipment != nil {
+			for _, eqID := range exercise.Equipment {
 				link := exerciseEquipmentDTO.ExerciseEquipment{
 					ExerciseID:  id,
 					EquipmentID: eqID,
@@ -185,8 +185,8 @@ func (s *ExerciseService) UpdateExercise(id string, exercise dto.ExerciseUpdateD
 	}
 	if s.exerciseMuscularGroupService != nil {
 		_ = s.exerciseMuscularGroupService.RemoveAllLinksForExercise(id)
-		if exercise.MuscularGroupIDs != nil {
-			for _, mgID := range exercise.MuscularGroupIDs {
+		if exercise.MuscularGroups != nil {
+			for _, mgID := range exercise.MuscularGroups {
 				link := exerciseMuscularGroupDTO.ExerciseMuscularGroup{
 					ExerciseID:      id,
 					MuscularGroupID: mgID,
