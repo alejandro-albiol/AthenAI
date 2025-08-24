@@ -101,9 +101,9 @@ func CreateTenantSchema(db *sql.DB, schemaName string) error {
 		return fmt.Errorf("failed to create custom_equipment table: %w", err)
 	}
 
-	// Create workout_template table for gym-specific templates
+	// Create custom_workout_template table for gym-specific templates
 	_, err = db.Exec(fmt.Sprintf(`
-		CREATE TABLE IF NOT EXISTS %s.workout_template (
+		CREATE TABLE IF NOT EXISTS %s.custom_workout_template (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			created_by UUID NOT NULL,
 			name TEXT NOT NULL,
@@ -115,15 +115,15 @@ func CreateTenantSchema(db *sql.DB, schemaName string) error {
 		)
 	`, schema))
 	if err != nil {
-		return fmt.Errorf("failed to create workout_template table: %w", err)
+		return fmt.Errorf("failed to create custom_workout_template table: %w", err)
 	}
 
-	// Create template_block table for gym-specific templates
+	// Create custom_template_block table for gym-specific templates
 	_, err = db.Exec(fmt.Sprintf(`
-		CREATE TABLE IF NOT EXISTS %s.template_block (
+		CREATE TABLE IF NOT EXISTS %s.custom_template_block (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			created_by UUID NOT NULL,
-			template_id UUID NOT NULL REFERENCES %s.workout_template(id) ON DELETE CASCADE,
+			template_id UUID NOT NULL REFERENCES %s.custom_workout_template(id) ON DELETE CASCADE,
 			block_name TEXT NOT NULL,
 			block_type TEXT NOT NULL CHECK (block_type IN ('warmup', 'main', 'core', 'cardio', 'cooldown', 'custom')),
 			block_order INTEGER NOT NULL,
@@ -133,12 +133,12 @@ func CreateTenantSchema(db *sql.DB, schemaName string) error {
 		)
 	`, schema, schema))
 	if err != nil {
-		return fmt.Errorf("failed to create template_block table: %w", err)
+		return fmt.Errorf("failed to create custom_template_block table: %w", err)
 	}
 
-	// Create workout_instance table for actual workouts created from templates
+	// Create custom_workout_instance table for actual workouts created from templates
 	_, err = db.Exec(fmt.Sprintf(`
-		CREATE TABLE IF NOT EXISTS %s.workout_instance (
+		CREATE TABLE IF NOT EXISTS %s.custom_workout_instance (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			created_by UUID NOT NULL,
 			name TEXT NOT NULL,
@@ -151,15 +151,15 @@ func CreateTenantSchema(db *sql.DB, schemaName string) error {
 		)
 	`, schema))
 	if err != nil {
-		return fmt.Errorf("failed to create workout_instance table: %w", err)
+		return fmt.Errorf("failed to create custom_workout_instance table: %w", err)
 	}
 
-	// Create workout_exercise table for exercises assigned to workout instances
+	// Create custom_workout_exercise table for exercises assigned to workout instances
 	_, err = db.Exec(fmt.Sprintf(`
-		CREATE TABLE IF NOT EXISTS %s.workout_exercise (
+		CREATE TABLE IF NOT EXISTS %s.custom_workout_exercise (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			created_by UUID NOT NULL,
-			workout_instance_id UUID NOT NULL REFERENCES %s.workout_instance(id) ON DELETE CASCADE,
+			workout_instance_id UUID NOT NULL REFERENCES %s.custom_workout_instance(id) ON DELETE CASCADE,
 			exercise_source TEXT NOT NULL CHECK (exercise_source IN ('public', 'gym')),
 			public_exercise_id UUID,
 			gym_exercise_id UUID,
@@ -180,28 +180,28 @@ func CreateTenantSchema(db *sql.DB, schemaName string) error {
 		)
 	`, schema, schema))
 	if err != nil {
-		return fmt.Errorf("failed to create workout_exercise table: %w", err)
+		return fmt.Errorf("failed to create custom_workout_exercise table: %w", err)
 	}
 
-	// Create member_workout table for member workout sessions
+	// Create custom_member_workout table for member workout sessions
 	_, err = db.Exec(fmt.Sprintf(`
-		CREATE TABLE IF NOT EXISTS %s.member_workout (
+		CREATE TABLE IF NOT EXISTS %s.custom_member_workout (
 			id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
 			created_by UUID NOT NULL,
 			member_id UUID NOT NULL,
-			workout_instance_id UUID NOT NULL REFERENCES %s.workout_instance(id),
-			
+			workout_instance_id UUID NOT NULL REFERENCES %s.custom_workout_instance(id),
+            
 			scheduled_date DATE,
 			started_at TIMESTAMP WITH TIME ZONE,
 			completed_at TIMESTAMP WITH TIME ZONE,
 			status TEXT NOT NULL CHECK (status IN ('scheduled', 'in_progress', 'completed', 'skipped', 'cancelled')),
-			
+            
 			notes TEXT,
 			rating INTEGER CHECK (rating >= 1 AND rating <= 5)
 		)
 	`, schema, schema))
 	if err != nil {
-		return fmt.Errorf("failed to create member_workout table: %w", err)
+		return fmt.Errorf("failed to create custom_member_workout table: %w", err)
 	}
 
 	// Create indexes for better performance
