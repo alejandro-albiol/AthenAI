@@ -2,6 +2,7 @@ package dto
 
 // CustomExerciseUpdateDTO is used for updating a custom exercise
 type CustomExerciseUpdateDTO struct {
+	ID              *string   `json:"id"`
 	Name            *string   `json:"name"`
 	Synonyms        *[]string `json:"synonyms"`
 	DifficultyLevel *string   `json:"difficulty_level"`
@@ -10,4 +11,5 @@ type CustomExerciseUpdateDTO struct {
 	VideoURL        *string   `json:"video_url"`
 	ImageURL        *string   `json:"image_url"`
 	MuscularGroups  *[]string `json:"muscular_groups"`
+	IsActive		*bool     `json:"is_active"`
 }

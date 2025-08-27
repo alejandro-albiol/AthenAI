@@ -974,10 +974,21 @@ components:
           example: "2024-01-15T10:30:00Z"
 
 paths:
+
+  # Custom Exercise routes
+  /custom-exercise:
+    $ref: "./paths/custom_exercise/custom_exercise.yaml"
+
+  /custom-exercise/{id}:
+    $ref: "./paths/custom_exercise/custom_exercise-id.yaml"
+
+  # Custom Equipment routes
   /custom-equipment:
     $ref: "./paths/custom_equipment/custom_equipment.yaml"
+
   /custom-equipment/{id}:
     $ref: "./paths/custom_equipment/custom_equipment-id.yaml"
+
   # Auth routes
   /auth/login:
     $ref: "./paths/auth/login.yaml"

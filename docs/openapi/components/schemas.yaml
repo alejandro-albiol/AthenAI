@@ -1,3 +1,141 @@
+# Custom Exercise Schemas
+CustomExerciseCreation:
+  type: object
+  required:
+    - name
+    - difficulty_level
+    - exercise_type
+    - instructions
+    - created_by
+  properties:
+    name:
+      type: string
+      example: "Custom Push-up"
+    synonyms:
+      type: array
+      items:
+        type: string
+      example: ["press-ups", "floor press"]
+    difficulty_level:
+      type: string
+      enum: [beginner, intermediate, advanced]
+      example: "beginner"
+    exercise_type:
+      type: string
+      enum: [strength, cardio, flexibility, balance, functional]
+      example: "strength"
+    instructions:
+      type: string
+      example: "Start in plank position, lower body to floor, push back up."
+    video_url:
+      type: string
+      format: uri
+      example: "https://example.com/custom-pushup-video.mp4"
+    image_url:
+      type: string
+      format: uri
+      example: "https://example.com/custom-pushup-image.jpg"
+    muscular_groups:
+      type: array
+      items:
+        type: string
+      example: ["chest", "triceps"]
+    created_by:
+      type: string
+      format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440002"
+
+CustomExerciseUpdate:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+    name:
+      type: string
+      example: "Custom Push-up"
+    synonyms:
+      type: array
+      items:
+        type: string
+      example: ["press-ups", "floor press"]
+    difficulty_level:
+      type: string
+      enum: [beginner, intermediate, advanced]
+      example: "beginner"
+    exercise_type:
+      type: string
+      enum: [strength, cardio, flexibility, balance, functional]
+      example: "strength"
+    instructions:
+      type: string
+      example: "Start in plank position, lower body to floor, push back up."
+    video_url:
+      type: string
+      format: uri
+      example: "https://example.com/custom-pushup-video.mp4"
+    image_url:
+      type: string
+      format: uri
+      example: "https://example.com/custom-pushup-image.jpg"
+    muscular_groups:
+      type: array
+      items:
+        type: string
+      example: ["chest", "triceps"]
+
+CustomExerciseResponse:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+    name:
+      type: string
+      example: "Custom Push-up"
+    synonyms:
+      type: array
+      items:
+        type: string
+      example: ["press-ups", "floor press"]
+    difficulty_level:
+      type: string
+      enum: [beginner, intermediate, advanced]
+      example: "beginner"
+    exercise_type:
+      type: string
+      enum: [strength, cardio, flexibility, balance, functional]
+      example: "strength"
+    instructions:
+      type: string
+      example: "Start in plank position, lower body to floor, push back up."
+    video_url:
+      type: string
+      format: uri
+      example: "https://example.com/custom-pushup-video.mp4"
+    image_url:
+      type: string
+      format: uri
+      example: "https://example.com/custom-pushup-image.jpg"
+    muscular_groups:
+      type: array
+      items:
+        type: string
+      example: ["chest", "triceps"]
+    created_by:
+      type: string
+      format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440002"
+    created_at:
+      type: string
+      format: date-time
+      example: "2025-08-27T12:34:56Z"
+    updated_at:
+      type: string
+      format: date-time
+      example: "2025-08-27T12:34:56Z"
 # Custom Equipment Schemas
 CustomEquipmentCreate:
   type: object

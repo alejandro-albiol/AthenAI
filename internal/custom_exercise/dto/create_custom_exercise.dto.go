@@ -10,4 +10,5 @@ type CustomExerciseCreationDTO struct {
 	VideoURL        string   `json:"video_url"`
 	ImageURL        string   `json:"image_url"`
 	MuscularGroups  []string `json:"muscular_groups"`
+	CreatedBy       string   `json:"created_by" validate:"required"`
 }

@@ -19,6 +19,9 @@ import (
 	musculargroupmodule "github.com/alejandro-albiol/athenai/internal/muscular_group/module"
 	templateblockmodule "github.com/alejandro-albiol/athenai/internal/template_block/module"
 	workouttemplatemodule "github.com/alejandro-albiol/athenai/internal/workout_template/module"
+	customequipmentmodule "github.com/alejandro-albiol/athenai/internal/custom_equipment/module"
+	customexercisemodule "github.com/alejandro-albiol/athenai/internal/custom_exercise/module"
+	// workoutgeneratormodule "github.com/alejandro-albiol/athenai/internal/workout_generator/module"
 	// adminmodule "github.com/alejandro-albiol/athenai/internal/admin/module"
 	// customexercisemuscgroupmodule "github.com/alejandro-albiol/athenai/internal/custom_exercise_muscular_group/module"
 )
@@ -46,6 +49,8 @@ func NewAPIRouter(db *sql.DB) http.Handler {
 	// Uncomment when implemented:
 	// protected.Mount("/admin", adminmodule.NewAdminModule(db))
 	// protected.Mount("/custom-exercise-muscular-group", customexercisemuscgroupmodule.NewCustomExerciseMuscularGroupModule(db))
+	protected.Mount("/custom-equipment", customequipmentmodule.NewCustomEquipmentModule(db))
+	protected.Mount("/custom-exercise", customexercisemodule.NewCustomExerciseModule(db))
 
 	r.Mount("/", protected)
 	return r

@@ -1,0 +1,109 @@
+# Custom Exercise Item Endpoints
+---
+
+get:
+  tags:
+    - CustomExercise
+  summary: Get custom exercise by ID
+  description: Retrieves a custom exercise by its ID
+  operationId: getCustomExerciseById
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Custom exercise ID
+      schema:
+        type: string
+        format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+  responses:
+    "200":
+      description: Custom exercise found
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas.yaml#/CustomExerciseResponse'
+    "404":
+      $ref: '../../components/responses.yaml#/NotFound'
+    "401":
+      $ref: '../../components/responses.yaml#/Unauthorized'
+    "500":
+      $ref: '../../components/responses.yaml#/InternalServerError'
+
+put:
+  tags:
+    - CustomExercise
+  summary: Update custom exercise
+  description: Updates a custom exercise by its ID
+  operationId: updateCustomExercise
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Custom exercise ID
+      schema:
+        type: string
+        format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: '../../components/schemas.yaml#/CustomExerciseUpdate'
+  responses:
+    "200":
+      description: Custom exercise updated
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/schemas.yaml#/CustomExerciseResponse'
+    "400":
+      $ref: '../../components/responses.yaml#/BadRequest'
+    "404":
+      $ref: '../../components/responses.yaml#/NotFound'
+    "401":
+      $ref: '../../components/responses.yaml#/Unauthorized'
+    "500":
+      $ref: '../../components/responses.yaml#/InternalServerError'
+
+delete:
+  tags:
+    - CustomExercise
+  summary: Delete custom exercise
+  description: Deletes a custom exercise by its ID
+  operationId: deleteCustomExercise
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Custom exercise ID
+      schema:
+        type: string
+        format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+  responses:
+    "200":
+      description: Custom exercise deleted
+      content:
+        application/json:
+          schema:
+            $ref: '../../components/responses.yaml#/SuccessResponse'
+          example:
+            status: "success"
+            message: "Custom exercise deleted successfully"
+            data: null
+    "400":
+      $ref: '../../components/responses.yaml#/BadRequest'
+    "401":
+      $ref: '../../components/responses.yaml#/Unauthorized'
+    "404":
+      $ref: '../../components/responses.yaml#/NotFound'
+    "500":
+      $ref: '../../components/responses.yaml#/InternalServerError'
