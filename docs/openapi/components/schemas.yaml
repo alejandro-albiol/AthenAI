@@ -1,3 +1,84 @@
+# Custom Equipment Schemas
+CustomEquipmentCreate:
+  type: object
+  required:
+    - name
+    - created_by
+    - category
+  properties:
+    name:
+      type: string
+      example: "Hex Dumbbell"
+    created_by:
+      type: string
+      format: uuid
+      example: "123e4567-e89b-12d3-a456-426614174000"
+    description:
+      type: string
+      example: "Rubber-coated dumbbell for strength training."
+    category:
+      type: string
+      enum: [free_weights, machines, cardio, accessories, bodyweight, custom]
+      example: "free_weights"
+    is_active:
+      type: boolean
+      default: true
+
+CustomEquipmentUpdate:
+  type: object
+  required:
+    - id
+  properties:
+    id:
+      type: string
+      format: uuid
+      example: "123e4567-e89b-12d3-a456-426614174000"
+    name:
+      type: string
+      example: "Hex Dumbbell"
+    description:
+      type: string
+      example: "Rubber-coated dumbbell for strength training."
+    category:
+      type: string
+      enum: [free_weights, machines, cardio, accessories, bodyweight, custom]
+      example: "free_weights"
+    is_active:
+      type: boolean
+      default: true
+
+CustomEquipmentResponse:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      example: "123e4567-e89b-12d3-a456-426614174000"
+    name:
+      type: string
+      example: "Hex Dumbbell"
+    created_by:
+      type: string
+      format: uuid
+      example: "123e4567-e89b-12d3-a456-426614174000"
+    description:
+      type: string
+      example: "Rubber-coated dumbbell for strength training."
+    category:
+      type: string
+      enum: [free_weights, machines, cardio, accessories, bodyweight, custom]
+      example: "free_weights"
+    is_active:
+      type: boolean
+      default: true
+    created_at:
+      type: string
+      format: date-time
+      example: "2025-08-27T12:34:56Z"
+    updated_at:
+      type: string
+      format: date-time
+      example: "2025-08-27T12:34:56Z"
 # User related schemas
 UserCreationDTO:
   type: object

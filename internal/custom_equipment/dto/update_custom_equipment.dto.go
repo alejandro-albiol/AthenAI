@@ -5,4 +5,5 @@ type UpdateCustomEquipmentDTO struct {
 	Description *string `json:"description,omitempty"`
 	Category    *string `json:"category,omitempty"`
 	IsActive    *bool   `json:"is_active,omitempty"`
+	ID          string  `json:"id"`
 }

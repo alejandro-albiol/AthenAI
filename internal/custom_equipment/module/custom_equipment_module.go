@@ -12,8 +12,8 @@ import (
 
 // NewCustomEquipmentModule wires up the custom equipment module
 func NewCustomEquipmentModule(db *sql.DB) http.Handler {
-	repo := &repository.CustomEquipmentRepositoryImpl{DB: db}
-	service := &service.CustomEquipmentServiceImpl{Repo: repo}
-	handler := &handler.CustomEquipmentHandler{Service: service}
+	repo := repository.NewCustomEquipmentRepository(db)
+	service := service.NewCustomEquipmentService(repo)
+	handler := handler.NewCustomEquipmentHandler(service)
 	return router.NewCustomEquipmentRouter(handler)
 }

@@ -1,32 +1,74 @@
 package service
 
 import (
+	"database/sql"
+
 	"github.com/alejandro-albiol/athenai/internal/custom_equipment/dto"
 	"github.com/alejandro-albiol/athenai/internal/custom_equipment/interfaces"
+	"github.com/alejandro-albiol/athenai/pkg/apierror"
+	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
 )
-
-// CustomEquipmentServiceImpl implements interfaces.CustomEquipmentService
 
 type CustomEquipmentServiceImpl struct {
 	Repo interfaces.CustomEquipmentRepository
 }
 
+func NewCustomEquipmentService(repo interfaces.CustomEquipmentRepository) *CustomEquipmentServiceImpl {
+	return &CustomEquipmentServiceImpl{Repo: repo}
+}
+
 func (s *CustomEquipmentServiceImpl) CreateCustomEquipment(gymID string, equipment *dto.CreateCustomEquipmentDTO) error {
-	return s.Repo.Create(gymID, equipment)
+	existingEquipment, err := s.Repo.GetByID(gymID, equipment.Name)
+	if err != nil && err != sql.ErrNoRows {
+		return apierror.New(errorcode_enum.CodeInternal, "Failed to check existing equipment", err)
+	}
+	if existingEquipment != nil {
+		return apierror.New(errorcode_enum.CodeConflict, "Equipment already exists", nil)
+	}
+	err = s.Repo.Create(gymID, equipment)
+	if err != nil {
+		return apierror.New(errorcode_enum.CodeInternal, "Failed to create equipment", err)
+	}
+	return nil
 }
 
 func (s *CustomEquipmentServiceImpl) GetCustomEquipmentByID(gymID, id string) (*dto.ResponseCustomEquipmentDTO, error) {
-	return s.Repo.GetByID(gymID, id)
+	equipment, err := s.Repo.GetByID(gymID, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, apierror.New(errorcode_enum.CodeNotFound, "Equipment not found", err)
+		}
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to get equipment", err)
+	}
+	return equipment, nil
 }
 
 func (s *CustomEquipmentServiceImpl) ListCustomEquipment(gymID string) ([]*dto.ResponseCustomEquipmentDTO, error) {
-	return s.Repo.List(gymID)
+	equipment, err := s.Repo.List(gymID)
+	if err != nil {
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to list equipment", err)
+	}
+	return equipment, nil
 }
 
 func (s *CustomEquipmentServiceImpl) UpdateCustomEquipment(gymID string, equipment *dto.UpdateCustomEquipmentDTO) error {
-	return s.Repo.Update(gymID, equipment)
+	err := s.Repo.Update(gymID, equipment)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return apierror.New(errorcode_enum.CodeNotFound, "Equipment not found", err)
+		}
+		return apierror.New(errorcode_enum.CodeInternal, "Failed to update equipment", err)
+	}
+	return nil
 }
 
 func (s *CustomEquipmentServiceImpl) DeleteCustomEquipment(gymID, id string) error {
-	return s.Repo.Delete(gymID, id)
+	err := s.Repo.Delete(gymID, id)
+	if err != nil {
+		if err == sql.ErrNoRows {
+			return apierror.New(errorcode_enum.CodeNotFound, "Equipment not found", err)
+		}
+		return apierror.New(errorcode_enum.CodeInternal, "Failed to delete equipment", err)
+	}
+	return nil
 }
