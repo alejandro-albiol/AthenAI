@@ -9,15 +9,15 @@ import (
 	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
 )
 
-type CustomEquipmentServiceImpl struct {
+type CustomEquipmentService struct {
 	Repo interfaces.CustomEquipmentRepository
 }
 
-func NewCustomEquipmentService(repo interfaces.CustomEquipmentRepository) *CustomEquipmentServiceImpl {
-	return &CustomEquipmentServiceImpl{Repo: repo}
+func NewCustomEquipmentService(repo interfaces.CustomEquipmentRepository) *CustomEquipmentService {
+	return &CustomEquipmentService{Repo: repo}
 }
 
-func (s *CustomEquipmentServiceImpl) CreateCustomEquipment(gymID string, equipment *dto.CreateCustomEquipmentDTO) error {
+func (s *CustomEquipmentService) CreateCustomEquipment(gymID string, equipment *dto.CreateCustomEquipmentDTO) error {
 	existingEquipment, err := s.Repo.GetByID(gymID, equipment.Name)
 	if err != nil && err != sql.ErrNoRows {
 		return apierror.New(errorcode_enum.CodeInternal, "Failed to check existing equipment", err)
@@ -32,7 +32,7 @@ func (s *CustomEquipmentServiceImpl) CreateCustomEquipment(gymID string, equipme
 	return nil
 }
 
-func (s *CustomEquipmentServiceImpl) GetCustomEquipmentByID(gymID, id string) (*dto.ResponseCustomEquipmentDTO, error) {
+func (s *CustomEquipmentService) GetCustomEquipmentByID(gymID, id string) (*dto.ResponseCustomEquipmentDTO, error) {
 	equipment, err := s.Repo.GetByID(gymID, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -43,7 +43,7 @@ func (s *CustomEquipmentServiceImpl) GetCustomEquipmentByID(gymID, id string) (*
 	return equipment, nil
 }
 
-func (s *CustomEquipmentServiceImpl) ListCustomEquipment(gymID string) ([]*dto.ResponseCustomEquipmentDTO, error) {
+func (s *CustomEquipmentService) ListCustomEquipment(gymID string) ([]*dto.ResponseCustomEquipmentDTO, error) {
 	equipment, err := s.Repo.List(gymID)
 	if err != nil {
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to list equipment", err)
@@ -51,7 +51,7 @@ func (s *CustomEquipmentServiceImpl) ListCustomEquipment(gymID string) ([]*dto.R
 	return equipment, nil
 }
 
-func (s *CustomEquipmentServiceImpl) UpdateCustomEquipment(gymID string, equipment *dto.UpdateCustomEquipmentDTO) error {
+func (s *CustomEquipmentService) UpdateCustomEquipment(gymID string, equipment *dto.UpdateCustomEquipmentDTO) error {
 	err := s.Repo.Update(gymID, equipment)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -62,7 +62,7 @@ func (s *CustomEquipmentServiceImpl) UpdateCustomEquipment(gymID string, equipme
 	return nil
 }
 
-func (s *CustomEquipmentServiceImpl) DeleteCustomEquipment(gymID, id string) error {
+func (s *CustomEquipmentService) DeleteCustomEquipment(gymID, id string) error {
 	err := s.Repo.Delete(gymID, id)
 	if err != nil {
 		if err == sql.ErrNoRows {

@@ -16,15 +16,15 @@ func NewCustomExerciseEquipmentRepository(db *sql.DB) interfaces.CustomExerciseE
 	return &CustomExerciseEquipmentRepositoryImpl{db: db}
 }
 
-func (r *CustomExerciseEquipmentRepositoryImpl) CreateLink(gymID string, link dto.CustomExerciseEquipment) (string, error) {
+func (r *CustomExerciseEquipmentRepositoryImpl) CreateLink(gymID string, link dto.CustomExerciseEquipment) error {
 	schema := gymID
 	query := fmt.Sprintf("INSERT INTO %s.custom_exercise_equipment (custom_exercise_id, equipment_id) VALUES ($1, $2) RETURNING id", schema)
 	var id string
 	err := r.db.QueryRow(query, link.CustomExerciseID, link.EquipmentID).Scan(&id)
 	if err != nil {
-		return "", err
+		return err
 	}
-	return id, nil
+	return nil
 }
 
 func (r *CustomExerciseEquipmentRepositoryImpl) DeleteLink(gymID, id string) error {

@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/alejandro-albiol/athenai/internal/custom_exercise/dto"
-	"github.com/alejandro-albiol/athenai/internal/custom_exercise/service"
+	"github.com/alejandro-albiol/athenai/internal/custom_exercise/interfaces"
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
 	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
 	"github.com/alejandro-albiol/athenai/pkg/middleware"
@@ -14,10 +14,10 @@ import (
 )
 
 type CustomExerciseHandler struct {
-	Service *service.CustomExerciseService
+	Service interfaces.CustomExerciseService
 }
 
-func NewCustomExerciseHandler(svc *service.CustomExerciseService) *CustomExerciseHandler {
+func NewCustomExerciseHandler(svc interfaces.CustomExerciseService) *CustomExerciseHandler {
 	return &CustomExerciseHandler{Service: svc}
 }
 
@@ -28,20 +28,20 @@ func (h *CustomExerciseHandler) Create(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 	gymID := middleware.GetGymID(r)
-	err := h.Service.Create(gymID, &dtoReq)
+	err := h.Service.CreateCustomExercise(gymID, dtoReq)
 	if err != nil {
-		response.WriteAPIError(w, err)
+		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeInternal, "Failed to create custom exercise", err))
 		return
 	}
-	response.WriteAPISuccess(w, "Equipment created", nil)
+	response.WriteAPISuccess(w, "Custom Exercise created successfully", nil)
 }
 
 func (h *CustomExerciseHandler) GetByID(w http.ResponseWriter, r *http.Request) {
 	gymID := middleware.GetGymID(r)
 	id := chi.URLParam(r, "id")
-	res, err := h.Service.GetByID(gymID, id)
+	res, err := h.Service.GetCustomExerciseByID(gymID, id)
 	if err != nil {
-		response.WriteAPIError(w, err)
+		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve custom exercise", err))
 		return
 	}
 	response.WriteAPISuccess(w, "Custom Exercise retrieved successfully", res)
@@ -49,9 +49,9 @@ func (h *CustomExerciseHandler) GetByID(w http.ResponseWriter, r *http.Request) 
 
 func (h *CustomExerciseHandler) List(w http.ResponseWriter, r *http.Request) {
 	gymID := middleware.GetGymID(r)
-	res, err := h.Service.List(gymID)
+	res, err := h.Service.ListCustomExercises(gymID)
 	if err != nil {
-		response.WriteAPIError(w, err)
+		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeInternal, "Failed to list custom exercises", err))
 		return
 	}
 	response.WriteAPISuccess(w, "Custom Exercises retrieved successfully", res)
@@ -65,10 +65,9 @@ func (h *CustomExerciseHandler) Update(w http.ResponseWriter, r *http.Request) {
 	}
 	gymID := middleware.GetGymID(r)
 	id := chi.URLParam(r, "id")
-	dtoReq.ID = &id
-	err := h.Service.Update(gymID, &dtoReq)
+	err := h.Service.UpdateCustomExercise(gymID, id, dtoReq)
 	if err != nil {
-		response.WriteAPIError(w, err)
+		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeInternal, "Failed to update custom exercise", err))
 		return
 	}
 	response.WriteAPISuccess(w, "Custom Exercise updated successfully", nil)
@@ -77,9 +76,9 @@ func (h *CustomExerciseHandler) Update(w http.ResponseWriter, r *http.Request) {
 func (h *CustomExerciseHandler) Delete(w http.ResponseWriter, r *http.Request) {
 	gymID := middleware.GetGymID(r)
 	id := chi.URLParam(r, "id")
-	err := h.Service.Delete(gymID, id)
+	err := h.Service.DeleteCustomExercise(gymID, id)
 	if err != nil {
-		response.WriteAPIError(w, err)
+		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeInternal, "Failed to delete custom exercise", err))
 		return
 	}
 	response.WriteAPISuccess(w, "Custom Exercise deleted successfully", nil)

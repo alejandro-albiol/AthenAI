@@ -1,11 +1,13 @@
 package router
 
 import (
+	"net/http"
+
 	"github.com/alejandro-albiol/athenai/internal/custom_equipment/handler"
 	"github.com/go-chi/chi/v5"
 )
 
-func NewCustomEquipmentRouter(h *handler.CustomEquipmentHandler) chi.Router {
+func NewCustomEquipmentRouter(h *handler.CustomEquipmentHandler) http.Handler {
 	r := chi.NewRouter()
 	r.Post("/custom-equipment", h.Create)
 	r.Get("/custom-equipment/{id}", h.GetByID)

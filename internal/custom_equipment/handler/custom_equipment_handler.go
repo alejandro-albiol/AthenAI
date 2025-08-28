@@ -15,10 +15,10 @@ import (
 // CustomEquipmentHandler handles HTTP requests for custom equipment
 
 type CustomEquipmentHandler struct {
-	Service *service.CustomEquipmentServiceImpl
+	Service *service.CustomEquipmentService
 }
 
-func NewCustomEquipmentHandler(service *service.CustomEquipmentServiceImpl) *CustomEquipmentHandler {
+func NewCustomEquipmentHandler(service *service.CustomEquipmentService) *CustomEquipmentHandler {
 	return &CustomEquipmentHandler{Service: service}
 }
 
