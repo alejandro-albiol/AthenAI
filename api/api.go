@@ -21,6 +21,12 @@ import (
 	workouttemplatemodule "github.com/alejandro-albiol/athenai/internal/workout_template/module"
 	customequipmentmodule "github.com/alejandro-albiol/athenai/internal/custom_equipment/module"
 	customexercisemodule "github.com/alejandro-albiol/athenai/internal/custom_exercise/module"
+	customexerciseequipmentmodule "github.com/alejandro-albiol/athenai/internal/custom_exercise_equipment/module"
+	customexercisemuscgroupmodule "github.com/alejandro-albiol/athenai/internal/custom_exercise_muscular_group/module"
+	custommemberworkoutmodule "github.com/alejandro-albiol/athenai/internal/custom_member_workout/module"
+	customtemplateblockmodule "github.com/alejandro-albiol/athenai/internal/custom_template_block/module"
+	customworkoutinstancemodule "github.com/alejandro-albiol/athenai/internal/custom_workout_instance/module"
+	customworkouttemplatemodule "github.com/alejandro-albiol/athenai/internal/custom_workout_template/module"
 	// workoutgeneratormodule "github.com/alejandro-albiol/athenai/internal/workout_generator/module"
 	// adminmodule "github.com/alejandro-albiol/athenai/internal/admin/module"
 	// customexercisemuscgroupmodule "github.com/alejandro-albiol/athenai/internal/custom_exercise_muscular_group/module"
@@ -51,6 +57,12 @@ func NewAPIRouter(db *sql.DB) http.Handler {
 	// protected.Mount("/custom-exercise-muscular-group", customexercisemuscgroupmodule.NewCustomExerciseMuscularGroupModule(db))
 	protected.Mount("/custom-equipment", customequipmentmodule.NewCustomEquipmentModule(db))
 	protected.Mount("/custom-exercise", customexercisemodule.NewCustomExerciseModule(db))
+	protected.Mount("/custom-exercise-equipment", customexerciseequipmentmodule.NewCustomExerciseEquipmentModule(db))
+	protected.Mount("/custom-exercise-muscular-group", customexercisemuscgroupmodule.NewCustomExerciseMuscularGroupModule(db))
+	protected.Mount("/custom-member-workout", custommemberworkoutmodule.NewCustomMemberWorkoutModule(db))
+	protected.Mount("/custom-template-block", customtemplateblockmodule.NewCustomTemplateBlockModule(db))
+	protected.Mount("/custom-workout-instance", customworkoutinstancemodule.NewCustomWorkoutInstanceModule(db))
+	protected.Mount("/custom-workout-template", customworkouttemplatemodule.NewCustomWorkoutTemplateModule(db))
 
 	r.Mount("/", protected)
 	return r

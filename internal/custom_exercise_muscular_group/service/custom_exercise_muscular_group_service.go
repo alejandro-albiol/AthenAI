@@ -31,12 +31,12 @@ func (s *CustomExerciseMuscularGroupService) DeleteLink(gymID, id string) error 
 	return nil
 }
 
-func (s *CustomExerciseMuscularGroupService) RemoveAllLinksForExercise(gymID, id string) (dto.CustomExerciseMuscularGroup, error) {
+func (s *CustomExerciseMuscularGroupService) RemoveAllLinksForExercise(gymID, id string) error {
 	err := s.repository.DeleteLink(gymID, id)
 	if err != nil {
-		return dto.CustomExerciseMuscularGroup{}, apierror.New(errorcode_enum.CodeInternal, "Failed to remove all links for exercise", err)
+		return apierror.New(errorcode_enum.CodeInternal, "Failed to remove all links for exercise", err)
 	}
-	return dto.CustomExerciseMuscularGroup{}, nil
+	return nil
 }
 
 func (s *CustomExerciseMuscularGroupService) GetLinkByID(gymID, id string) (dto.CustomExerciseMuscularGroup, error) {
