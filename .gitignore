@@ -11,3 +11,6 @@
 # OS specific
 .DS_Store
 Thumbs.db
+
+# Data collection interview guide
+interview-guide.docx
