@@ -1080,3 +1080,291 @@ ExerciseMuscularGroupLinkDTO:
       type: string
       format: uuid
       example: "550e8400-e29b-41d4-a716-446655440002"
+
+# CustomExerciseEquipment DTOs
+CreateCustomExerciseEquipmentDTO:
+  type: object
+  required:
+    - name
+    - type
+  properties:
+    name:
+      type: string
+      example: "Dumbbell"
+    type:
+      type: string
+      example: "Free Weight"
+    description:
+      type: string
+      example: "Adjustable dumbbell for strength training"
+
+ResponseCustomExerciseEquipmentDTO:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440000"
+    name:
+      type: string
+      example: "Dumbbell"
+    type:
+      type: string
+      example: "Free Weight"
+    description:
+      type: string
+      example: "Adjustable dumbbell for strength training"
+
+UpdateCustomExerciseEquipmentDTO:
+  type: object
+  properties:
+    name:
+      type: string
+      example: "Dumbbell"
+    type:
+      type: string
+      example: "Free Weight"
+    description:
+      type: string
+      example: "Adjustable dumbbell for strength training"
+
+# CustomExerciseMuscularGroup DTOs
+CreateCustomExerciseMuscularGroupDTO:
+  type: object
+  required:
+    - name
+  properties:
+    name:
+      type: string
+      example: "Chest"
+    description:
+      type: string
+      example: "Muscles in the chest area"
+
+ResponseCustomExerciseMuscularGroupDTO:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440001"
+    name:
+      type: string
+      example: "Chest"
+    description:
+      type: string
+      example: "Muscles in the chest area"
+
+UpdateCustomExerciseMuscularGroupDTO:
+  type: object
+  properties:
+    name:
+      type: string
+      example: "Chest"
+    description:
+      type: string
+      example: "Muscles in the chest area"
+
+# CustomMemberWorkout DTOs
+CreateCustomMemberWorkoutDTO:
+  type: object
+  required:
+    - memberId
+    - workoutName
+  properties:
+    memberId:
+      type: string
+      format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440002"
+    workoutName:
+      type: string
+      example: "Monday Strength"
+    description:
+      type: string
+      example: "Strength workout for Monday"
+
+ResponseCustomMemberWorkoutDTO:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440003"
+    memberId:
+      type: string
+      format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440002"
+    workoutName:
+      type: string
+      example: "Monday Strength"
+    description:
+      type: string
+      example: "Strength workout for Monday"
+
+UpdateCustomMemberWorkoutDTO:
+  type: object
+  properties:
+    workoutName:
+      type: string
+      example: "Monday Strength"
+    description:
+      type: string
+      example: "Strength workout for Monday"
+
+# CustomTemplateBlock DTOs
+CreateCustomTemplateBlockDTO:
+  type: object
+  required:
+    - name
+  properties:
+    name:
+      type: string
+      example: "Warmup Block"
+    description:
+      type: string
+      example: "Block for warmup exercises"
+
+ResponseCustomTemplateBlockDTO:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440004"
+    name:
+      type: string
+      example: "Warmup Block"
+    description:
+      type: string
+      example: "Block for warmup exercises"
+
+UpdateCustomTemplateBlockDTO:
+  type: object
+  properties:
+    name:
+      type: string
+      example: "Warmup Block"
+    description:
+      type: string
+      example: "Block for warmup exercises"
+
+# CustomWorkoutExercise DTOs
+CreateCustomWorkoutExerciseDTO:
+  type: object
+  required:
+    - name
+  properties:
+    name:
+      type: string
+      example: "Push Up"
+    description:
+      type: string
+      example: "Bodyweight chest exercise"
+
+ResponseCustomWorkoutExerciseDTO:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440005"
+    name:
+      type: string
+      example: "Push Up"
+    description:
+      type: string
+      example: "Bodyweight chest exercise"
+
+UpdateCustomWorkoutExerciseDTO:
+  type: object
+  properties:
+    name:
+      type: string
+      example: "Push Up"
+    description:
+      type: string
+      example: "Bodyweight chest exercise"
+
+# CustomWorkoutInstance DTOs
+CreateCustomWorkoutInstanceDTO:
+  type: object
+  required:
+    - templateId
+  properties:
+    templateId:
+      type: string
+      format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440006"
+    date:
+      type: string
+      format: date
+      example: "2025-08-31"
+
+ResponseCustomWorkoutInstanceDTO:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440007"
+    templateId:
+      type: string
+      format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440006"
+    date:
+      type: string
+      format: date
+      example: "2025-08-31"
+
+UpdateCustomWorkoutInstanceDTO:
+  type: object
+  properties:
+    date:
+      type: string
+      format: date
+      example: "2025-08-31"
+
+# CustomWorkoutTemplate DTOs
+ResponseCustomWorkoutTemplateDTO:
+  type: object
+  properties:
+    id:
+      type: string
+      format: uuid
+      example: "550e8400-e29b-41d4-a716-446655440008"
+    name:
+      type: string
+      example: "Full Body Workout"
+    description:
+      type: string
+      example: "A template for a full body workout routine"
+    createdAt:
+      type: string
+      format: date-time
+      example: "2025-08-31T12:00:00Z"
+    updatedAt:
+      type: string
+      format: date-time
+      example: "2025-08-31T12:00:00Z"
+
+CreateCustomWorkoutTemplateDTO:
+  type: object
+  required:
+    - name
+  properties:
+    name:
+      type: string
+      example: "Full Body Workout"
+    description:
+      type: string
+      example: "A template for a full body workout routine"
+
+UpdateCustomWorkoutTemplateDTO:
+  type: object
+  properties:
+    name:
+      type: string
+      example: "Full Body Workout"
+    description:
+      type: string
+      example: "A template for a full body workout routine"

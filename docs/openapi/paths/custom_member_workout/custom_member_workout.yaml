@@ -1,0 +1,59 @@
+---
+post:
+  tags:
+    - CustomMemberWorkout
+  summary: Create new custom member workout
+  description: Creates a new custom member workout for a tenant
+  operationId: createCustomMemberWorkout
+  security:
+    - bearerAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+            $ref: "../../components/schemas.yaml#/CreateCustomMemberWorkoutDTO"
+  responses:
+    "200":
+      description: Custom member workout created successfully
+      content:
+        application/json:
+          schema:
+            $ref: "../../openapi.yaml#/components/responses/SuccessResponse"
+    "400":
+      $ref: "../../components/responses.yaml#/BadRequestResponse"
+    "401":
+      $ref: "../../components/responses.yaml#/UnauthorizedResponse"
+    "500":
+      $ref: "../../components/responses.yaml#/InternalServerErrorResponse"
+
+get:
+  tags:
+    - CustomMemberWorkout
+  summary: List all custom member workouts
+  description: Retrieves a list of all custom member workouts for a tenant
+  operationId: listCustomMemberWorkouts
+  security:
+    - bearerAuth: []
+  responses:
+    "200":
+      description: Custom member workout list retrieved successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Custom member workout list retrieved successfully"
+              data:
+                type: array
+                items:
+                    $ref: "../../components/schemas.yaml#/ResponseCustomMemberWorkoutDTO"
+    "401":
+      $ref: "../../components/responses.yaml#/UnauthorizedResponse"
+    "500":
+      $ref: "../../components/responses.yaml#/InternalServerErrorResponse"

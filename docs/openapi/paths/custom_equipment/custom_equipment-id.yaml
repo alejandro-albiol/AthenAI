@@ -23,11 +23,11 @@ get:
           schema:
             $ref: '../../components/schemas.yaml#/CustomEquipmentResponse'
     "404":
-      $ref: '../../components/responses.yaml#/NotFound'
+      $ref: '../../components/responses.yaml#/NotFoundResponse'
     "401":
-      $ref: '../../components/responses.yaml#/Unauthorized'
+      $ref: '../../components/responses.yaml#/UnauthorizedResponse'
     "500":
-      $ref: '../../components/responses.yaml#/InternalServerError'
+      $ref: '../../components/responses.yaml#/InternalServerErrorResponse'
 put:
   tags:
     - CustomEquipment
@@ -59,13 +59,13 @@ put:
           schema:
             $ref: '../../components/schemas.yaml#/CustomEquipmentResponse'
     "400":
-      $ref: '../../components/responses.yaml#/BadRequest'
+      $ref: '../../components/responses.yaml#/BadRequestResponse'
     "404":
-      $ref: '../../components/responses.yaml#/NotFound'
+      $ref: '../../components/responses.yaml#/NotFoundResponse'
     "401":
-      $ref: '../../components/responses.yaml#/Unauthorized'
+      $ref: '../../components/responses.yaml#/UnauthorizedResponse'
     "500":
-      $ref: '../../components/responses.yaml#/InternalServerError'
+      $ref: '../../components/responses.yaml#/InternalServerErrorResponse'
 delete:
   tags:
     - CustomEquipment
@@ -95,10 +95,10 @@ delete:
             message: "Equipment deleted successfully"
             data: null
     "400":
-      $ref: '../../components/responses.yaml#/BadRequest'
+      $ref: '../../components/responses.yaml#/BadRequestResponse'
     "401":
-      $ref: '../../components/responses.yaml#/Unauthorized'
+      $ref: '../../components/responses.yaml#/UnauthorizedResponse'
     "404":
-      $ref: '../../components/responses.yaml#/NotFound'
+      $ref: '../../components/responses.yaml#/NotFoundResponse'
     "500":
-      $ref: '../../components/responses.yaml#/InternalServerError'
+      $ref: '../../components/responses.yaml#/InternalServerErrorResponse'

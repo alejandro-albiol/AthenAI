@@ -1,0 +1,120 @@
+---
+get:
+  tags:
+    - CustomExerciseMuscularGroup
+  summary: Get custom exercise muscular group by ID
+  description: Retrieves a specific custom exercise muscular group by its ID
+  operationId: getCustomExerciseMuscularGroupById
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Custom exercise muscular group ID
+      schema:
+        type: string
+        format: uuid
+  responses:
+    "200":
+      description: Custom exercise muscular group retrieved successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Custom exercise muscular group retrieved successfully"
+              data:
+                $ref: "../../components/schemas.yaml#/ResponseCustomExerciseMuscularGroupDTO"
+    "400":
+      $ref: "../../components/responses.yaml#/BadRequestResponse"
+    "401":
+      $ref: "../../components/responses.yaml#/UnauthorizedResponse"
+    "404":
+      $ref: "../../components/responses.yaml#/NotFoundResponse"
+    "500":
+      $ref: "../../components/responses.yaml#/InternalServerErrorResponse"
+
+patch:
+  tags:
+    - CustomExerciseMuscularGroup
+  summary: Update custom exercise muscular group
+  description: Updates an existing custom exercise muscular group
+  operationId: updateCustomExerciseMuscularGroup
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Custom exercise muscular group ID
+      schema:
+        type: string
+        format: uuid
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../../components/schemas.yaml#/UpdateCustomExerciseMuscularGroupDTO"
+  responses:
+    "200":
+      description: Custom exercise muscular group updated successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Custom exercise muscular group updated successfully"
+              data:
+                $ref: "../../components/schemas.yaml#/ResponseCustomExerciseMuscularGroupDTO"
+    "400":
+      $ref: "../../components/responses.yaml#/BadRequestResponse"
+    "401":
+      $ref: "../../components/responses.yaml#/UnauthorizedResponse"
+    "404":
+      $ref: "../../components/responses.yaml#/NotFoundResponse"
+    "500":
+      $ref: "../../components/responses.yaml#/InternalServerErrorResponse"
+
+delete:
+  tags:
+    - CustomExerciseMuscularGroup
+  summary: Delete custom exercise muscular group
+  description: Deletes a specific custom exercise muscular group
+  operationId: deleteCustomExerciseMuscularGroup
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Custom exercise muscular group ID
+      schema:
+        type: string
+        format: uuid
+  responses:
+    "200":
+      description: Custom exercise muscular group deleted successfully
+      content:
+        application/json:
+          schema:
+            $ref: "../../components/responses.yaml#/SuccessResponse"
+    "400":
+      $ref: "../../components/responses.yaml#/BadRequestResponse"
+    "401":
+      $ref: "../../components/responses.yaml#/UnauthorizedResponse"
+    "404":
+      $ref: "../../components/responses.yaml#/NotFoundResponse"
+    "500":
+      $ref: "../../components/responses.yaml#/InternalServerErrorResponse"

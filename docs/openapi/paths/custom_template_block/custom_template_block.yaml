@@ -1,0 +1,59 @@
+---
+post:
+  tags:
+    - CustomTemplateBlock
+  summary: Create new custom template block
+  description: Creates a new custom template block for a tenant
+  operationId: createCustomTemplateBlock
+  security:
+    - bearerAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+            $ref: "../../components/schemas.yaml#/CreateCustomTemplateBlockDTO"
+  responses:
+    "200":
+      description: Custom template block created successfully
+      content:
+        application/json:
+          schema:
+              $ref: "../../components/responses.yaml#/SuccessResponse"
+    "400":
+      $ref: "../../components/responses.yaml#/BadRequestResponse"
+    "401":
+      $ref: "../../components/responses.yaml#/UnauthorizedResponse"
+    "500":
+      $ref: "../../components/responses.yaml#/InternalServerErrorResponse"
+
+get:
+  tags:
+    - CustomTemplateBlock
+  summary: List all custom template blocks
+  description: Retrieves a list of all custom template blocks for a tenant
+  operationId: listCustomTemplateBlocks
+  security:
+    - bearerAuth: []
+  responses:
+    "200":
+      description: Custom template block list retrieved successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Custom template block list retrieved successfully"
+              data:
+                type: array
+                items:
+                    $ref: "../../components/schemas.yaml#/ResponseCustomTemplateBlockDTO"
+    "401":
+      $ref: "../../components/responses.yaml#/UnauthorizedResponse"
+    "500":
+      $ref: "../../components/responses.yaml#/InternalServerErrorResponse"

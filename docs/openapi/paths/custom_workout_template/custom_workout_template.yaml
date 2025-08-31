@@ -1,0 +1,59 @@
+---
+post:
+  tags:
+    - CustomWorkoutTemplate
+  summary: Create new custom workout template
+  description: Creates a new custom workout template for a tenant
+  operationId: createCustomWorkoutTemplate
+  security:
+    - bearerAuth: []
+  requestBody:
+    required: true
+    content:
+      application/json:
+            schema:
+              $ref: "../../components/schemas.yaml#/CreateCustomWorkoutTemplateDTO"
+  responses:
+    "200":
+      description: Custom workout template created successfully
+      content:
+        application/json:
+            schema:
+              $ref: "../../components/responses.yaml#/SuccessResponse"
+    "400":
+      $ref: "../../components/responses.yaml#/BadRequestResponse"
+    "401":
+      $ref: "../../components/responses.yaml#/UnauthorizedResponse"
+    "500":
+      $ref: "../../components/responses.yaml#/InternalServerErrorResponse"
+
+get:
+  tags:
+    - CustomWorkoutTemplate
+  summary: List all custom workout templates
+  description: Retrieves a list of all custom workout templates for a tenant
+  operationId: listCustomWorkoutTemplates
+  security:
+    - bearerAuth: []
+  responses:
+    "200":
+      description: Custom workout template list retrieved successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Custom workout template list retrieved successfully"
+              data:
+                type: array
+                items:
+                    $ref: "../../components/schemas.yaml#/ResponseCustomWorkoutTemplateDTO"
+    "401":
+      $ref: "../../components/responses.yaml#/UnauthorizedResponse"
+    "500":
+      $ref: "../../components/responses.yaml#/InternalServerErrorResponse"

@@ -1,0 +1,120 @@
+---
+get:
+  tags:
+    - CustomTemplateBlock
+  summary: Get custom template block by ID
+  description: Retrieves a specific custom template block by its ID
+  operationId: getCustomTemplateBlockById
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Custom template block ID
+      schema:
+        type: string
+        format: uuid
+  responses:
+    "200":
+      description: Custom template block retrieved successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Custom template block retrieved successfully"
+              data:
+                $ref: "../../components/schemas.yaml#/ResponseCustomTemplateBlockDTO"
+    "400":
+      $ref: "../../components/responses.yaml#/BadRequestResponse"
+    "401":
+      $ref: "../../components/responses.yaml#/UnauthorizedResponse"
+    "404":
+      $ref: "../../components/responses.yaml#/NotFoundResponse"
+    "500":
+      $ref: "../../components/responses.yaml#/InternalServerErrorResponse"
+
+patch:
+  tags:
+    - CustomTemplateBlock
+  summary: Update custom template block
+  description: Updates an existing custom template block
+  operationId: updateCustomTemplateBlock
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Custom template block ID
+      schema:
+        type: string
+        format: uuid
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../../components/schemas.yaml#/UpdateCustomTemplateBlockDTO"
+  responses:
+    "200":
+      description: Custom template block updated successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Custom template block updated successfully"
+              data:
+                $ref: "../../components/schemas.yaml#/ResponseCustomTemplateBlockDTO"
+    "400":
+      $ref: "../../components/responses.yaml#/BadRequestResponse"
+    "401":
+      $ref: "../../components/responses.yaml#/UnauthorizedResponse"
+    "404":
+      $ref: "../../components/responses.yaml#/NotFoundResponse"
+    "500":
+      $ref: "../../components/responses.yaml#/InternalServerErrorResponse"
+
+delete:
+  tags:
+    - CustomTemplateBlock
+  summary: Delete custom template block
+  description: Deletes a specific custom template block
+  operationId: deleteCustomTemplateBlock
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Custom template block ID
+      schema:
+        type: string
+        format: uuid
+  responses:
+    "200":
+      description: Custom template block deleted successfully
+      content:
+        application/json:
+          schema:
+            $ref: "../../components/responses.yaml#/SuccessResponse"
+    "400":
+      $ref: "../../components/responses.yaml#/BadRequestResponse"
+    "401":
+      $ref: "../../components/responses.yaml#/UnauthorizedResponse"
+    "404":
+      $ref: "../../components/responses.yaml#/NotFoundResponse"
+    "500":
+      $ref: "../../components/responses.yaml#/InternalServerErrorResponse"

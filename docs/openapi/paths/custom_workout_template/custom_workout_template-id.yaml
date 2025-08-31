@@ -1,0 +1,120 @@
+---
+get:
+  tags:
+    - CustomWorkoutTemplate
+  summary: Get custom workout template by ID
+  description: Retrieves a specific custom workout template by its ID
+  operationId: getCustomWorkoutTemplateById
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Custom workout template ID
+      schema:
+        type: string
+        format: uuid
+  responses:
+    "200":
+      description: Custom workout template retrieved successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Custom workout template retrieved successfully"
+              data:
+                $ref: "../../components/schemas.yaml#/ResponseCustomWorkoutTemplateDTO"
+    "400":
+      $ref: "../../components/responses.yaml#/BadRequestResponse"
+    "401":
+      $ref: "../../components/responses.yaml#/UnauthorizedResponse"
+    "404":
+      $ref: "../../components/responses.yaml#/NotFoundResponse"
+    "500":
+      $ref: "../../components/responses.yaml#/InternalServerErrorResponse"
+
+patch:
+  tags:
+    - CustomWorkoutTemplate
+  summary: Update custom workout template
+  description: Updates an existing custom workout template
+  operationId: updateCustomWorkoutTemplate
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Custom workout template ID
+      schema:
+        type: string
+        format: uuid
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../../components/schemas.yaml#/UpdateCustomWorkoutTemplateDTO"
+  responses:
+    "200":
+      description: Custom workout template updated successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Custom workout template updated successfully"
+              data:
+                $ref: "../../components/schemas.yaml#/ResponseCustomWorkoutTemplateDTO"
+    "400":
+      $ref: "../../components/responses.yaml#/BadRequestResponse"
+    "401":
+      $ref: "../../components/responses.yaml#/UnauthorizedResponse"
+    "404":
+      $ref: "../../components/responses.yaml#/NotFoundResponse"
+    "500":
+      $ref: "../../components/responses.yaml#/InternalServerErrorResponse"
+
+delete:
+  tags:
+    - CustomWorkoutTemplate
+  summary: Delete custom workout template
+  description: Deletes a specific custom workout template
+  operationId: deleteCustomWorkoutTemplate
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Custom workout template ID
+      schema:
+        type: string
+        format: uuid
+  responses:
+    "200":
+      description: Custom workout template deleted successfully
+      content:
+        application/json:
+          schema:
+            $ref: "../../components/responses.yaml#/SuccessResponse"
+    "400":
+      $ref: "../../components/responses.yaml#/BadRequestResponse"
+    "401":
+      $ref: "../../components/responses.yaml#/UnauthorizedResponse"
+    "404":
+      $ref: "../../components/responses.yaml#/NotFoundResponse"
+    "500":
+      $ref: "../../components/responses.yaml#/InternalServerErrorResponse"

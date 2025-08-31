@@ -1,0 +1,119 @@
+get:
+  tags:
+    - CustomWorkoutExercise
+  summary: Get custom workout exercise by ID
+  description: Retrieves a specific custom workout exercise by its ID
+  operationId: getCustomWorkoutExerciseById
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Custom workout exercise ID
+      schema:
+        type: string
+        format: uuid
+  responses:
+    "200":
+      description: Custom workout exercise retrieved successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Custom workout exercise retrieved successfully"
+              data:
+                $ref: "../../components/schemas.yaml#/ResponseCustomWorkoutExerciseDTO"
+    "400":
+      $ref: "../../components/responses.yaml#/BadRequestResponse"
+    "401":
+      $ref: "../../components/responses.yaml#/UnauthorizedResponse"
+    "404":
+      $ref: "../../components/responses.yaml#/NotFoundResponse"
+    "500":
+      $ref: "../../components/responses.yaml#/InternalServerErrorResponse"
+
+patch:
+  tags:
+    - CustomWorkoutExercise
+  summary: Update custom workout exercise
+  description: Updates an existing custom workout exercise
+  operationId: updateCustomWorkoutExercise
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Custom workout exercise ID
+      schema:
+        type: string
+        format: uuid
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../../components/schemas.yaml#/UpdateCustomWorkoutExerciseDTO"
+  responses:
+    "200":
+      description: Custom workout exercise updated successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Custom workout exercise updated successfully"
+              data:
+                $ref: "../../components/schemas.yaml#/ResponseCustomWorkoutExerciseDTO"
+    "400":
+      $ref: "../../components/responses.yaml#/BadRequestResponse"
+    "401":
+      $ref: "../../components/responses.yaml#/UnauthorizedResponse"
+    "404":
+      $ref: "../../components/responses.yaml#/NotFoundResponse"
+    "500":
+      $ref: "../../components/responses.yaml#/InternalServerErrorResponse"
+
+delete:
+  tags:
+    - CustomWorkoutExercise
+  summary: Delete custom workout exercise
+  description: Deletes a specific custom workout exercise
+  operationId: deleteCustomWorkoutExercise
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Custom workout exercise ID
+      schema:
+        type: string
+        format: uuid
+  responses:
+    "200":
+      description: Custom workout exercise deleted successfully
+      content:
+        application/json:
+          schema:
+            $ref: "../../components/responses.yaml#/SuccessResponse"
+    "400":
+      $ref: "../../components/responses.yaml#/BadRequestResponse"
+    "401":
+      $ref: "../../components/responses.yaml#/UnauthorizedResponse"
+    "404":
+      $ref: "../../components/responses.yaml#/NotFoundResponse"
+    "500":
+      $ref: "../../components/responses.yaml#/InternalServerErrorResponse"

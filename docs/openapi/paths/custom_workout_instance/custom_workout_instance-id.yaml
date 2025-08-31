@@ -1,0 +1,119 @@
+get:
+  tags:
+    - CustomWorkoutInstance
+  summary: Get custom workout instance by ID
+  description: Retrieves a specific custom workout instance by its ID
+  operationId: getCustomWorkoutInstanceById
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Custom workout instance ID
+      schema:
+        type: string
+        format: uuid
+  responses:
+    "200":
+      description: Custom workout instance retrieved successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Custom workout instance retrieved successfully"
+              data:
+                $ref: "../../components/schemas.yaml#/ResponseCustomWorkoutInstanceDTO"
+    "400":
+      $ref: "../../components/responses.yaml#/BadRequestResponse"
+    "401":
+      $ref: "../../components/responses.yaml#/UnauthorizedResponse"
+    "404":
+      $ref: "../../components/responses.yaml#/NotFoundResponse"
+    "500":
+      $ref: "../../components/responses.yaml#/InternalServerErrorResponse"
+
+patch:
+  tags:
+    - CustomWorkoutInstance
+  summary: Update custom workout instance
+  description: Updates an existing custom workout instance
+  operationId: updateCustomWorkoutInstance
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Custom workout instance ID
+      schema:
+        type: string
+        format: uuid
+  requestBody:
+    required: true
+    content:
+      application/json:
+        schema:
+          $ref: "../../components/schemas.yaml#/UpdateCustomWorkoutInstanceDTO"
+  responses:
+    "200":
+      description: Custom workout instance updated successfully
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              status:
+                type: string
+                example: "success"
+              message:
+                type: string
+                example: "Custom workout instance updated successfully"
+              data:
+                $ref: "../../components/schemas.yaml#/ResponseCustomWorkoutInstanceDTO"
+    "400":
+      $ref: "../../components/responses.yaml#/BadRequestResponse"
+    "401":
+      $ref: "../../components/responses.yaml#/UnauthorizedResponse"
+    "404":
+      $ref: "../../components/responses.yaml#/NotFoundResponse"
+    "500":
+      $ref: "../../components/responses.yaml#/InternalServerErrorResponse"
+
+delete:
+  tags:
+    - CustomWorkoutInstance
+  summary: Delete custom workout instance
+  description: Deletes a specific custom workout instance
+  operationId: deleteCustomWorkoutInstance
+  security:
+    - bearerAuth: []
+  parameters:
+    - name: id
+      in: path
+      required: true
+      description: Custom workout instance ID
+      schema:
+        type: string
+        format: uuid
+  responses:
+    "200":
+      description: Custom workout instance deleted successfully
+      content:
+        application/json:
+          schema:
+            $ref: "../../components/responses.yaml#/SuccessResponse"
+    "400":
+      $ref: "../../components/responses.yaml#/BadRequestResponse"
+    "401":
+      $ref: "../../components/responses.yaml#/UnauthorizedResponse"
+    "404":
+      $ref: "../../components/responses.yaml#/NotFoundResponse"
+    "500":
+      $ref: "../../components/responses.yaml#/InternalServerErrorResponse"

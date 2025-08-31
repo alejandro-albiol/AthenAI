@@ -22,11 +22,11 @@ post:
           schema:
             $ref: '../../components/schemas.yaml#/CustomExerciseResponse'
     "400":
-      $ref: '../../components/responses.yaml#/BadRequest'
+      $ref: '../../components/responses.yaml#/BadRequestResponse'
     "401":
-      $ref: '../../components/responses.yaml#/Unauthorized'
+      $ref: '../../components/responses.yaml#/UnauthorizedResponse'
     "500":
-      $ref: '../../components/responses.yaml#/InternalServerError'
+      $ref: '../../components/responses.yaml#/InternalServerErrorResponse'
 
 get:
   tags:
@@ -46,6 +46,6 @@ get:
             items:
               $ref: '../../components/schemas.yaml#/CustomExerciseResponse'
     "401":
-      $ref: '../../components/responses.yaml#/Unauthorized'
+      $ref: '../../components/responses.yaml#/UnauthorizedResponse'
     "500":
-      $ref: '../../components/responses.yaml#/InternalServerError'
+      $ref: '../../components/responses.yaml#/InternalServerErrorResponse'

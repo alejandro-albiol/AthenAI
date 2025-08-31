@@ -974,6 +974,47 @@ components:
           example: "2024-01-15T10:30:00Z"
 
 paths:
+  # Custom Exercise Equipment routes
+  /custom-exercise-equipment:
+    $ref: "./paths/custom_exercise_equipment/custom_exercise_equipment.yaml"
+  /custom-exercise-equipment/{id}:
+    $ref: "./paths/custom_exercise_equipment/custom_exercise_equipment-id.yaml"
+
+  # Custom Exercise Muscular Group routes
+  /custom-exercise-muscular-group:
+    $ref: "./paths/custom_exercise_muscular_group/custom_exercise_muscular_group.yaml"
+  /custom-exercise-muscular-group/{id}:
+    $ref: "./paths/custom_exercise_muscular_group/custom_exercise_muscular_group-id.yaml"
+
+  # Custom Member Workout routes
+  /custom-member-workout:
+    $ref: "./paths/custom_member_workout/custom_member_workout.yaml"
+  /custom-member-workout/{id}:
+    $ref: "./paths/custom_member_workout/custom_member_workout-id.yaml"
+
+  # Custom Template Block routes
+  /custom-template-block:
+    $ref: "./paths/custom_template_block/custom_template_block.yaml"
+  /custom-template-block/{id}:
+    $ref: "./paths/custom_template_block/custom_template_block-id.yaml"
+
+  # Custom Workout Exercise routes
+  /custom-workout-exercise:
+    $ref: "./paths/custom_workout_exercise/custom_workout_exercise.yaml"
+  /custom-workout-exercise/{id}:
+    $ref: "./paths/custom_workout_exercise/custom_workout_exercise-id.yaml"
+
+  # Custom Workout Instance routes
+  /custom-workout-instance:
+    $ref: "./paths/custom_workout_instance/custom_workout_instance.yaml"
+  /custom-workout-instance/{id}:
+    $ref: "./paths/custom_workout_instance/custom_workout_instance-id.yaml"
+
+  # Custom Workout Template routes
+  /custom-workout-template:
+    $ref: "./paths/custom_workout_template/custom_workout_template.yaml"
+  /custom-workout-template/{id}:
+    $ref: "./paths/custom_workout_template/custom_workout_template-id.yaml"
 
   # Custom Exercise routes
   /custom-exercise:
