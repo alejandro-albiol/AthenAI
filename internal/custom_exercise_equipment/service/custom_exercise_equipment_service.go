@@ -3,21 +3,50 @@ package service
 import (
 	"database/sql"
 
+	customEquipmentInterfaces "github.com/alejandro-albiol/athenai/internal/custom_equipment/interfaces"
 	"github.com/alejandro-albiol/athenai/internal/custom_exercise_equipment/dto"
 	"github.com/alejandro-albiol/athenai/internal/custom_exercise_equipment/interfaces"
+	publicEquipmentInterfaces "github.com/alejandro-albiol/athenai/internal/equipment/interfaces"
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
 	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
 )
 
 type CustomExerciseEquipmentService struct {
-	repository interfaces.CustomExerciseEquipmentRepository
+	repository          interfaces.CustomExerciseEquipmentRepository
+	customEquipmentRepo customEquipmentInterfaces.CustomEquipmentRepository
+	publicEquipmentRepo publicEquipmentInterfaces.EquipmentRepository
 }
 
-func NewCustomExerciseEquipmentService(repo interfaces.CustomExerciseEquipmentRepository) interfaces.CustomExerciseEquipmentService {
-	return &CustomExerciseEquipmentService{repository: repo}
+func NewCustomExerciseEquipmentService(
+	repo interfaces.CustomExerciseEquipmentRepository,
+	customEquipmentRepo customEquipmentInterfaces.CustomEquipmentRepository,
+	publicEquipmentRepo publicEquipmentInterfaces.EquipmentRepository,
+) interfaces.CustomExerciseEquipmentService {
+	return &CustomExerciseEquipmentService{
+		repository:          repo,
+		customEquipmentRepo: customEquipmentRepo,
+		publicEquipmentRepo: publicEquipmentRepo,
+	}
 }
 
 func (s *CustomExerciseEquipmentService) CreateLink(gymID string, link dto.CustomExerciseEquipment) error {
+	// Validate equipment exists in either tenant or public table
+	var found bool
+	if s.customEquipmentRepo != nil {
+		eq, err := s.customEquipmentRepo.GetByID(gymID, link.EquipmentID)
+		if err == nil && eq != nil {
+			found = true
+		}
+	}
+	if !found && s.publicEquipmentRepo != nil {
+		eq, err := s.publicEquipmentRepo.GetEquipmentByID(link.EquipmentID)
+		if err == nil && eq.ID != "" {
+			found = true
+		}
+	}
+	if !found {
+		return apierror.New(errorcode_enum.CodeNotFound, "Equipment not found or not allowed", nil)
+	}
 	err := s.repository.CreateLink(gymID, link)
 	if err != nil {
 		return apierror.New(errorcode_enum.CodeInternal, "Failed to create custom exercise equipment link", err)
