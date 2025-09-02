@@ -42,6 +42,17 @@ func (r *CustomEquipmentRepository) GetByID(gymID, id string) (*dto.ResponseCust
 	return &res, nil
 }
 
+func (r *CustomEquipmentRepository) GetByName(gymID, name string) (*dto.ResponseCustomEquipmentDTO, error) {
+	query := `SELECT id, created_by, name, description, category, is_active FROM "%s".custom_equipment WHERE name = $1`
+	schema := gymID
+	row := r.DB.QueryRow(fmt.Sprintf(query, schema), name)
+	var res dto.ResponseCustomEquipmentDTO
+	if err := row.Scan(&res.ID, &res.CreatedBy, &res.Name, &res.Description, &res.Category, &res.IsActive); err != nil {
+		return nil, err
+	}
+	return &res, nil
+}
+
 func (r *CustomEquipmentRepository) List(gymID string) ([]*dto.ResponseCustomEquipmentDTO, error) {
 	query := `SELECT id, created_by, name, description, category, is_active FROM "%s".custom_equipment`
 	schema := gymID

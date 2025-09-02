@@ -5,7 +5,7 @@ import (
 	"net/http"
 
 	"github.com/alejandro-albiol/athenai/internal/custom_equipment/dto"
-	"github.com/alejandro-albiol/athenai/internal/custom_equipment/service"
+	"github.com/alejandro-albiol/athenai/internal/custom_equipment/interfaces"
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
 	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
 	"github.com/alejandro-albiol/athenai/pkg/middleware"
@@ -15,10 +15,10 @@ import (
 // CustomEquipmentHandler handles HTTP requests for custom equipment
 
 type CustomEquipmentHandler struct {
-	Service *service.CustomEquipmentService
+	Service interfaces.CustomEquipmentService
 }
 
-func NewCustomEquipmentHandler(service *service.CustomEquipmentService) *CustomEquipmentHandler {
+func NewCustomEquipmentHandler(service interfaces.CustomEquipmentService) *CustomEquipmentHandler {
 	return &CustomEquipmentHandler{Service: service}
 }
 
@@ -45,6 +45,22 @@ func (h *CustomEquipmentHandler) GetByID(w http.ResponseWriter, r *http.Request)
 	gymID := middleware.GetGymID(r)
 	id := r.URL.Query().Get("id")
 	equipment, err := h.Service.GetCustomEquipmentByID(gymID, id)
+	if err != nil {
+		if apiErr, ok := err.(*apierror.APIError); ok {
+			response.WriteAPIError(w, apiErr)
+		} else {
+			response.WriteAPIError(w, apierror.New(errorcode_enum.CodeInternal, "Unexpected error", err))
+		}
+		return
+	}
+	response.WriteAPISuccess(w, "Equipment found", equipment)
+}
+
+// GetByName handles GET /custom-equipment/search?name=...
+func (h *CustomEquipmentHandler) GetByName(w http.ResponseWriter, r *http.Request) {
+	gymID := middleware.GetGymID(r)
+	name := r.URL.Query().Get("name")
+	equipment, err := h.Service.GetCustomEquipmentByName(gymID, name)
 	if err != nil {
 		if apiErr, ok := err.(*apierror.APIError); ok {
 			response.WriteAPIError(w, apiErr)

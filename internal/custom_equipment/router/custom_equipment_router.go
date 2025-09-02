@@ -12,6 +12,7 @@ func NewCustomEquipmentRouter(h *handler.CustomEquipmentHandler) http.Handler {
 	r.Post("/custom-equipment", h.Create)
 	r.Get("/custom-equipment/{id}", h.GetByID)
 	r.Get("/custom-equipment", h.List)
+	r.Get("/custom-equipment/search", h.GetByName)
 	r.Put("/custom-equipment/{id}", h.Update)
 	r.Delete("/custom-equipment/{id}", h.Delete)
 	return r
