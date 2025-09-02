@@ -79,7 +79,7 @@ func (s *WorkoutGeneratorService) GenerateWorkout(req dto.WorkoutGeneratorReques
 	}
 
 	// 4. Build LLM prompt
-	prompt := buildPrompt(req, exercises, template, blocks)
+	prompt := buildPrompt(req, exercises, *template, blocks)
 
 	// 5. Call LLM
 	llmReq := map[string]interface{}{"prompt": prompt}
@@ -118,7 +118,7 @@ func mergeExercises(public, tenant []exdto.ExerciseResponseDTO) []exdto.Exercise
 }
 
 // buildPrompt creates a rich prompt for the LLM
-func buildPrompt(req dto.WorkoutGeneratorRequest, exercises []exdto.ExerciseResponseDTO, template wtdto.WorkoutTemplateDTO, blocks []tbdto.TemplateBlockDTO) string {
+func buildPrompt(req dto.WorkoutGeneratorRequest, exercises []exdto.ExerciseResponseDTO, template wtdto.ResponseWorkoutTemplateDTO, blocks []tbdto.TemplateBlockDTO) string {
 	var sb strings.Builder
 	sb.WriteString("User Context:\n")
 	sb.WriteString(fmt.Sprintf("ID: %s\n", req.UserID))
@@ -132,7 +132,7 @@ func buildPrompt(req dto.WorkoutGeneratorRequest, exercises []exdto.ExerciseResp
 	}
 	sb.WriteString("\nWorkout Template:\n")
 	sb.WriteString(fmt.Sprintf("Name: %s\n", template.Name))
-	sb.WriteString(fmt.Sprintf("Description: %s\n", derefString(template.Description)))
+	sb.WriteString(fmt.Sprintf("Description: %s\n", template.Description))
 	sb.WriteString(fmt.Sprintf("Difficulty: %s\n", template.DifficultyLevel))
 	sb.WriteString("Blocks:\n")
 	for _, block := range blocks {
@@ -140,11 +140,4 @@ func buildPrompt(req dto.WorkoutGeneratorRequest, exercises []exdto.ExerciseResp
 	}
 	sb.WriteString("\nPlease generate a workout plan for this user based on the above context, available exercises, and template structure.")
 	return sb.String()
-}
-
-func derefString(s *string) string {
-	if s == nil {
-		return ""
-	}
-	return *s
 }

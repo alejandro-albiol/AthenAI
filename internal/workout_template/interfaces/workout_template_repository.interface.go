@@ -4,26 +4,26 @@ import "github.com/alejandro-albiol/athenai/internal/workout_template/dto"
 
 type WorkoutTemplateRepository interface {
 	// Create inserts a new workout template into the database.
-	Create(template dto.CreateWorkoutTemplateDTO) (string, error)
+	CreateWorkoutTemplate(dto *dto.CreateWorkoutTemplateDTO) (string, error)
 
 	// GetByID fetches a workout template by its unique ID.
-	GetByID(id string) (dto.WorkoutTemplateDTO, error)
+	GetWorkoutTemplateByID(id string) (*dto.ResponseWorkoutTemplateDTO, error)
 
 	// GetByName fetches a workout template by its name.
-	GetByName(name string) (dto.WorkoutTemplateDTO, error)
+	GetWorkoutTemplateByName(name string) (*dto.ResponseWorkoutTemplateDTO, error)
 
 	// GetByDifficulty fetches all workout templates with the specified difficulty.
-	GetByDifficulty(difficulty string) ([]dto.WorkoutTemplateDTO, error)
+	GetWorkoutTemplatesByDifficulty(difficulty string) ([]*dto.ResponseWorkoutTemplateDTO, error)
 
 	// GetByTargetAudience fetches all workout templates for a given target audience.
-	GetByTargetAudience(targetAudience string) ([]dto.WorkoutTemplateDTO, error)
+	GetWorkoutTemplatesByTargetAudience(targetAudience string) ([]*dto.ResponseWorkoutTemplateDTO, error)
 
 	// GetAll fetches all workout templates from the database.
-	GetAll() ([]dto.WorkoutTemplateDTO, error)
+	GetAllWorkoutTemplates() ([]*dto.ResponseWorkoutTemplateDTO, error)
 
 	// Update modifies an existing workout template by ID.
-	Update(id string, template dto.UpdateWorkoutTemplateDTO) (dto.WorkoutTemplateDTO, error)
+	UpdateWorkoutTemplate(id string, dto *dto.UpdateWorkoutTemplateDTO) (*dto.ResponseWorkoutTemplateDTO, error)
 
 	// Delete removes a workout template by ID.
-	Delete(id string) error
+	DeleteWorkoutTemplate(id string) error
 }

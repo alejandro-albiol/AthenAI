@@ -27,8 +27,8 @@ func NewWorkoutTemplateHandler(service interfaces.WorkoutTemplateService) *Worko
 
 // CreateWorkoutTemplate handles HTTP requests to create a new workout template.
 func (h *WorkoutTemplateHandler) CreateWorkoutTemplate(w http.ResponseWriter, r *http.Request) {
-	var input dto.CreateWorkoutTemplateDTO
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+	var createDTO dto.CreateWorkoutTemplateDTO
+	if err := json.NewDecoder(r.Body).Decode(&createDTO); err != nil {
 		response.WriteAPIError(w, apierror.New(
 			errorcode_enum.CodeBadRequest,
 			"Invalid request payload",
@@ -36,7 +36,7 @@ func (h *WorkoutTemplateHandler) CreateWorkoutTemplate(w http.ResponseWriter, r 
 		))
 		return
 	}
-	templateID, err := h.Service.CreateWorkoutTemplate(input)
+	templateID, err := h.Service.CreateWorkoutTemplate(&createDTO)
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
@@ -55,8 +55,8 @@ func (h *WorkoutTemplateHandler) CreateWorkoutTemplate(w http.ResponseWriter, r 
 
 // GetWorkoutTemplateByID handles HTTP requests to retrieve a workout template by ID.
 func (h *WorkoutTemplateHandler) GetWorkoutTemplateByID(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	template, err := h.Service.GetWorkoutTemplateByID(id)
+	templateID := chi.URLParam(r, "id")
+	workoutTemplate, err := h.Service.GetWorkoutTemplateByID(templateID)
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
@@ -70,13 +70,13 @@ func (h *WorkoutTemplateHandler) GetWorkoutTemplateByID(w http.ResponseWriter, r
 		))
 		return
 	}
-	response.WriteAPISuccess(w, "Workout template found", template)
+	response.WriteAPISuccess(w, "Workout template found", workoutTemplate)
 }
 
 // GetWorkoutTemplateByName handles HTTP requests to retrieve a workout template by name.
 func (h *WorkoutTemplateHandler) GetWorkoutTemplateByName(w http.ResponseWriter, r *http.Request) {
-	name := chi.URLParam(r, "name")
-	template, err := h.Service.GetWorkoutTemplateByName(name)
+	templateName := chi.URLParam(r, "name")
+	workoutTemplate, err := h.Service.GetWorkoutTemplateByName(templateName)
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
@@ -90,13 +90,13 @@ func (h *WorkoutTemplateHandler) GetWorkoutTemplateByName(w http.ResponseWriter,
 		))
 		return
 	}
-	response.WriteAPISuccess(w, "Workout template found", template)
+	response.WriteAPISuccess(w, "Workout template found", workoutTemplate)
 }
 
 // GetWorkoutTemplatesByDifficulty handles HTTP requests to retrieve workout templates by difficulty.
 func (h *WorkoutTemplateHandler) GetWorkoutTemplatesByDifficulty(w http.ResponseWriter, r *http.Request) {
-	difficulty := chi.URLParam(r, "difficulty")
-	templates, err := h.Service.GetWorkoutTemplatesByDifficulty(difficulty)
+	difficultyLevel := chi.URLParam(r, "difficulty")
+	workoutTemplates, err := h.Service.GetWorkoutTemplatesByDifficulty(difficultyLevel)
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
@@ -110,13 +110,13 @@ func (h *WorkoutTemplateHandler) GetWorkoutTemplatesByDifficulty(w http.Response
 		))
 		return
 	}
-	response.WriteAPISuccess(w, "Workout templates retrieved successfully", templates)
+	response.WriteAPISuccess(w, "Workout templates retrieved successfully", workoutTemplates)
 }
 
 // GetWorkoutTemplatesByTargetAudience handles HTTP requests to retrieve workout templates by target audience.
 func (h *WorkoutTemplateHandler) GetWorkoutTemplatesByTargetAudience(w http.ResponseWriter, r *http.Request) {
 	targetAudience := chi.URLParam(r, "targetAudience")
-	templates, err := h.Service.GetWorkoutTemplatesByTargetAudience(targetAudience)
+	workoutTemplates, err := h.Service.GetWorkoutTemplatesByTargetAudience(targetAudience)
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
@@ -130,12 +130,12 @@ func (h *WorkoutTemplateHandler) GetWorkoutTemplatesByTargetAudience(w http.Resp
 		))
 		return
 	}
-	response.WriteAPISuccess(w, "Workout templates retrieved successfully", templates)
+	response.WriteAPISuccess(w, "Workout templates retrieved successfully", workoutTemplates)
 }
 
 // GetAllWorkoutTemplates handles HTTP requests to retrieve all workout templates.
 func (h *WorkoutTemplateHandler) GetAllWorkoutTemplates(w http.ResponseWriter, r *http.Request) {
-	templates, err := h.Service.GetAllWorkoutTemplates()
+	workoutTemplates, err := h.Service.GetAllWorkoutTemplates()
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
@@ -149,14 +149,14 @@ func (h *WorkoutTemplateHandler) GetAllWorkoutTemplates(w http.ResponseWriter, r
 		))
 		return
 	}
-	response.WriteAPISuccess(w, "Workout templates retrieved successfully", templates)
+	response.WriteAPISuccess(w, "Workout templates retrieved successfully", workoutTemplates)
 }
 
 // UpdateWorkoutTemplate handles HTTP requests to update a workout template.
 func (h *WorkoutTemplateHandler) UpdateWorkoutTemplate(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	var input dto.UpdateWorkoutTemplateDTO
-	if err := json.NewDecoder(r.Body).Decode(&input); err != nil {
+	templateID := chi.URLParam(r, "id")
+	var updateDTO dto.UpdateWorkoutTemplateDTO
+	if err := json.NewDecoder(r.Body).Decode(&updateDTO); err != nil {
 		response.WriteAPIError(w, apierror.New(
 			errorcode_enum.CodeBadRequest,
 			"Invalid request payload",
@@ -164,7 +164,7 @@ func (h *WorkoutTemplateHandler) UpdateWorkoutTemplate(w http.ResponseWriter, r 
 		))
 		return
 	}
-	template, err := h.Service.UpdateWorkoutTemplate(id, input)
+	workoutTemplate, err := h.Service.UpdateWorkoutTemplate(templateID, &updateDTO)
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
@@ -178,13 +178,13 @@ func (h *WorkoutTemplateHandler) UpdateWorkoutTemplate(w http.ResponseWriter, r 
 		))
 		return
 	}
-	response.WriteAPISuccess(w, "Workout template updated successfully", template)
+	response.WriteAPISuccess(w, "Workout template updated successfully", workoutTemplate)
 }
 
 // DeleteWorkoutTemplate handles HTTP requests to delete a workout template.
 func (h *WorkoutTemplateHandler) DeleteWorkoutTemplate(w http.ResponseWriter, r *http.Request) {
-	id := chi.URLParam(r, "id")
-	err := h.Service.DeleteWorkoutTemplate(id)
+	templateID := chi.URLParam(r, "id")
+	err := h.Service.DeleteWorkoutTemplate(templateID)
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
