@@ -13,32 +13,35 @@ type MockUserRepository struct {
 	mock.Mock
 }
 
-func (m *MockUserRepository) CreateUser(gymID string, user dto.UserCreationDTO) (string, error) {
+func (m *MockUserRepository) CreateUser(gymID string, user *dto.UserCreationDTO) (string, error) {
 	args := m.Called(gymID, user)
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockUserRepository) GetUserByID(gymID, id string) (dto.UserResponseDTO, error) {
+func (m *MockUserRepository) GetUserByID(gymID, id string) (*dto.UserResponseDTO, error) {
 	args := m.Called(gymID, id)
-	return args.Get(0).(dto.UserResponseDTO), args.Error(1)
+	if user, ok := args.Get(0).(*dto.UserResponseDTO); ok {
+		return user, args.Error(1)
+	}
+	return nil, args.Error(1)
 }
 
-func (m *MockUserRepository) GetUserByUsername(gymID, username string) (dto.UserResponseDTO, error) {
+func (m *MockUserRepository) GetUserByUsername(gymID, username string) (*dto.UserResponseDTO, error) {
 	args := m.Called(gymID, username)
-	return args.Get(0).(dto.UserResponseDTO), args.Error(1)
+	return args.Get(0).(*dto.UserResponseDTO), args.Error(1)
 }
 
-func (m *MockUserRepository) GetUserByEmail(gymID, email string) (dto.UserResponseDTO, error) {
+func (m *MockUserRepository) GetUserByEmail(gymID, email string) (*dto.UserResponseDTO, error) {
 	args := m.Called(gymID, email)
-	return args.Get(0).(dto.UserResponseDTO), args.Error(1)
+	return args.Get(0).(*dto.UserResponseDTO), args.Error(1)
 }
 
-func (m *MockUserRepository) GetAllUsers(gymID string) ([]dto.UserResponseDTO, error) {
+func (m *MockUserRepository) GetAllUsers(gymID string) ([]*dto.UserResponseDTO, error) {
 	args := m.Called(gymID)
-	return args.Get(0).([]dto.UserResponseDTO), args.Error(1)
+	return args.Get(0).([]*dto.UserResponseDTO), args.Error(1)
 }
 
-func (m *MockUserRepository) UpdateUser(gymID, id string, user dto.UserUpdateDTO) error {
+func (m *MockUserRepository) UpdateUser(gymID, id string, user *dto.UserUpdateDTO) error {
 	args := m.Called(gymID, id, user)
 	return args.Error(0)
 }
@@ -72,48 +75,48 @@ func TestRegisterUser(t *testing.T) {
 	testCases := []struct {
 		name      string
 		gymID     string
-		userDTO   dto.UserCreationDTO
+		userDTO   *dto.UserCreationDTO
 		mockSetup func(*MockUserRepository)
 		wantErr   bool
 	}{
 		{
 			name:  "successful registration",
 			gymID: "gym123",
-			userDTO: dto.UserCreationDTO{
+			userDTO: &dto.UserCreationDTO{
 				Username: "testuser",
 				Email:    "test@test.com",
 				Password: "password123",
 				Role:     userrole_enum.User,
 			},
 			mockSetup: func(mockRepo *MockUserRepository) {
-				mockRepo.On("GetUserByUsername", "gym123", "testuser").Return(dto.UserResponseDTO{}, nil)
-				mockRepo.On("GetUserByEmail", "gym123", "test@test.com").Return(dto.UserResponseDTO{}, nil)
-				mockRepo.On("CreateUser", "gym123", mock.AnythingOfType("dto.UserCreationDTO")).Return("user-123", nil)
+				mockRepo.On("GetUserByUsername", "gym123", "testuser").Return(&dto.UserResponseDTO{}, nil)
+				mockRepo.On("GetUserByEmail", "gym123", "test@test.com").Return(&dto.UserResponseDTO{}, nil)
+				mockRepo.On("CreateUser", "gym123", mock.AnythingOfType("*dto.UserCreationDTO")).Return("user-123", nil)
 			},
 			wantErr: false,
 		},
 		{
 			name:  "username already exists",
 			gymID: "gym123",
-			userDTO: dto.UserCreationDTO{
+			userDTO: &dto.UserCreationDTO{
 				Username: "existing",
 				Email:    "test@test.com",
 			},
 			mockSetup: func(mockRepo *MockUserRepository) {
-				mockRepo.On("GetUserByUsername", "gym123", "existing").Return(dto.UserResponseDTO{ID: "1"}, nil)
+				mockRepo.On("GetUserByUsername", "gym123", "existing").Return(&dto.UserResponseDTO{ID: "1"}, nil)
 			},
 			wantErr: true,
 		},
 		{
 			name:  "email already exists",
 			gymID: "gym123",
-			userDTO: dto.UserCreationDTO{
+			userDTO: &dto.UserCreationDTO{
 				Username: "newuser",
 				Email:    "existing@test.com",
 			},
 			mockSetup: func(mockRepo *MockUserRepository) {
-				mockRepo.On("GetUserByUsername", "gym123", "newuser").Return(dto.UserResponseDTO{}, nil)
-				mockRepo.On("GetUserByEmail", "gym123", "existing@test.com").Return(dto.UserResponseDTO{ID: "1"}, nil)
+				mockRepo.On("GetUserByUsername", "gym123", "newuser").Return(&dto.UserResponseDTO{}, nil)
+				mockRepo.On("GetUserByEmail", "gym123", "existing@test.com").Return(&dto.UserResponseDTO{ID: "1"}, nil)
 			},
 			wantErr: true,
 		},
@@ -149,7 +152,7 @@ func TestVerifyUser(t *testing.T) {
 			gymID:  "gym123",
 			userID: "user123",
 			mockSetup: func(mockRepo *MockUserRepository) {
-				mockRepo.On("GetUserByID", "gym123", "user123").Return(dto.UserResponseDTO{
+				mockRepo.On("GetUserByID", "gym123", "user123").Return(&dto.UserResponseDTO{
 					ID:       "user123",
 					Verified: false,
 				}, nil)
@@ -158,11 +161,11 @@ func TestVerifyUser(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:   "already verified",
+			name:   "user already verified",
 			gymID:  "gym123",
 			userID: "user123",
 			mockSetup: func(mockRepo *MockUserRepository) {
-				mockRepo.On("GetUserByID", "gym123", "user123").Return(dto.UserResponseDTO{
+				mockRepo.On("GetUserByID", "gym123", "user123").Return(&dto.UserResponseDTO{
 					ID:       "user123",
 					Verified: true,
 				}, nil)
@@ -174,7 +177,7 @@ func TestVerifyUser(t *testing.T) {
 			gymID:  "gym123",
 			userID: "nonexistent",
 			mockSetup: func(mockRepo *MockUserRepository) {
-				mockRepo.On("GetUserByID", "gym123", "nonexistent").Return(dto.UserResponseDTO{}, assert.AnError)
+				mockRepo.On("GetUserByID", "gym123", "nonexistent").Return((*dto.UserResponseDTO)(nil), assert.AnError)
 			},
 			wantErr: true,
 		},
@@ -202,14 +205,14 @@ func TestGetUserByID(t *testing.T) {
 		userID    string
 		mockSetup func(*MockUserRepository)
 		wantErr   bool
-		want      dto.UserResponseDTO
+		want      *dto.UserResponseDTO
 	}{
 		{
 			name:   "successful fetch",
 			gymID:  "gym123",
 			userID: "user123",
 			mockSetup: func(mockRepo *MockUserRepository) {
-				mockRepo.On("GetUserByID", "gym123", "user123").Return(dto.UserResponseDTO{
+				mockRepo.On("GetUserByID", "gym123", "user123").Return(&dto.UserResponseDTO{
 					ID:       "user123",
 					Username: "testuser",
 					Email:    "test@test.com",
@@ -218,7 +221,7 @@ func TestGetUserByID(t *testing.T) {
 				}, nil)
 			},
 			wantErr: false,
-			want: dto.UserResponseDTO{
+			want: &dto.UserResponseDTO{
 				ID:       "user123",
 				Username: "testuser",
 				Email:    "test@test.com",
@@ -231,10 +234,10 @@ func TestGetUserByID(t *testing.T) {
 			gymID:  "gym123",
 			userID: "nonexistent",
 			mockSetup: func(mockRepo *MockUserRepository) {
-				mockRepo.On("GetUserByID", "gym123", "nonexistent").Return(dto.UserResponseDTO{}, assert.AnError)
+				mockRepo.On("GetUserByID", "gym123", "nonexistent").Return((*dto.UserResponseDTO)(nil), assert.AnError)
 			},
 			wantErr: true,
-			want:    dto.UserResponseDTO{},
+			want:    nil,
 		},
 	}
 
@@ -261,14 +264,14 @@ func TestGetUserByUsername(t *testing.T) {
 		username  string
 		mockSetup func(*MockUserRepository)
 		wantErr   bool
-		want      dto.UserResponseDTO
+		want      *dto.UserResponseDTO
 	}{
 		{
 			name:     "successful fetch",
 			gymID:    "gym123",
 			username: "testuser",
 			mockSetup: func(mockRepo *MockUserRepository) {
-				mockRepo.On("GetUserByUsername", "gym123", "testuser").Return(dto.UserResponseDTO{
+				mockRepo.On("GetUserByUsername", "gym123", "testuser").Return(&dto.UserResponseDTO{
 					ID:       "user123",
 					Username: "testuser",
 					Email:    "test@test.com",
@@ -277,7 +280,7 @@ func TestGetUserByUsername(t *testing.T) {
 				}, nil)
 			},
 			wantErr: false,
-			want: dto.UserResponseDTO{
+			want: &dto.UserResponseDTO{
 				ID:       "user123",
 				Username: "testuser",
 				Email:    "test@test.com",
@@ -290,10 +293,10 @@ func TestGetUserByUsername(t *testing.T) {
 			gymID:    "gym123",
 			username: "nonexistent",
 			mockSetup: func(mockRepo *MockUserRepository) {
-				mockRepo.On("GetUserByUsername", "gym123", "nonexistent").Return(dto.UserResponseDTO{}, assert.AnError)
+				mockRepo.On("GetUserByUsername", "gym123", "nonexistent").Return((*dto.UserResponseDTO)(nil), assert.AnError)
 			},
 			wantErr: true,
-			want:    dto.UserResponseDTO{},
+			want:    nil,
 		},
 	}
 
@@ -320,14 +323,14 @@ func TestGetUserByEmail(t *testing.T) {
 		email     string
 		mockSetup func(*MockUserRepository)
 		wantErr   bool
-		want      dto.UserResponseDTO
+		want      *dto.UserResponseDTO
 	}{
 		{
 			name:  "successful fetch",
 			gymID: "gym123",
 			email: "test@test.com",
 			mockSetup: func(mockRepo *MockUserRepository) {
-				mockRepo.On("GetUserByEmail", "gym123", "test@test.com").Return(dto.UserResponseDTO{
+				mockRepo.On("GetUserByEmail", "gym123", "test@test.com").Return(&dto.UserResponseDTO{
 					ID:       "user123",
 					Username: "testuser",
 					Email:    "test@test.com",
@@ -336,7 +339,7 @@ func TestGetUserByEmail(t *testing.T) {
 				}, nil)
 			},
 			wantErr: false,
-			want: dto.UserResponseDTO{
+			want: &dto.UserResponseDTO{
 				ID:       "user123",
 				Username: "testuser",
 				Email:    "test@test.com",
@@ -349,10 +352,10 @@ func TestGetUserByEmail(t *testing.T) {
 			gymID: "gym123",
 			email: "nonexistent@test.com",
 			mockSetup: func(mockRepo *MockUserRepository) {
-				mockRepo.On("GetUserByEmail", "gym123", "nonexistent@test.com").Return(dto.UserResponseDTO{}, assert.AnError)
+				mockRepo.On("GetUserByEmail", "gym123", "nonexistent@test.com").Return((*dto.UserResponseDTO)(nil), assert.AnError)
 			},
 			wantErr: true,
-			want:    dto.UserResponseDTO{},
+			want:    nil,
 		},
 	}
 
@@ -364,6 +367,7 @@ func TestGetUserByEmail(t *testing.T) {
 			got, err := service.GetUserByEmail(tc.gymID, tc.email)
 			if tc.wantErr {
 				assert.Error(t, err)
+				assert.Nil(t, got)
 			} else {
 				assert.NoError(t, err)
 				assert.Equal(t, tc.want, got)
@@ -425,13 +429,13 @@ func TestGetAllUsers(t *testing.T) {
 		gymID     string
 		mockSetup func(*MockUserRepository)
 		wantErr   bool
-		want      []dto.UserResponseDTO
+		want      []*dto.UserResponseDTO
 	}{
 		{
 			name:  "successful fetch with multiple users",
 			gymID: "gym123",
 			mockSetup: func(mockRepo *MockUserRepository) {
-				users := []dto.UserResponseDTO{
+				users := []*dto.UserResponseDTO{
 					{
 						ID:       "user1",
 						Username: "testuser1",
@@ -450,7 +454,7 @@ func TestGetAllUsers(t *testing.T) {
 				mockRepo.On("GetAllUsers", "gym123").Return(users, nil)
 			},
 			wantErr: false,
-			want: []dto.UserResponseDTO{
+			want: []*dto.UserResponseDTO{
 				{
 					ID:       "user1",
 					Username: "testuser1",
@@ -471,19 +475,19 @@ func TestGetAllUsers(t *testing.T) {
 			name:  "successful fetch with empty result",
 			gymID: "gym123",
 			mockSetup: func(mockRepo *MockUserRepository) {
-				mockRepo.On("GetAllUsers", "gym123").Return([]dto.UserResponseDTO{}, nil)
+				mockRepo.On("GetAllUsers", "gym123").Return([]*dto.UserResponseDTO{}, nil)
 			},
 			wantErr: false,
-			want:    []dto.UserResponseDTO{},
+			want:    []*dto.UserResponseDTO{},
 		},
 		{
 			name:  "repository error",
 			gymID: "gym123",
 			mockSetup: func(mockRepo *MockUserRepository) {
-				mockRepo.On("GetAllUsers", "gym123").Return([]dto.UserResponseDTO{}, assert.AnError)
+				mockRepo.On("GetAllUsers", "gym123").Return([]*dto.UserResponseDTO{}, assert.AnError)
 			},
 			wantErr: true,
-			want:    []dto.UserResponseDTO(nil),
+			want:    []*dto.UserResponseDTO(nil),
 		},
 	}
 
@@ -522,7 +526,7 @@ func TestUpdateUser(t *testing.T) {
 			},
 			mockSetup: func(mockRepo *MockUserRepository) {
 				// User exists
-				mockRepo.On("GetUserByID", "gym123", "user123").Return(dto.UserResponseDTO{
+				mockRepo.On("GetUserByID", "gym123", "user123").Return(&dto.UserResponseDTO{
 					ID:       "user123",
 					Username: "olduser",
 					Email:    "old@test.com",
@@ -530,11 +534,11 @@ func TestUpdateUser(t *testing.T) {
 					GymID:    "gym123",
 				}, nil)
 				// Username doesn't already exist
-				mockRepo.On("GetUserByUsername", "gym123", "updateduser").Return(dto.UserResponseDTO{}, assert.AnError)
+				mockRepo.On("GetUserByUsername", "gym123", "updateduser").Return((*dto.UserResponseDTO)(nil), assert.AnError)
 				// Email doesn't already exist
-				mockRepo.On("GetUserByEmail", "gym123", "updated@test.com").Return(dto.UserResponseDTO{}, assert.AnError)
+				mockRepo.On("GetUserByEmail", "gym123", "updated@test.com").Return((*dto.UserResponseDTO)(nil), assert.AnError)
 				// Update succeeds
-				mockRepo.On("UpdateUser", "gym123", "user123", mock.AnythingOfType("dto.UserUpdateDTO")).Return(nil)
+				mockRepo.On("UpdateUser", "gym123", "user123", mock.AnythingOfType("*dto.UserUpdateDTO")).Return(nil)
 			},
 			wantErr: false,
 		},
@@ -547,7 +551,7 @@ func TestUpdateUser(t *testing.T) {
 				Email:    "updated@test.com",
 			},
 			mockSetup: func(mockRepo *MockUserRepository) {
-				mockRepo.On("GetUserByID", "gym123", "nonexistent").Return(dto.UserResponseDTO{}, assert.AnError)
+				mockRepo.On("GetUserByID", "gym123", "nonexistent").Return((*dto.UserResponseDTO)(nil), assert.AnError)
 			},
 			wantErr: true,
 		},
@@ -561,7 +565,7 @@ func TestUpdateUser(t *testing.T) {
 			},
 			mockSetup: func(mockRepo *MockUserRepository) {
 				// User exists
-				mockRepo.On("GetUserByID", "gym123", "user123").Return(dto.UserResponseDTO{
+				mockRepo.On("GetUserByID", "gym123", "user123").Return(&dto.UserResponseDTO{
 					ID:       "user123",
 					Username: "olduser",
 					Email:    "old@test.com",
@@ -569,7 +573,7 @@ func TestUpdateUser(t *testing.T) {
 					GymID:    "gym123",
 				}, nil)
 				// Username already exists (different user)
-				mockRepo.On("GetUserByUsername", "gym123", "existinguser").Return(dto.UserResponseDTO{
+				mockRepo.On("GetUserByUsername", "gym123", "existinguser").Return(&dto.UserResponseDTO{
 					ID: "otheruser",
 				}, nil)
 			},
@@ -585,7 +589,7 @@ func TestUpdateUser(t *testing.T) {
 			},
 			mockSetup: func(mockRepo *MockUserRepository) {
 				// User exists
-				mockRepo.On("GetUserByID", "gym123", "user123").Return(dto.UserResponseDTO{
+				mockRepo.On("GetUserByID", "gym123", "user123").Return(&dto.UserResponseDTO{
 					ID:       "user123",
 					Username: "olduser",
 					Email:    "old@test.com",
@@ -593,9 +597,9 @@ func TestUpdateUser(t *testing.T) {
 					GymID:    "gym123",
 				}, nil)
 				// Username doesn't already exist
-				mockRepo.On("GetUserByUsername", "gym123", "updateduser").Return(dto.UserResponseDTO{}, assert.AnError)
+				mockRepo.On("GetUserByUsername", "gym123", "updateduser").Return((*dto.UserResponseDTO)(nil), assert.AnError)
 				// Email already exists (different user)
-				mockRepo.On("GetUserByEmail", "gym123", "existing@test.com").Return(dto.UserResponseDTO{
+				mockRepo.On("GetUserByEmail", "gym123", "existing@test.com").Return(&dto.UserResponseDTO{
 					ID: "otheruser",
 				}, nil)
 			},
@@ -608,7 +612,7 @@ func TestUpdateUser(t *testing.T) {
 			mockRepo := new(MockUserRepository)
 			service := NewUsersService(mockRepo)
 			tc.mockSetup(mockRepo)
-			err := service.UpdateUser(tc.gymID, tc.userID, tc.userDTO)
+			err := service.UpdateUser(tc.gymID, tc.userID, &tc.userDTO)
 			if tc.wantErr {
 				assert.Error(t, err)
 			} else {
@@ -634,7 +638,7 @@ func TestUpdatePassword(t *testing.T) {
 			newPassword: "newpassword123",
 			mockSetup: func(mockRepo *MockUserRepository) {
 				// User exists
-				mockRepo.On("GetUserByID", "gym123", "user123").Return(dto.UserResponseDTO{
+				mockRepo.On("GetUserByID", "gym123", "user123").Return(&dto.UserResponseDTO{
 					ID:    "user123",
 					GymID: "gym123",
 				}, nil)
@@ -684,7 +688,7 @@ func TestDeleteUser(t *testing.T) {
 			userID: "user123",
 			mockSetup: func(mockRepo *MockUserRepository) {
 				// User exists
-				mockRepo.On("GetUserByID", "gym123", "user123").Return(dto.UserResponseDTO{
+				mockRepo.On("GetUserByID", "gym123", "user123").Return(&dto.UserResponseDTO{
 					ID:    "user123",
 					GymID: "gym123",
 				}, nil)
@@ -735,7 +739,7 @@ func TestSetUserActive(t *testing.T) {
 			active: true,
 			mockSetup: func(mockRepo *MockUserRepository) {
 				// User exists and is currently inactive
-				mockRepo.On("GetUserByID", "gym123", "user123").Return(dto.UserResponseDTO{
+				mockRepo.On("GetUserByID", "gym123", "user123").Return(&dto.UserResponseDTO{
 					ID:       "user123",
 					GymID:    "gym123",
 					IsActive: false,
@@ -752,7 +756,7 @@ func TestSetUserActive(t *testing.T) {
 			active: false,
 			mockSetup: func(mockRepo *MockUserRepository) {
 				// User exists and is currently active
-				mockRepo.On("GetUserByID", "gym123", "user123").Return(dto.UserResponseDTO{
+				mockRepo.On("GetUserByID", "gym123", "user123").Return(&dto.UserResponseDTO{
 					ID:       "user123",
 					GymID:    "gym123",
 					IsActive: true,

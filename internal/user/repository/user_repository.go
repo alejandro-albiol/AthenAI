@@ -22,11 +22,11 @@ func NewUsersRepository(db *sql.DB, gymRepo gyminterfaces.GymRepository) interfa
 	}
 }
 
-func (r *usersRepository) CreateUser(gymID string, dto dto.UserCreationDTO) (string, error) {
+func (r *usersRepository) CreateUser(gymID string, dto *dto.UserCreationDTO) (string, error) {
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)
 	if err != nil {
-		return "", fmt.Errorf("failed to get gym: %w", err)
+		return "", err
 	}
 	// Construct tenant-specific table name
 	tableName := pq.QuoteIdentifier(gym.ID) + ".user"
@@ -51,11 +51,11 @@ func (r *usersRepository) CreateUser(gymID string, dto dto.UserCreationDTO) (str
 	return userID, nil
 }
 
-func (r *usersRepository) GetUserByID(gymID, id string) (dto.UserResponseDTO, error) {
+func (r *usersRepository) GetUserByID(gymID, id string) (*dto.UserResponseDTO, error) {
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)
 	if err != nil {
-		return dto.UserResponseDTO{}, fmt.Errorf("failed to get gym: %w", err)
+		return nil, err
 	}
 
 	// Construct tenant-specific table name
@@ -69,8 +69,8 @@ func (r *usersRepository) GetUserByID(gymID, id string) (dto.UserResponseDTO, er
         WHERE id = $1 AND deleted_at IS NULL`, tableName)
 
 	row := r.db.QueryRow(query, id)
-	var user dto.UserResponseDTO
-	var passwordHash string // We don't return this in the DTO
+	user := &dto.UserResponseDTO{}
+	var passwordHash string
 	err = row.Scan(
 		&user.ID, &user.Username, &user.Email, &passwordHash, &user.Role,
 		&user.Verified, &user.IsActive, &user.GymID,
@@ -78,16 +78,16 @@ func (r *usersRepository) GetUserByID(gymID, id string) (dto.UserResponseDTO, er
 		&user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
-		return dto.UserResponseDTO{}, err
+		return nil, err
 	}
 	return user, nil
 }
 
-func (r *usersRepository) GetUserByUsername(gymID, username string) (dto.UserResponseDTO, error) {
+func (r *usersRepository) GetUserByUsername(gymID, username string) (*dto.UserResponseDTO, error) {
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)
 	if err != nil {
-		return dto.UserResponseDTO{}, fmt.Errorf("failed to get gym: %w", err)
+		return nil, err
 	}
 
 	// Construct tenant-specific table name
@@ -100,20 +100,20 @@ func (r *usersRepository) GetUserByUsername(gymID, username string) (dto.UserRes
         FROM %s 
         WHERE username = $1 AND deleted_at IS NULL`, tableName)
 	row := r.db.QueryRow(query, username)
-	var user dto.UserResponseDTO
+	user := &dto.UserResponseDTO{}
 	var passwordHash string // We don't return this in the DTO
 	err = row.Scan(&user.ID, &user.Username, &user.Email, &passwordHash, &user.Role, &user.Verified, &user.IsActive, &user.GymID, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
-		return dto.UserResponseDTO{}, err
+		return nil, err
 	}
 	return user, nil
 }
 
-func (r *usersRepository) GetUserByEmail(gymID, email string) (dto.UserResponseDTO, error) {
+func (r *usersRepository) GetUserByEmail(gymID, email string) (*dto.UserResponseDTO, error) {
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)
 	if err != nil {
-		return dto.UserResponseDTO{}, fmt.Errorf("failed to get gym: %w", err)
+		return nil, err
 	}
 
 	// Construct tenant-specific table name
@@ -121,26 +121,26 @@ func (r *usersRepository) GetUserByEmail(gymID, email string) (dto.UserResponseD
 
 	query := fmt.Sprintf("SELECT id, username, email, password_hash, role, is_verified, is_active, gym_id, created_at, updated_at FROM %s WHERE email = $1 AND deleted_at IS NULL", tableName)
 	row := r.db.QueryRow(query, email)
-	var user dto.UserResponseDTO
+	user := &dto.UserResponseDTO{}
 	var passwordHash string // We don't return this in the DTO
 	err = row.Scan(&user.ID, &user.Username, &user.Email, &passwordHash, &user.Role, &user.Verified, &user.IsActive, &user.GymID, &user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
-		return dto.UserResponseDTO{}, err
+		return nil, err
 	}
 	return user, nil
 }
 
-func (r *usersRepository) GetAllUsers(gymID string) ([]dto.UserResponseDTO, error) {
+func (r *usersRepository) GetAllUsers(gymID string) ([]*dto.UserResponseDTO, error) {
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get gym: %w", err)
+		return nil, err
 	}
 
 	// Construct tenant-specific table name
 	tableName := pq.QuoteIdentifier(gym.ID) + ".user"
 
-	users := make([]dto.UserResponseDTO, 0) // Initialize empty slice
+	users := make([]*dto.UserResponseDTO, 0) // Initialize empty slice
 
 	query := fmt.Sprintf(`
         SELECT id, username, email, password_hash, role, is_verified, is_active, gym_id, created_at, updated_at 
@@ -154,7 +154,7 @@ func (r *usersRepository) GetAllUsers(gymID string) ([]dto.UserResponseDTO, erro
 	defer rows.Close()
 
 	for rows.Next() {
-		var user dto.UserResponseDTO
+		user := &dto.UserResponseDTO{}
 		var passwordHash string // We don't return this in the DTO
 		if err := rows.Scan(
 			&user.ID, &user.Username, &user.Email, &passwordHash, &user.Role,
@@ -172,7 +172,7 @@ func (r *usersRepository) GetPasswordHashByUsername(gymID, username string) (str
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)
 	if err != nil {
-		return "", fmt.Errorf("failed to get gym: %w", err)
+		return "", err
 	}
 
 	// Construct tenant-specific table name
@@ -188,11 +188,11 @@ func (r *usersRepository) GetPasswordHashByUsername(gymID, username string) (str
 	return passwordHash, nil
 }
 
-func (r *usersRepository) UpdateUser(gymID string, id string, user dto.UserUpdateDTO) error {
+func (r *usersRepository) UpdateUser(gymID string, id string, user *dto.UserUpdateDTO) error {
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)
 	if err != nil {
-		return fmt.Errorf("failed to get gym: %w", err)
+		return err
 	}
 
 	// Construct tenant-specific table name
@@ -242,7 +242,7 @@ func (r *usersRepository) UpdatePassword(gymID, userID string, newPasswordHash s
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)
 	if err != nil {
-		return fmt.Errorf("failed to get gym: %w", err)
+		return err
 	}
 
 	// Construct tenant-specific table name
@@ -257,7 +257,7 @@ func (r *usersRepository) DeleteUser(gymID, id string) error {
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)
 	if err != nil {
-		return fmt.Errorf("failed to get gym: %w", err)
+		return err
 	}
 
 	// Construct tenant-specific table name
@@ -273,7 +273,7 @@ func (r *usersRepository) VerifyUser(gymID, userID string) error {
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)
 	if err != nil {
-		return fmt.Errorf("failed to get gym: %w", err)
+		return err
 	}
 
 	// Construct tenant-specific table name
@@ -298,7 +298,7 @@ func (r *usersRepository) SetUserActive(gymID, userID string, active bool) error
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)
 	if err != nil {
-		return fmt.Errorf("failed to get gym: %w", err)
+		return err
 	}
 
 	// Construct tenant-specific table name

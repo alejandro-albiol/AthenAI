@@ -51,29 +51,32 @@ type MockUserService struct {
 	mock.Mock
 }
 
-func (m *MockUserService) RegisterUser(gymID string, user dto.UserCreationDTO) (string, error) {
+func (m *MockUserService) RegisterUser(gymID string, user *dto.UserCreationDTO) (string, error) {
 	args := m.Called(gymID, user)
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockUserService) GetUserByID(gymID, id string) (dto.UserResponseDTO, error) {
+func (m *MockUserService) GetUserByID(gymID, id string) (*dto.UserResponseDTO, error) {
 	args := m.Called(gymID, id)
-	return args.Get(0).(dto.UserResponseDTO), args.Error(1)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dto.UserResponseDTO), args.Error(1)
 }
 
-func (m *MockUserService) GetUserByUsername(gymID, username string) (dto.UserResponseDTO, error) {
+func (m *MockUserService) GetUserByUsername(gymID, username string) (*dto.UserResponseDTO, error) {
 	args := m.Called(gymID, username)
-	return args.Get(0).(dto.UserResponseDTO), args.Error(1)
+	return args.Get(0).(*dto.UserResponseDTO), args.Error(1)
 }
 
-func (m *MockUserService) GetUserByEmail(gymID, email string) (dto.UserResponseDTO, error) {
+func (m *MockUserService) GetUserByEmail(gymID, email string) (*dto.UserResponseDTO, error) {
 	args := m.Called(gymID, email)
-	return args.Get(0).(dto.UserResponseDTO), args.Error(1)
+	return args.Get(0).(*dto.UserResponseDTO), args.Error(1)
 }
 
-func (m *MockUserService) GetAllUsers(gymID string) ([]dto.UserResponseDTO, error) {
+func (m *MockUserService) GetAllUsers(gymID string) ([]*dto.UserResponseDTO, error) {
 	args := m.Called(gymID)
-	return args.Get(0).([]dto.UserResponseDTO), args.Error(1)
+	return args.Get(0).([]*dto.UserResponseDTO), args.Error(1)
 }
 
 func (m *MockUserService) GetPasswordHashByUsername(gymID, username string) (string, error) {
@@ -81,7 +84,7 @@ func (m *MockUserService) GetPasswordHashByUsername(gymID, username string) (str
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockUserService) UpdateUser(gymID string, id string, user dto.UserUpdateDTO) error {
+func (m *MockUserService) UpdateUser(gymID string, id string, user *dto.UserUpdateDTO) error {
 	args := m.Called(gymID, id, user)
 	return args.Error(0)
 }
@@ -124,7 +127,7 @@ func TestRegisterUser(t *testing.T) {
 				Role:     userrole_enum.User,
 			},
 			setupMock: func(mockService *MockUserService) {
-				mockService.On("RegisterUser", "gym123", mock.AnythingOfType("dto.UserCreationDTO")).Return("user-123", nil)
+				mockService.On("RegisterUser", "gym123", mock.AnythingOfType("*dto.UserCreationDTO")).Return("user-123", nil)
 			},
 			wantStatus: http.StatusCreated,
 		},
@@ -136,7 +139,7 @@ func TestRegisterUser(t *testing.T) {
 				Email:    "test@test.com",
 			},
 			setupMock: func(mockService *MockUserService) {
-				mockService.On("RegisterUser", "gym123", mock.AnythingOfType("dto.UserCreationDTO")).Return(
+				mockService.On("RegisterUser", "gym123", mock.AnythingOfType("*dto.UserCreationDTO")).Return(
 					"", apierror.New(errorcode_enum.CodeConflict, "Username already exists", nil),
 				)
 			},
@@ -248,7 +251,7 @@ func TestGetAllUsers(t *testing.T) {
 			name:  "successful fetch",
 			gymID: "gym123",
 			setupMock: func(mockService *MockUserService) {
-				users := []dto.UserResponseDTO{
+				users := []*dto.UserResponseDTO{
 					{
 						ID:       "user1",
 						Username: "testuser1",
@@ -270,7 +273,7 @@ func TestGetAllUsers(t *testing.T) {
 			name:  "empty result",
 			gymID: "gym123",
 			setupMock: func(mockService *MockUserService) {
-				mockService.On("GetAllUsers", "gym123").Return([]dto.UserResponseDTO{}, nil)
+				mockService.On("GetAllUsers", "gym123").Return([]*dto.UserResponseDTO{}, nil)
 			},
 			wantStatus: http.StatusOK,
 		},
@@ -278,7 +281,7 @@ func TestGetAllUsers(t *testing.T) {
 			name:  "service error",
 			gymID: "gym123",
 			setupMock: func(mockService *MockUserService) {
-				mockService.On("GetAllUsers", "gym123").Return([]dto.UserResponseDTO{},
+				mockService.On("GetAllUsers", "gym123").Return([]*dto.UserResponseDTO{},
 					apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve users", nil))
 			},
 			wantStatus: http.StatusInternalServerError,
@@ -315,7 +318,7 @@ func TestGetUserByID(t *testing.T) {
 			gymID:  "gym123",
 			userID: "user123",
 			setupMock: func(mockService *MockUserService) {
-				user := dto.UserResponseDTO{
+				user := &dto.UserResponseDTO{
 					ID:       "user123",
 					Username: "testuser",
 					Email:    "test@test.com",
@@ -330,7 +333,7 @@ func TestGetUserByID(t *testing.T) {
 			gymID:  "gym123",
 			userID: "nonexistent",
 			setupMock: func(mockService *MockUserService) {
-				mockService.On("GetUserByID", "gym123", "nonexistent").Return(dto.UserResponseDTO{},
+				mockService.On("GetUserByID", "gym123", "nonexistent").Return(nil,
 					apierror.New(errorcode_enum.CodeNotFound, "User not found", nil))
 			},
 			wantStatus: http.StatusNotFound,
@@ -340,7 +343,7 @@ func TestGetUserByID(t *testing.T) {
 			gymID:  "gym123",
 			userID: "user123",
 			setupMock: func(mockService *MockUserService) {
-				mockService.On("GetUserByID", "gym123", "user123").Return(dto.UserResponseDTO{}, assert.AnError)
+				mockService.On("GetUserByID", "gym123", "user123").Return(nil, assert.AnError)
 			},
 			wantStatus: http.StatusInternalServerError,
 		},
@@ -735,7 +738,7 @@ func TestGetAllUsersInternalError(t *testing.T) {
 	handler := handler.NewUsersHandler(mockService)
 
 	// Mock service returns a non-APIError
-	mockService.On("GetAllUsers", "gym123").Return([]dto.UserResponseDTO{}, assert.AnError)
+	mockService.On("GetAllUsers", "gym123").Return([]*dto.UserResponseDTO{}, assert.AnError)
 
 	w := httptest.NewRecorder()
 	req := createTestRequest(http.MethodGet, "/user", nil, "gym123")

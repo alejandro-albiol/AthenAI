@@ -37,8 +37,8 @@ func (h *UsersHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var dto dto.UserCreationDTO
-	if err := json.NewDecoder(r.Body).Decode(&dto); err != nil {
+	var userDTO dto.UserCreationDTO
+	if err := json.NewDecoder(r.Body).Decode(&userDTO); err != nil {
 		response.WriteAPIError(w, apierror.New(
 			errorcode_enum.CodeBadRequest,
 			"Invalid request payload",
@@ -47,7 +47,7 @@ func (h *UsersHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	userID, err := h.service.RegisterUser(gymID, dto)
+	userID, err := h.service.RegisterUser(gymID, &userDTO)
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
@@ -206,7 +206,7 @@ func (h *UsersHandler) UpdateUser(w http.ResponseWriter, r *http.Request) {
 		))
 		return
 	}
-	err := h.service.UpdateUser(gymID, id, userDTO)
+	err := h.service.UpdateUser(gymID, id, &userDTO)
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {

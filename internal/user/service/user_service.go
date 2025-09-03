@@ -18,14 +18,14 @@ func NewUsersService(repository interfaces.UserRepository) *UsersService {
 	return &UsersService{repository: repository}
 }
 
-func (s *UsersService) RegisterUser(gymID string, user dto.UserCreationDTO) (string, error) {
+func (s *UsersService) RegisterUser(gymID string, user *dto.UserCreationDTO) (string, error) {
 	existingUsername, err := s.repository.GetUserByUsername(gymID, user.Username)
-	if err == nil && existingUsername.ID != "" {
+	if err == nil && existingUsername != nil && existingUsername.ID != "" {
 		return "", apierror.New(errorcode_enum.CodeConflict, fmt.Sprintf("Username %s already exists", user.Username), nil)
 	}
 
 	existingEmail, err := s.repository.GetUserByEmail(gymID, user.Email)
-	if err == nil && existingEmail.ID != "" {
+	if err == nil && existingEmail != nil && existingEmail.ID != "" {
 		return "", apierror.New(errorcode_enum.CodeConflict, fmt.Sprintf("Email %s already exists", user.Email), nil)
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
@@ -37,26 +37,26 @@ func (s *UsersService) RegisterUser(gymID string, user dto.UserCreationDTO) (str
 	return s.repository.CreateUser(gymID, user)
 }
 
-func (s *UsersService) GetUserByID(gymID, id string) (dto.UserResponseDTO, error) {
+func (s *UsersService) GetUserByID(gymID, id string) (*dto.UserResponseDTO, error) {
 	user, err := s.repository.GetUserByID(gymID, id)
-	if err != nil {
-		return dto.UserResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, fmt.Sprintf("User with ID %s not found", id), err)
+	if err != nil || user == nil {
+		return nil, apierror.New(errorcode_enum.CodeNotFound, fmt.Sprintf("User with ID %s not found", id), err)
 	}
 	return user, nil
 }
 
-func (s *UsersService) GetUserByUsername(gymID, username string) (dto.UserResponseDTO, error) {
+func (s *UsersService) GetUserByUsername(gymID, username string) (*dto.UserResponseDTO, error) {
 	user, err := s.repository.GetUserByUsername(gymID, username)
-	if err != nil {
-		return dto.UserResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, fmt.Sprintf("User with username %s not found", username), err)
+	if err != nil || user == nil {
+		return nil, apierror.New(errorcode_enum.CodeNotFound, fmt.Sprintf("User with username %s not found", username), err)
 	}
 	return user, nil
 }
 
-func (s *UsersService) GetUserByEmail(gymID, email string) (dto.UserResponseDTO, error) {
+func (s *UsersService) GetUserByEmail(gymID, email string) (*dto.UserResponseDTO, error) {
 	user, err := s.repository.GetUserByEmail(gymID, email)
-	if err != nil {
-		return dto.UserResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, fmt.Sprintf("User with email %s not found", email), err)
+	if err != nil || user == nil {
+		return nil, apierror.New(errorcode_enum.CodeNotFound, fmt.Sprintf("User with email %s not found", email), err)
 	}
 	return user, nil
 }
@@ -69,7 +69,7 @@ func (s *UsersService) GetPasswordHashByUsername(gymID, username string) (string
 	return passwordHash, nil
 }
 
-func (s *UsersService) GetAllUsers(gymID string) ([]dto.UserResponseDTO, error) {
+func (s *UsersService) GetAllUsers(gymID string) ([]*dto.UserResponseDTO, error) {
 	users, err := s.repository.GetAllUsers(gymID)
 	if err != nil {
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve users", err)
@@ -77,22 +77,22 @@ func (s *UsersService) GetAllUsers(gymID string) ([]dto.UserResponseDTO, error) 
 	return users, nil
 }
 
-func (s *UsersService) UpdateUser(gymID, id string, user dto.UserUpdateDTO) error {
+func (s *UsersService) UpdateUser(gymID, id string, user *dto.UserUpdateDTO) error {
 	existingUser, err := s.repository.GetUserByID(gymID, id)
-	if err != nil || existingUser.ID == "" {
+	if err != nil || existingUser == nil || existingUser.ID == "" {
 		return apierror.New(errorcode_enum.CodeNotFound, fmt.Sprintf("User with ID %s not found", id), err)
 	}
 
 	if user.Username != existingUser.Username {
 		existingUsername, err := s.repository.GetUserByUsername(gymID, user.Username)
-		if err == nil && existingUsername.ID != "" {
+		if err == nil && existingUsername != nil && existingUsername.ID != "" {
 			return apierror.New(errorcode_enum.CodeConflict, fmt.Sprintf("Username %s already exists", user.Username), nil)
 		}
 	}
 
 	if user.Email != existingUser.Email {
 		existingEmail, err := s.repository.GetUserByEmail(gymID, user.Email)
-		if err == nil && existingEmail.ID != "" {
+		if err == nil && existingEmail != nil && existingEmail.ID != "" {
 			return apierror.New(errorcode_enum.CodeConflict, fmt.Sprintf("Email %s already exists", user.Email), nil)
 		}
 	}
@@ -102,7 +102,7 @@ func (s *UsersService) UpdateUser(gymID, id string, user dto.UserUpdateDTO) erro
 
 func (s *UsersService) UpdatePassword(gymID, id, newPassword string) error {
 	existingUser, err := s.repository.GetUserByID(gymID, id)
-	if err != nil || existingUser.ID == "" {
+	if err != nil || existingUser == nil || existingUser.ID == "" {
 		return apierror.New(errorcode_enum.CodeNotFound, fmt.Sprintf("User with ID %s not found", id), err)
 	}
 
@@ -116,7 +116,7 @@ func (s *UsersService) UpdatePassword(gymID, id, newPassword string) error {
 
 func (s *UsersService) DeleteUser(gymID, id string) error {
 	existingUser, err := s.repository.GetUserByID(gymID, id)
-	if err != nil || existingUser.ID == "" {
+	if err != nil || existingUser == nil || existingUser.ID == "" {
 		return apierror.New(errorcode_enum.CodeNotFound, fmt.Sprintf("User with ID %s not found", id), err)
 	}
 	return s.repository.DeleteUser(gymID, id)
@@ -124,7 +124,7 @@ func (s *UsersService) DeleteUser(gymID, id string) error {
 
 func (s *UsersService) VerifyUser(gymID, userID string) error {
 	existingUser, err := s.repository.GetUserByID(gymID, userID)
-	if err != nil || existingUser.ID == "" {
+	if err != nil || existingUser == nil || existingUser.ID == "" {
 		return apierror.New(errorcode_enum.CodeNotFound, fmt.Sprintf("User with ID %s not found", userID), err)
 	}
 
@@ -142,7 +142,7 @@ func (s *UsersService) VerifyUser(gymID, userID string) error {
 
 func (s *UsersService) SetUserActive(gymID, userID string, active bool) error {
 	existingUser, err := s.repository.GetUserByID(gymID, userID)
-	if err != nil || existingUser.ID == "" {
+	if err != nil || existingUser == nil || existingUser.ID == "" {
 		return apierror.New(errorcode_enum.CodeNotFound, fmt.Sprintf("User with ID %s not found", userID), err)
 	}
 
