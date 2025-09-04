@@ -15,14 +15,14 @@ func NewExerciseMuscularGroupRepository(db *sql.DB) interfaces.ExerciseMuscularG
 	return &ExerciseMuscularGroupRepositoryImpl{db: db}
 }
 
-func (r *ExerciseMuscularGroupRepositoryImpl) CreateLink(link dto.ExerciseMuscularGroup) (string, error) {
+func (r *ExerciseMuscularGroupRepositoryImpl) CreateLink(link *dto.ExerciseMuscularGroup) (*string, error) {
 	query := `INSERT INTO exercise_muscular_group (exercise_id, muscular_group_id) VALUES ($1, $2) RETURNING exercise_id`
 	var id string
 	err := r.db.QueryRow(query, link.ExerciseID, link.MuscularGroupID).Scan(&id)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return id, nil
+	return &id, nil
 }
 
 func (r *ExerciseMuscularGroupRepositoryImpl) DeleteLink(id string) error {
@@ -37,26 +37,26 @@ func (r *ExerciseMuscularGroupRepositoryImpl) RemoveAllLinksForExercise(exercise
 	return err
 }
 
-func (r *ExerciseMuscularGroupRepositoryImpl) FindByID(id string) (dto.ExerciseMuscularGroup, error) {
+func (r *ExerciseMuscularGroupRepositoryImpl) FindByID(id string) (*dto.ExerciseMuscularGroup, error) {
 	query := `SELECT exercise_id, muscular_group_id FROM exercise_muscular_group WHERE exercise_id = $1`
 	var link dto.ExerciseMuscularGroup
 	err := r.db.QueryRow(query, id).Scan(&link.ExerciseID, &link.MuscularGroupID)
 	if err != nil {
-		return dto.ExerciseMuscularGroup{}, err
+		return nil, err
 	}
-	return link, nil
-}
+	return &link, nil
+	}
 
-func (r *ExerciseMuscularGroupRepositoryImpl) FindByExerciseID(exerciseID string) ([]dto.ExerciseMuscularGroup, error) {
+func (r *ExerciseMuscularGroupRepositoryImpl) FindByExerciseID(exerciseID string) ([]*dto.ExerciseMuscularGroup, error) {
 	query := `SELECT exercise_id, muscular_group_id FROM exercise_muscular_group WHERE exercise_id = $1`
 	rows, err := r.db.Query(query, exerciseID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var links []dto.ExerciseMuscularGroup
+	var links []*dto.ExerciseMuscularGroup
 	for rows.Next() {
-		var link dto.ExerciseMuscularGroup
+		link := &dto.ExerciseMuscularGroup{}
 		err := rows.Scan(&link.ExerciseID, &link.MuscularGroupID)
 		if err != nil {
 			return nil, err
@@ -66,16 +66,16 @@ func (r *ExerciseMuscularGroupRepositoryImpl) FindByExerciseID(exerciseID string
 	return links, nil
 }
 
-func (r *ExerciseMuscularGroupRepositoryImpl) FindByMuscularGroupID(muscularGroupID string) ([]dto.ExerciseMuscularGroup, error) {
+func (r *ExerciseMuscularGroupRepositoryImpl) FindByMuscularGroupID(muscularGroupID string) ([]*dto.ExerciseMuscularGroup, error) {
 	query := `SELECT exercise_id, muscular_group_id FROM exercise_muscular_group WHERE muscular_group_id = $1`
 	rows, err := r.db.Query(query, muscularGroupID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
-	var links []dto.ExerciseMuscularGroup
+	var links []*dto.ExerciseMuscularGroup
 	for rows.Next() {
-		var link dto.ExerciseMuscularGroup
+		link := &dto.ExerciseMuscularGroup{}
 		err := rows.Scan(&link.ExerciseID, &link.MuscularGroupID)
 		if err != nil {
 			return nil, err

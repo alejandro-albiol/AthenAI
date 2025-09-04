@@ -17,9 +17,10 @@ type MockGymRepository struct {
 	mock.Mock
 }
 
-func (m *MockGymRepository) CreateGym(gym *dto.GymCreationDTO) (string, error) {
+func (m *MockGymRepository) CreateGym(gym *dto.GymCreationDTO) (*string, error) {
 	args := m.Called(gym)
-	return args.String(0), args.Error(1)
+	str := args.String(0)
+	return &str, args.Error(1)
 }
 
 func (m *MockGymRepository) GetGymByID(id string) (*dto.GymResponseDTO, error) {

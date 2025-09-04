@@ -5,7 +5,7 @@ import "github.com/alejandro-albiol/athenai/internal/workout_template/dto"
 // WorkoutTemplateService defines service methods for workout templates.
 type WorkoutTemplateService interface {
 	// CreateWorkoutTemplate creates a new workout template in the system.
-	CreateWorkoutTemplate(dto *dto.CreateWorkoutTemplateDTO) (string, error)
+	CreateWorkoutTemplate(dto *dto.CreateWorkoutTemplateDTO) (*string, error)
 
 	// GetWorkoutTemplateByID retrieves a workout template by its unique ID.
 	GetWorkoutTemplateByID(id string) (*dto.ResponseWorkoutTemplateDTO, error)

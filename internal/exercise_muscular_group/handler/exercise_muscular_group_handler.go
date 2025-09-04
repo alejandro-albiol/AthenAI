@@ -22,7 +22,7 @@ func NewExerciseMuscularGroupHandler(service *service.ExerciseMuscularGroupServi
 }
 
 func (h *ExerciseMuscularGroupHandler) CreateLink(w http.ResponseWriter, r *http.Request) {
-	var link dto.ExerciseMuscularGroup
+	var link *dto.ExerciseMuscularGroup
 	if err := json.NewDecoder(r.Body).Decode(&link); err != nil {
 		response.WriteAPIError(w, apierror.New(
 			errorcode_enum.CodeBadRequest,
@@ -45,7 +45,7 @@ func (h *ExerciseMuscularGroupHandler) CreateLink(w http.ResponseWriter, r *http
 		}
 		return
 	}
-	response.WriteAPICreated(w, "Link created successfully", map[string]string{"id": linkID})
+	response.WriteAPICreated(w, "Link created successfully", linkID)
 }
 
 func (h *ExerciseMuscularGroupHandler) DeleteLink(w http.ResponseWriter, r *http.Request) {

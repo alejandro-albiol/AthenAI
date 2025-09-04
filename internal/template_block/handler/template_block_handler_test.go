@@ -21,9 +21,12 @@ type MockTemplateBlockService struct {
 	mock.Mock
 }
 
-func (m *MockTemplateBlockService) CreateTemplateBlock(block *dto.CreateTemplateBlockDTO) (string, error) {
+func (m *MockTemplateBlockService) CreateTemplateBlock(block *dto.CreateTemplateBlockDTO) (*string, error) {
 	args := m.Called(block)
-	return args.String(0), args.Error(1)
+	if id, ok := args.Get(0).(*string); ok {
+		return id, args.Error(1)
+	}
+	return nil, args.Error(1)
 }
 
 func (m *MockTemplateBlockService) GetTemplateBlockByID(id string) (*dto.TemplateBlockDTO, error) {

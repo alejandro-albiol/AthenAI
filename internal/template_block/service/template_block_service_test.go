@@ -18,9 +18,9 @@ type mockRepository struct {
 	deleteErr error
 }
 
-func (m *mockRepository) CreateTemplateBlock(block *dto.CreateTemplateBlockDTO) (string, error) {
+func (m *mockRepository) CreateTemplateBlock(block *dto.CreateTemplateBlockDTO) (*string, error) {
 	if m.createErr != nil {
-		return "", m.createErr
+		return nil, m.createErr
 	}
 	id := "new-id"
 	m.blocks[id] = &dto.TemplateBlockDTO{
@@ -28,7 +28,7 @@ func (m *mockRepository) CreateTemplateBlock(block *dto.CreateTemplateBlockDTO) 
 		Name:       block.Name,
 		TemplateID: block.TemplateID,
 	}
-	return id, nil
+	return &id, nil
 }
 
 func (m *mockRepository) GetTemplateBlockByTemplateIDAndName(templateID, name string) (*dto.TemplateBlockDTO, error) {
@@ -97,12 +97,12 @@ func TestTemplateBlockService_CreateTemplateBlock(t *testing.T) {
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if id == "" {
+	if id == nil || *id == "" {
 		t.Fatalf("expected id, got empty string")
 	}
 
 	// Duplicate name
-	mock.blocks[id] = &dto.TemplateBlockDTO{ID: id, Name: "Block1", TemplateID: "T1"}
+	mock.blocks[*id] = &dto.TemplateBlockDTO{ID: *id, Name: "Block1", TemplateID: "T1"}
 	_, err = service.CreateTemplateBlock(block)
 	if err == nil {
 		t.Fatalf("expected conflict error, got nil")

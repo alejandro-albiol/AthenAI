@@ -7,7 +7,7 @@ import "github.com/alejandro-albiol/athenai/internal/template_block/dto"
 // to ensure strict module boundaries and testability.
 type TemplateBlockService interface {
 	// CreateTemplateBlock creates a new template block in the system.
-	CreateTemplateBlock(block *dto.CreateTemplateBlockDTO) (string, error)
+	CreateTemplateBlock(block *dto.CreateTemplateBlockDTO) (*string, error)
 
 	// GetTemplateBlockByID retrieves a template block by its unique ID.
 	GetTemplateBlockByID(id string) (*dto.TemplateBlockDTO, error)

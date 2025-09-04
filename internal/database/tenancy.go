@@ -8,8 +8,8 @@ import (
 )
 
 // CreateTenantSchema creates a new schema and users table for a tenant (gym)
-func CreateTenantSchema(db *sql.DB, schemaName string) error {
-	schema := pq.QuoteIdentifier(schemaName)
+func CreateTenantSchema(db *sql.DB, schemaName *string) error {
+	schema := pq.QuoteIdentifier(*schemaName)
 	// Helper to quote table names with schema
 	qt := func(table string) string {
 		return fmt.Sprintf("%s.%s", schema, pq.QuoteIdentifier(table))
@@ -207,25 +207,25 @@ func CreateTenantSchema(db *sql.DB, schemaName string) error {
 	// Create indexes for better performance
 	quoteIdx := func(name string) string { return pq.QuoteIdentifier(name) }
 	indexStmts := []string{
-		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(is_active);", quoteIdx("idx_"+schemaName+"_custom_exercise_active"), qt("custom_exercise")),
-		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(exercise_type);", quoteIdx("idx_"+schemaName+"_custom_exercise_type"), qt("custom_exercise")),
-		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(difficulty_level);", quoteIdx("idx_"+schemaName+"_custom_exercise_difficulty"), qt("custom_exercise")),
-		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(is_active);", quoteIdx("idx_"+schemaName+"_custom_equipment_active"), qt("custom_equipment")),
-		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(category);", quoteIdx("idx_"+schemaName+"_custom_equipment_category"), qt("custom_equipment")),
-		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(is_active);", quoteIdx("idx_"+schemaName+"_workout_template_active"), qt("workout_template")),
-		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(difficulty_level);", quoteIdx("idx_"+schemaName+"_workout_template_difficulty"), qt("workout_template")),
-		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(template_id);", quoteIdx("idx_"+schemaName+"_template_block_template"), qt("template_block")),
-		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(template_id, block_order);", quoteIdx("idx_"+schemaName+"_template_block_order"), qt("template_block")),
-		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(public_template_id);", quoteIdx("idx_"+schemaName+"_workout_instance_public_template"), qt("workout_instance")),
-		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(gym_template_id);", quoteIdx("idx_"+schemaName+"_workout_instance_gym_template"), qt("workout_instance")),
-		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(workout_instance_id);", quoteIdx("idx_"+schemaName+"_workout_exercise_instance"), qt("workout_exercise")),
-		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(public_exercise_id);", quoteIdx("idx_"+schemaName+"_workout_exercise_public"), qt("workout_exercise")),
-		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(gym_exercise_id);", quoteIdx("idx_"+schemaName+"_workout_exercise_gym"), qt("workout_exercise")),
-		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(workout_instance_id, block_name);", quoteIdx("idx_"+schemaName+"_workout_exercise_block"), qt("workout_exercise")),
-		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(member_id);", quoteIdx("idx_"+schemaName+"_member_workout_member"), qt("member_workout")),
-		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(workout_instance_id);", quoteIdx("idx_"+schemaName+"_member_workout_instance"), qt("member_workout")),
-		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(status);", quoteIdx("idx_"+schemaName+"_member_workout_status"), qt("member_workout")),
-		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(scheduled_date);", quoteIdx("idx_"+schemaName+"_member_workout_date"), qt("member_workout")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(is_active);", quoteIdx("idx_"+*schemaName+"_custom_exercise_active"), qt("custom_exercise")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(exercise_type);", quoteIdx("idx_"+*schemaName+"_custom_exercise_type"), qt("custom_exercise")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(difficulty_level);", quoteIdx("idx_"+*schemaName+"_custom_exercise_difficulty"), qt("custom_exercise")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(is_active);", quoteIdx("idx_"+*schemaName+"_custom_equipment_active"), qt("custom_equipment")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(category);", quoteIdx("idx_"+*schemaName+"_custom_equipment_category"), qt("custom_equipment")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(is_active);", quoteIdx("idx_"+*schemaName+"_workout_template_active"), qt("workout_template")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(difficulty_level);", quoteIdx("idx_"+*schemaName+"_workout_template_difficulty"), qt("workout_template")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(template_id);", quoteIdx("idx_"+*schemaName+"_template_block_template"), qt("template_block")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(template_id, block_order);", quoteIdx("idx_"+*schemaName+"_template_block_order"), qt("template_block")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(public_template_id);", quoteIdx("idx_"+*schemaName+"_workout_instance_public_template"), qt("workout_instance")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(gym_template_id);", quoteIdx("idx_"+*schemaName+"_workout_instance_gym_template"), qt("workout_instance")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(workout_instance_id);", quoteIdx("idx_"+*schemaName+"_workout_exercise_instance"), qt("workout_exercise")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(public_exercise_id);", quoteIdx("idx_"+*schemaName+"_workout_exercise_public"), qt("workout_exercise")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(gym_exercise_id);", quoteIdx("idx_"+*schemaName+"_workout_exercise_gym"), qt("workout_exercise")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(workout_instance_id, block_name);", quoteIdx("idx_"+*schemaName+"_workout_exercise_block"), qt("workout_exercise")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(member_id);", quoteIdx("idx_"+*schemaName+"_member_workout_member"), qt("member_workout")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(workout_instance_id);", quoteIdx("idx_"+*schemaName+"_member_workout_instance"), qt("member_workout")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(status);", quoteIdx("idx_"+*schemaName+"_member_workout_status"), qt("member_workout")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(scheduled_date);", quoteIdx("idx_"+*schemaName+"_member_workout_date"), qt("member_workout")),
 	}
 	for _, stmt := range indexStmts {
 		fmt.Printf("[DEBUG] Executing index SQL: %s\n", stmt)

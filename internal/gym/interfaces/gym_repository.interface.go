@@ -8,7 +8,7 @@ import "github.com/alejandro-albiol/athenai/internal/gym/dto"
 type GymRepository interface {
 	// CreateGym persists a new gym to the database.
 	// Returns raw database errors without any domain error mapping.
-	CreateGym(gym *dto.GymCreationDTO) (string, error)
+	CreateGym(gym *dto.GymCreationDTO) (*string, error)
 
 	// GetGymByID retrieves a gym from the database by its ID.
 	// Returns sql.ErrNoRows if not found, or other raw database errors.

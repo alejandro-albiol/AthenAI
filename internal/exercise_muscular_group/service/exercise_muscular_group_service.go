@@ -15,10 +15,10 @@ func NewExerciseMuscularGroupService(repository interfaces.ExerciseMuscularGroup
 	return &ExerciseMuscularGroupService{repository: repository}
 }
 
-func (s *ExerciseMuscularGroupService) CreateLink(link dto.ExerciseMuscularGroup) (string, error) {
+func (s *ExerciseMuscularGroupService) CreateLink(link *dto.ExerciseMuscularGroup) (*string, error) {
 	linkID, err := s.repository.CreateLink(link)
 	if err != nil {
-		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to create exercise-muscular group link", err)
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to create exercise-muscular group link", err)
 	}
 	return linkID, nil
 }
@@ -39,15 +39,15 @@ func (s *ExerciseMuscularGroupService) RemoveAllLinksForExercise(exerciseID stri
 	return nil
 }
 
-func (s *ExerciseMuscularGroupService) GetLinkByID(id string) (dto.ExerciseMuscularGroup, error) {
+func (s *ExerciseMuscularGroupService) GetLinkByID(id string) (*dto.ExerciseMuscularGroup, error) {
 	link, err := s.repository.FindByID(id)
 	if err != nil {
-		return dto.ExerciseMuscularGroup{}, apierror.New(errorcode_enum.CodeNotFound, "Link not found", err)
+		return nil, apierror.New(errorcode_enum.CodeNotFound, "Link not found", err)
 	}
 	return link, nil
 }
 
-func (s *ExerciseMuscularGroupService) GetLinksByExerciseID(exerciseID string) ([]dto.ExerciseMuscularGroup, error) {
+func (s *ExerciseMuscularGroupService) GetLinksByExerciseID(exerciseID string) ([]*dto.ExerciseMuscularGroup, error) {
 	links, err := s.repository.FindByExerciseID(exerciseID)
 	if err != nil {
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to get links by exercise ID", err)
@@ -55,7 +55,7 @@ func (s *ExerciseMuscularGroupService) GetLinksByExerciseID(exerciseID string) (
 	return links, nil
 }
 
-func (s *ExerciseMuscularGroupService) GetLinksByMuscularGroupID(muscularGroupID string) ([]dto.ExerciseMuscularGroup, error) {
+func (s *ExerciseMuscularGroupService) GetLinksByMuscularGroupID(muscularGroupID string) ([]*dto.ExerciseMuscularGroup, error) {
 	links, err := s.repository.FindByMuscularGroupID(muscularGroupID)
 	if err != nil {
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to get links by muscular group ID", err)

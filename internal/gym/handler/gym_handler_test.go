@@ -23,12 +23,12 @@ type MockGymService struct {
 	mock.Mock
 }
 
-func (m *MockGymService) CreateGym(gym *dto.GymCreationDTO) (string, error) {
+func (m *MockGymService) CreateGym(gym *dto.GymCreationDTO) (*string, error) {
 	args := m.Called(gym)
 	if len(args) > 0 {
-		return args.String(0), args.Error(1)
+		return args.Get(0).(*string), args.Error(1)
 	}
-	return "", args.Error(0)
+	return nil, args.Error(0)
 }
 
 func (m *MockGymService) GetGymByID(id string) (*dto.GymResponseDTO, error) {

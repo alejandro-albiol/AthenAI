@@ -15,7 +15,7 @@ func NewGymRepository(db *sql.DB) *GymRepository {
 	return &GymRepository{db: db}
 }
 
-func (r *GymRepository) CreateGym(gym *dto.GymCreationDTO) (string, error) {
+func (r *GymRepository) CreateGym(gym *dto.GymCreationDTO) (*string, error) {
 	query := `
 		INSERT INTO gym (name, email, address, phone, is_active, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, true, $5, $5)
@@ -33,9 +33,9 @@ func (r *GymRepository) CreateGym(gym *dto.GymCreationDTO) (string, error) {
 	).Scan(&id)
 
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return id, nil
+	return &id, nil
 }
 
 func (r *GymRepository) GetGymByID(id string) (*dto.GymResponseDTO, error) {

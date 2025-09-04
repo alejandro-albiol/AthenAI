@@ -17,10 +17,10 @@ func NewTemplateBlockService(repository interfaces.TemplateBlockRepository) *Tem
 	return &TemplateBlockService{repository: repository}
 }
 
-func (s *TemplateBlockService) CreateTemplateBlock(block *dto.CreateTemplateBlockDTO) (string, error) {
+func (s *TemplateBlockService) CreateTemplateBlock(block *dto.CreateTemplateBlockDTO) (*string, error) {
 	existingBlock, err := s.repository.GetTemplateBlockByTemplateIDAndName(block.TemplateID, block.Name)
 	if err == nil && existingBlock.ID != "" {
-		return "", apierror.New(errorcode_enum.CodeConflict, fmt.Sprintf("Template block with name '%s' already exists in template", block.Name), nil)
+		return nil, apierror.New(errorcode_enum.CodeConflict, fmt.Sprintf("Template block with name '%s' already exists in template", block.Name), nil)
 	}
 	return s.repository.CreateTemplateBlock(block)
 }

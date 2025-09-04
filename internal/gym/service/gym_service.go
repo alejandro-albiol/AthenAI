@@ -20,32 +20,32 @@ func NewGymService(repository interfaces.GymRepository) *GymService {
 	return &GymService{repository: repository}
 }
 
-func (s *GymService) CreateGym(createDTO *dto.GymCreationDTO) (string, error) {
+func (s *GymService) CreateGym(createDTO *dto.GymCreationDTO) (*string, error) {
 	_, err := s.repository.GetGymByName(createDTO.Name)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
-		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to check gym existence", err)
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to check gym existence", err)
 	}
 	if err == nil {
-		return "", apierror.New(errorcode_enum.CodeConflict, "Gym with this name already exists", nil)
+		return nil, apierror.New(errorcode_enum.CodeConflict, "Gym with this name already exists", nil)
 	}
 
 	gymID, err := s.repository.CreateGym(createDTO)
 	if err != nil {
-		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to create gym", err)
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to create gym", err)
 	}
 
 	// Skip tenant schema creation in test environment
 	if os.Getenv("APP_ENV") != "test" {
 		db, err := database.NewPostgresDB()
 		if err != nil {
-			return "", apierror.New(errorcode_enum.CodeInternal, "Failed to connect to database", err)
+			return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to connect to database", err)
 		}
 		defer db.Close()
 
 		// Use the gym ID for the schema, not the domain name
 		err = database.CreateTenantSchema(db, gymID)
 		if err != nil {
-			return "", apierror.New(errorcode_enum.CodeInternal, "Failed to create tenant schema", err)
+			return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to create tenant schema", err)
 		}
 	}
 

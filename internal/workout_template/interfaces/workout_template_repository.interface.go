@@ -4,7 +4,7 @@ import "github.com/alejandro-albiol/athenai/internal/workout_template/dto"
 
 type WorkoutTemplateRepository interface {
 	// Create inserts a new workout template into the database.
-	CreateWorkoutTemplate(dto *dto.CreateWorkoutTemplateDTO) (string, error)
+	CreateWorkoutTemplate(dto *dto.CreateWorkoutTemplateDTO) (*string, error)
 
 	// GetByID fetches a workout template by its unique ID.
 	GetWorkoutTemplateByID(id string) (*dto.ResponseWorkoutTemplateDTO, error)

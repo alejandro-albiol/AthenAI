@@ -13,9 +13,15 @@ type MockUserRepository struct {
 	mock.Mock
 }
 
-func (m *MockUserRepository) CreateUser(gymID string, user *dto.UserCreationDTO) (string, error) {
+func (m *MockUserRepository) CreateUser(gymID string, user *dto.UserCreationDTO) (*string, error) {
 	args := m.Called(gymID, user)
-	return args.String(0), args.Error(1)
+	if s, ok := args.Get(0).(string); ok {
+		return &s, args.Error(1)
+	}
+	if s, ok := args.Get(0).(*string); ok {
+		return s, args.Error(1)
+	}
+	return nil, args.Error(1)
 }
 
 func (m *MockUserRepository) GetUserByID(gymID, id string) (*dto.UserResponseDTO, error) {

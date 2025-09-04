@@ -18,19 +18,19 @@ func NewUsersService(repository interfaces.UserRepository) *UsersService {
 	return &UsersService{repository: repository}
 }
 
-func (s *UsersService) RegisterUser(gymID string, user *dto.UserCreationDTO) (string, error) {
+func (s *UsersService) RegisterUser(gymID string, user *dto.UserCreationDTO) (*string, error) {
 	existingUsername, err := s.repository.GetUserByUsername(gymID, user.Username)
 	if err == nil && existingUsername != nil && existingUsername.ID != "" {
-		return "", apierror.New(errorcode_enum.CodeConflict, fmt.Sprintf("Username %s already exists", user.Username), nil)
+		return nil, apierror.New(errorcode_enum.CodeConflict, fmt.Sprintf("Username %s already exists", user.Username), nil)
 	}
 
 	existingEmail, err := s.repository.GetUserByEmail(gymID, user.Email)
 	if err == nil && existingEmail != nil && existingEmail.ID != "" {
-		return "", apierror.New(errorcode_enum.CodeConflict, fmt.Sprintf("Email %s already exists", user.Email), nil)
+		return nil, apierror.New(errorcode_enum.CodeConflict, fmt.Sprintf("Email %s already exists", user.Email), nil)
 	}
 	hashedPassword, err := bcrypt.GenerateFromPassword([]byte(user.Password), bcrypt.DefaultCost)
 	if err != nil {
-		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to hash password", err)
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to hash password", err)
 	}
 	user.Password = string(hashedPassword)
 

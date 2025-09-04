@@ -18,7 +18,7 @@ func NewTemplateBlockRepository(db *sql.DB) interfaces.TemplateBlockRepository {
 }
 
 // CreateTemplateBlock inserts a new template block and returns its ID.
-func (r *TemplateBlockRepository) CreateTemplateBlock(block *dto.CreateTemplateBlockDTO) (string, error) {
+func (r *TemplateBlockRepository) CreateTemplateBlock(block *dto.CreateTemplateBlockDTO) (*string, error) {
 	query := `
 		INSERT INTO public.template_block 
 			(template_id, name, type, "order", exercise_count, estimated_duration_minutes, instructions)
@@ -36,9 +36,9 @@ func (r *TemplateBlockRepository) CreateTemplateBlock(block *dto.CreateTemplateB
 		block.Instructions,
 	).Scan(&id)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return id, nil
+	return &id, nil
 }
 
 // GetTemplateBlockByID retrieves a template block by its ID.

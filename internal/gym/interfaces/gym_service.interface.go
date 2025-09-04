@@ -9,7 +9,7 @@ type GymService interface {
 	// CreateGym validates and creates a new gym.
 	// Returns the created gym's ID on success, or a domain error if validation fails
 	// or there are conflicts (e.g., duplicate domain).
-	CreateGym(gym *dto.GymCreationDTO) (string, error)
+	CreateGym(gym *dto.GymCreationDTO) (*string, error)
 
 	// GetGymByID retrieves a gym by its unique identifier.
 	// Maps database errors to domain errors and validates access permissions.

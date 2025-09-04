@@ -35,7 +35,7 @@ func (h *TemplateBlockHandler) CreateTemplateBlock(w http.ResponseWriter, r *htt
 		}
 		return
 	}
-	response.WriteAPICreated(w, "Template block created successfully", map[string]string{"id": blockID})
+	response.WriteAPICreated(w, "Template block created successfully", blockID)
 }
 
 func (h *TemplateBlockHandler) GetTemplateBlockByID(w http.ResponseWriter, r *http.Request) {

@@ -36,8 +36,8 @@ func TestCreateTemplateBlock(t *testing.T) {
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
-	if id != "block-uuid" {
-		t.Errorf("expected id 'block-uuid', got '%s'", id)
+	if id == nil || *id != "block-uuid" {
+		t.Errorf("expected id 'block-uuid', got '%v'", id)
 	}
 
 	if err := mock.ExpectationsWereMet(); err != nil {

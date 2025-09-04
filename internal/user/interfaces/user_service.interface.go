@@ -4,7 +4,7 @@ import dto "github.com/alejandro-albiol/athenai/internal/user/dto"
 
 type UserService interface {
 	// RegisterUser registers a new user.
-	RegisterUser(gymID string, user *dto.UserCreationDTO) (string, error)
+	RegisterUser(gymID string, user *dto.UserCreationDTO) (*string, error)
 	// GetUserByID retrieves a user by their ID.
 	GetUserByID(gymID, id string) (*dto.UserResponseDTO, error)
 	// GetUserByUsername retrieves a user by username.

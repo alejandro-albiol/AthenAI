@@ -14,9 +14,13 @@ type MockWorkoutTemplateRepository struct {
 	mock.Mock
 }
 
-func (m *MockWorkoutTemplateRepository) CreateWorkoutTemplate(input *dto.CreateWorkoutTemplateDTO) (string, error) {
+func (m *MockWorkoutTemplateRepository) CreateWorkoutTemplate(input *dto.CreateWorkoutTemplateDTO) (*string, error) {
 	args := m.Called(input)
-	return args.String(0), args.Error(1)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	id := args.Get(0).(string)
+	return &id, args.Error(1)
 }
 func (m *MockWorkoutTemplateRepository) GetWorkoutTemplateByID(id string) (*dto.ResponseWorkoutTemplateDTO, error) {
 	args := m.Called(id)
@@ -65,7 +69,9 @@ func TestCreateWorkoutTemplate_Success(t *testing.T) {
 
 	id, err := svc.CreateWorkoutTemplate(createDTO)
 	assert.NoError(t, err)
-	assert.Equal(t, "123", id)
+	if assert.NotNil(t, id) {
+		assert.Equal(t, "123", *id)
+	}
 }
 
 func TestCreateWorkoutTemplate_Conflict(t *testing.T) {
@@ -76,7 +82,7 @@ func TestCreateWorkoutTemplate_Conflict(t *testing.T) {
 
 	id, err := svc.CreateWorkoutTemplate(createDTO)
 	assert.Error(t, err)
-	assert.Equal(t, "", id)
+	assert.Nil(t, id)
 }
 
 func TestGetWorkoutTemplateByID_Success(t *testing.T) {

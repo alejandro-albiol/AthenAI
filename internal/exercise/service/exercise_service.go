@@ -72,7 +72,7 @@ func (s *ExerciseService) CreateExercise(exercise dto.ExerciseCreationDTO) (stri
 	}
 	if s.exerciseMuscularGroupService != nil && len(exercise.MuscularGroups) > 0 {
 		for _, mgID := range exercise.MuscularGroups {
-			link := exerciseMuscularGroupDTO.ExerciseMuscularGroup{
+			link := &exerciseMuscularGroupDTO.ExerciseMuscularGroup{
 				ExerciseID:      id,
 				MuscularGroupID: mgID,
 			}
@@ -187,7 +187,7 @@ func (s *ExerciseService) UpdateExercise(id string, exercise dto.ExerciseUpdateD
 		_ = s.exerciseMuscularGroupService.RemoveAllLinksForExercise(id)
 		if exercise.MuscularGroups != nil {
 			for _, mgID := range exercise.MuscularGroups {
-				link := exerciseMuscularGroupDTO.ExerciseMuscularGroup{
+				link := &exerciseMuscularGroupDTO.ExerciseMuscularGroup{
 					ExerciseID:      id,
 					MuscularGroupID: mgID,
 				}

@@ -18,18 +18,18 @@ func NewWorkoutTemplateService(repository interfaces.WorkoutTemplateRepository) 
 }
 
 // CreateWorkoutTemplate creates a new workout template in the system.
-func (s *WorkoutTemplateService) CreateWorkoutTemplate(input *dto.CreateWorkoutTemplateDTO) (string, error) {
+func (s *WorkoutTemplateService) CreateWorkoutTemplate(input *dto.CreateWorkoutTemplateDTO) (*string, error) {
 	existingTemplate, err := s.repository.GetWorkoutTemplateByName(input.Name)
 	if err == nil && existingTemplate != nil && existingTemplate.ID != "" {
-		return "", apierror.New(errorcode_enum.CodeConflict, "Workout template already exists", nil)
+		return nil, apierror.New(errorcode_enum.CodeConflict, "Workout template already exists", nil)
 	}
 	if err != nil && err.Error() != "not found" {
-		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to check existing workout template", err)
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to check existing workout template", err)
 	}
 
 	templateID, err := s.repository.CreateWorkoutTemplate(input)
 	if err != nil {
-		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to create workout template", err)
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to create workout template", err)
 	}
 	return templateID, nil
 }

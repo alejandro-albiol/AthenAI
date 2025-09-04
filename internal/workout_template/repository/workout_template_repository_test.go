@@ -52,7 +52,9 @@ func TestCreateWorkoutTemplate_Success(t *testing.T) {
 
 	id, err := repo.CreateWorkoutTemplate(createDTO)
 	assert.NoError(t, err)
-	assert.Equal(t, "1", id)
+	if assert.NotNil(t, id) {
+		assert.Equal(t, "1", *id)
+	}
 }
 
 func TestGetWorkoutTemplateByID_Success(t *testing.T) {
@@ -140,4 +142,3 @@ func TestGetWorkoutTemplatesByDifficulty_Success(t *testing.T) {
 	assert.Len(t, results, 1)
 	assert.Equal(t, resp.ID, results[0].ID)
 }
-
