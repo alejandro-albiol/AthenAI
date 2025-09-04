@@ -10,7 +10,6 @@ import (
 func NewMuscularGroupRouter(handler interfaces.MuscularGroupHandlerInterface) http.Handler {
 	r := chi.NewRouter()
 
-	// Muscular Group CRUD endpoints
 	r.Post("/", handler.CreateMuscularGroup)       // POST /muscular-groups
 	r.Get("/", handler.ListMuscularGroups)         // GET /muscular-groups
 	r.Get("/{id}", handler.GetMuscularGroup)       // GET /muscular-groups/{id}

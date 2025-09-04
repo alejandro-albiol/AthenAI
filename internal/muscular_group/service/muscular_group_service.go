@@ -15,7 +15,7 @@ func NewMuscularGroupService(repository interfaces.MuscularGroupRepository) *Mus
 	return &MuscularGroupService{repository: repository}
 }
 
-func (s *MuscularGroupService) CreateMuscularGroup(mg dto.CreateMuscularGroupDTO) (string, error) {
+func (s *MuscularGroupService) CreateMuscularGroup(mg *dto.CreateMuscularGroupDTO) (string, error) {
 	// Check for name uniqueness
 	groups, err := s.repository.GetAllMuscularGroups()
 	if err != nil {
@@ -34,15 +34,15 @@ func (s *MuscularGroupService) CreateMuscularGroup(mg dto.CreateMuscularGroupDTO
 	return muscularGroupID, nil
 }
 
-func (s *MuscularGroupService) GetMuscularGroupByID(id string) (dto.MuscularGroupResponseDTO, error) {
+func (s *MuscularGroupService) GetMuscularGroupByID(id string) (*dto.MuscularGroupResponseDTO, error) {
 	muscularGroup, err := s.repository.GetMuscularGroupByID(id)
 	if err != nil {
-		return dto.MuscularGroupResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Muscular group not found", err)
+		return nil, apierror.New(errorcode_enum.CodeNotFound, "Muscular group not found", err)
 	}
 	return muscularGroup, nil
 }
 
-func (s *MuscularGroupService) GetAllMuscularGroups() ([]dto.MuscularGroupResponseDTO, error) {
+func (s *MuscularGroupService) GetAllMuscularGroups() ([]*dto.MuscularGroupResponseDTO, error) {
 	muscularGroups, err := s.repository.GetAllMuscularGroups()
 	if err != nil {
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve muscular groups", err)
@@ -50,31 +50,29 @@ func (s *MuscularGroupService) GetAllMuscularGroups() ([]dto.MuscularGroupRespon
 	return muscularGroups, nil
 }
 
-func (s *MuscularGroupService) UpdateMuscularGroup(id string, mg dto.UpdateMuscularGroupDTO) (dto.MuscularGroupResponseDTO, error) {
+func (s *MuscularGroupService) UpdateMuscularGroup(id string, dto *dto.UpdateMuscularGroupDTO) (*dto.MuscularGroupResponseDTO, error) {
 	// Check if muscular group exists
-	_, err := s.repository.GetMuscularGroupByID(id)
+	existing, err := s.repository.GetMuscularGroupByID(id)
 	if err != nil {
-		return dto.MuscularGroupResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Muscular group not found", err)
+		return nil, apierror.New(errorcode_enum.CodeNotFound, "Muscular group not found", err)
+	}
+	if existing == nil {
+		return nil, apierror.New(errorcode_enum.CodeNotFound, "Muscular group not found", nil)
 	}
 
-	// Check for name uniqueness if name is being updated
-	if mg.Name != nil {
-		groups, err := s.repository.GetAllMuscularGroups()
-		if err != nil {
-			return dto.MuscularGroupResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to check muscular group name uniqueness", err)
-		}
-		for _, g := range groups {
-			if g.ID != id && g.Name == *mg.Name {
-				return dto.MuscularGroupResponseDTO{}, apierror.New(errorcode_enum.CodeConflict, "Muscular group with this name already exists", nil)
-			}
+	// If name is being updated, check for uniqueness
+	if dto.Name != nil {
+		dup, err := s.repository.GetMuscularGroupByName(*dto.Name)
+		if err == nil && dup != nil && dup.ID != id {
+			return nil, apierror.New(errorcode_enum.CodeConflict, "Muscular group with this name already exists", nil)
 		}
 	}
 
-	updatedMuscularGroup, err := s.repository.UpdateMuscularGroup(id, mg)
+	updated, err := s.repository.UpdateMuscularGroup(id, dto)
 	if err != nil {
-		return dto.MuscularGroupResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to update muscular group", err)
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to update muscular group", err)
 	}
-	return updatedMuscularGroup, nil
+	return updated, nil
 }
 
 func (s *MuscularGroupService) DeleteMuscularGroup(id string) error {

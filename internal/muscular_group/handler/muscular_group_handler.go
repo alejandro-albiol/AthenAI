@@ -33,7 +33,7 @@ func (h *MuscularGroupHandler) CreateMuscularGroup(w http.ResponseWriter, r *htt
 		return
 	}
 
-	muscularGroupID, err := h.service.CreateMuscularGroup(createDTO)
+	muscularGroupID, err := h.service.CreateMuscularGroup(&createDTO)
 	if err != nil {
 		response.WriteAPIError(w, err.(*apierror.APIError))
 		return
@@ -83,7 +83,7 @@ func (h *MuscularGroupHandler) UpdateMuscularGroup(w http.ResponseWriter, r *htt
 		return
 	}
 
-	var updateDTO dto.UpdateMuscularGroupDTO
+	var updateDTO *dto.UpdateMuscularGroupDTO
 	if err := json.NewDecoder(r.Body).Decode(&updateDTO); err != nil {
 		response.WriteAPIError(w, apierror.New(
 			errorcode_enum.CodeBadRequest,
