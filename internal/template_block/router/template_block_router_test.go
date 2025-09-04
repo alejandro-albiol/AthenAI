@@ -24,11 +24,16 @@ func (m *MockTemplateBlockHandler) CreateTemplateBlock(w http.ResponseWriter, r 
 	m.Called(w, r)
 }
 
-func (m *MockTemplateBlockHandler) GetTemplateBlock(w http.ResponseWriter, r *http.Request) {
+func (m *MockTemplateBlockHandler) GetTemplateBlockByID(w http.ResponseWriter, r *http.Request) {
 	m.Called(w, r)
 }
 
 func (m *MockTemplateBlockHandler) ListTemplateBlocksByTemplateID(w http.ResponseWriter, r *http.Request) {
+	m.Called(w, r)
+}
+
+// Add missing interface method for filter
+func (m *MockTemplateBlockHandler) GetTemplateBlocksByFilter(w http.ResponseWriter, r *http.Request) {
 	m.Called(w, r)
 }
 
@@ -77,9 +82,9 @@ func TestCreateTemplateBlockRoute(t *testing.T) {
 	mockHandler.AssertExpectations(t)
 }
 
-func TestGetTemplateBlockRoute(t *testing.T) {
+func TestGetTemplateBlockByIDRoute(t *testing.T) {
 	mockHandler := new(MockTemplateBlockHandler)
-	mockHandler.On("GetTemplateBlock", mock.AnythingOfType("*httptest.ResponseRecorder"), mock.AnythingOfType("*http.Request")).Run(func(args mock.Arguments) {
+	mockHandler.On("GetTemplateBlockByID", mock.AnythingOfType("*httptest.ResponseRecorder"), mock.AnythingOfType("*http.Request")).Run(func(args mock.Arguments) {
 		w := args.Get(0).(http.ResponseWriter)
 		block := dto.TemplateBlockDTO{
 			ID:            "block123",
@@ -191,7 +196,7 @@ func TestDeleteTemplateBlockRoute(t *testing.T) {
 
 	r := router.NewTemplateBlockRouter(mockHandler)
 
-	req := httptest.NewRequest(http.MethodDelete, "/block123", nil)
+	req := httptest.NewRequest(http.MethodDelete, "/template-blocks/block123", nil)
 	w := httptest.NewRecorder()
 
 	r.ServeHTTP(w, req)
@@ -206,7 +211,7 @@ func TestDeleteTemplateBlockRoute(t *testing.T) {
 
 func TestRouterErrorHandling(t *testing.T) {
 	mockHandler := new(MockTemplateBlockHandler)
-	mockHandler.On("GetTemplateBlock", mock.AnythingOfType("*httptest.ResponseRecorder"), mock.AnythingOfType("*http.Request")).Run(func(args mock.Arguments) {
+	mockHandler.On("GetTemplateBlockByID", mock.AnythingOfType("*httptest.ResponseRecorder"), mock.AnythingOfType("*http.Request")).Run(func(args mock.Arguments) {
 		w := args.Get(0).(http.ResponseWriter)
 		apiErr := apierror.New(errorcode_enum.CodeNotFound, "Template block not found", nil)
 		response.WriteAPIError(w, apiErr)
@@ -214,7 +219,7 @@ func TestRouterErrorHandling(t *testing.T) {
 
 	r := router.NewTemplateBlockRouter(mockHandler)
 
-	req := httptest.NewRequest(http.MethodGet, "/nonexistent", nil)
+	req := httptest.NewRequest(http.MethodGet, "/template-blocks/nonexistent", nil)
 	w := httptest.NewRecorder()
 
 	r.ServeHTTP(w, req)

@@ -22,7 +22,7 @@ func NewWorkoutGeneratorHandler(service interfaces.WorkoutGeneratorService) *Wor
 }
 
 func (h *WorkoutGeneratorHandler) GenerateWorkout(w http.ResponseWriter, r *http.Request) {
-	var req dto.WorkoutGeneratorRequest
+	var req *dto.WorkoutGeneratorRequest
 	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "invalid request", err))
 		return

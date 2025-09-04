@@ -3,10 +3,10 @@ package interfaces
 import "github.com/alejandro-albiol/athenai/internal/template_block/dto"
 
 type TemplateBlockRepository interface {
-	Create(block dto.CreateTemplateBlockDTO) (string, error)
-	GetByID(id string) (dto.TemplateBlockDTO, error)
-	GetByTemplateID(templateID string) ([]dto.TemplateBlockDTO, error)
-	GetByTemplateIDAndName(templateID, name string) (dto.TemplateBlockDTO, error)
-	Update(id string, block dto.UpdateTemplateBlockDTO) (dto.TemplateBlockDTO, error)
-	Delete(id string) error
+	CreateTemplateBlock(block *dto.CreateTemplateBlockDTO) (string, error)
+	GetTemplateBlockByID(id string) (*dto.TemplateBlockDTO, error)
+	GetTemplateBlocksByTemplateID(templateID string) ([]*dto.TemplateBlockDTO, error)
+	GetTemplateBlockByTemplateIDAndName(templateID string, name string) (*dto.TemplateBlockDTO, error)
+	UpdateTemplateBlock(id string, block *dto.UpdateTemplateBlockDTO) (*dto.TemplateBlockDTO, error)
+	DeleteTemplateBlock(id string) error
 }

@@ -7,15 +7,18 @@ import (
 	"github.com/alejandro-albiol/athenai/internal/template_block/interfaces"
 )
 
+// TemplateBlockRepository provides database operations for template blocks.
 type TemplateBlockRepository struct {
 	db *sql.DB
 }
 
+// NewTemplateBlockRepository creates a new TemplateBlockRepository.
 func NewTemplateBlockRepository(db *sql.DB) interfaces.TemplateBlockRepository {
 	return &TemplateBlockRepository{db: db}
 }
 
-func (r *TemplateBlockRepository) Create(block dto.CreateTemplateBlockDTO) (string, error) {
+// CreateTemplateBlock inserts a new template block and returns its ID.
+func (r *TemplateBlockRepository) CreateTemplateBlock(block *dto.CreateTemplateBlockDTO) (string, error) {
 	query := `
 		INSERT INTO public.template_block 
 			(template_id, name, type, "order", exercise_count, estimated_duration_minutes, instructions)
@@ -38,10 +41,11 @@ func (r *TemplateBlockRepository) Create(block dto.CreateTemplateBlockDTO) (stri
 	return id, nil
 }
 
-func (r *TemplateBlockRepository) GetByID(id string) (dto.TemplateBlockDTO, error) {
-	var block dto.TemplateBlockDTO
+// GetTemplateBlockByID retrieves a template block by its ID.
+func (r *TemplateBlockRepository) GetTemplateBlockByID(id string) (*dto.TemplateBlockDTO, error) {
+	block := &dto.TemplateBlockDTO{}
 	query := `
-		SELECT id, template_id, block_name, block_type, block_order, exercise_count, estimated_duration_minutes, instructions, created_at
+		SELECT id, template_id, name, type, "order", exercise_count, estimated_duration_minutes, instructions, created_at
 		FROM public.template_block WHERE id = $1`
 	err := r.db.QueryRow(query, id).Scan(
 		&block.ID,
@@ -55,14 +59,15 @@ func (r *TemplateBlockRepository) GetByID(id string) (dto.TemplateBlockDTO, erro
 		&block.CreatedAt,
 	)
 	if err != nil {
-		return dto.TemplateBlockDTO{}, err
+		return nil, err
 	}
 	return block, nil
 }
 
-func (r *TemplateBlockRepository) GetByTemplateID(templateID string) ([]dto.TemplateBlockDTO, error) {
+// GetTemplateBlocksByTemplateID retrieves all template blocks for a given template ID.
+func (r *TemplateBlockRepository) GetTemplateBlocksByTemplateID(templateID string) ([]*dto.TemplateBlockDTO, error) {
 	query := `
-		SELECT id, template_id, block_name, block_type, block_order, exercise_count, estimated_duration_minutes, instructions, created_at
+		SELECT id, template_id, name, type, "order", exercise_count, estimated_duration_minutes, instructions, created_at
 		FROM public.template_block WHERE template_id = $1 ORDER BY "order"`
 	rows, err := r.db.Query(query, templateID)
 	if err != nil {
@@ -70,9 +75,9 @@ func (r *TemplateBlockRepository) GetByTemplateID(templateID string) ([]dto.Temp
 	}
 	defer rows.Close()
 
-	var blocks []dto.TemplateBlockDTO
+	var blocks []*dto.TemplateBlockDTO
 	for rows.Next() {
-		var block dto.TemplateBlockDTO
+		block := &dto.TemplateBlockDTO{}
 		err := rows.Scan(
 			&block.ID,
 			&block.TemplateID,
@@ -92,9 +97,10 @@ func (r *TemplateBlockRepository) GetByTemplateID(templateID string) ([]dto.Temp
 	return blocks, nil
 }
 
-func (r *TemplateBlockRepository) GetByTemplateIDAndName(templateID, name string) (dto.TemplateBlockDTO, error) {
-	var block dto.TemplateBlockDTO
-	query := `SELECT id, template_id, name, type, order, exercise_count, estimated_duration_minutes, instructions, created_at FROM public.template_block WHERE template_id = $1 AND name = $2`
+// GetTemplateBlockByTemplateIDAndName retrieves a template block by template ID and name.
+func (r *TemplateBlockRepository) GetTemplateBlockByTemplateIDAndName(templateID string, name string) (*dto.TemplateBlockDTO, error) {
+	block := &dto.TemplateBlockDTO{}
+	query := `SELECT id, template_id, name, type, "order", exercise_count, estimated_duration_minutes, instructions, created_at FROM public.template_block WHERE template_id = $1 AND name = $2`
 	err := r.db.QueryRow(query, templateID, name).Scan(
 		&block.ID,
 		&block.TemplateID,
@@ -107,18 +113,19 @@ func (r *TemplateBlockRepository) GetByTemplateIDAndName(templateID, name string
 		&block.CreatedAt,
 	)
 	if err != nil {
-		return dto.TemplateBlockDTO{}, err
+		return nil, err
 	}
 	return block, nil
 }
 
-func (r *TemplateBlockRepository) Update(id string, block dto.UpdateTemplateBlockDTO) (dto.TemplateBlockDTO, error) {
+// Update modifies an existing template block and returns the updated block.
+func (r *TemplateBlockRepository) UpdateTemplateBlock(id string, block *dto.UpdateTemplateBlockDTO) (*dto.TemplateBlockDTO, error) {
 	query := `
 		UPDATE public.template_block
-		SET template_id = $1, name = $2, type = $3, "order" = $4, exercise_count = $5, estimated_duration_minutes = $6, instructions = $7
-		WHERE id = $8
-		RETURNING id, template_id, block_name, block_type, block_order, exercise_count, estimated_duration_minutes, instructions, created_at`
-	var updatedBlock dto.TemplateBlockDTO
+		SET name = $1, type = $2, "order" = $3, exercise_count = $4, estimated_duration_minutes = $5, instructions = $6
+		WHERE id = $7
+		RETURNING id, template_id, name, type, "order", exercise_count, estimated_duration_minutes, instructions, created_at`
+	updatedBlock := &dto.TemplateBlockDTO{}
 	err := r.db.QueryRow(
 		query,
 		block.Name,
@@ -140,12 +147,13 @@ func (r *TemplateBlockRepository) Update(id string, block dto.UpdateTemplateBloc
 		&updatedBlock.CreatedAt,
 	)
 	if err != nil {
-		return dto.TemplateBlockDTO{}, err
+		return nil, err
 	}
 	return updatedBlock, nil
 }
 
-func (r *TemplateBlockRepository) Delete(id string) error {
+// DeleteTemplateBlock removes a template block by its ID.
+func (r *TemplateBlockRepository) DeleteTemplateBlock(id string) error {
 	query := `DELETE FROM public.template_block WHERE id = $1`
 	_, err := r.db.Exec(query, id)
 	return err

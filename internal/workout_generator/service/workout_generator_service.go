@@ -45,7 +45,7 @@ func NewWorkoutGeneratorService(
 	}
 }
 
-func (s *WorkoutGeneratorService) GenerateWorkout(req dto.WorkoutGeneratorRequest) (*dto.WorkoutGeneratorResponse, error) {
+func (s *WorkoutGeneratorService) GenerateWorkout(req *dto.WorkoutGeneratorRequest) (*dto.WorkoutGeneratorResponse, error) {
 	// 1. Get user context
 	user, err := s.UserService.GetUserByID("", req.UserID)
 	if err != nil {
@@ -53,12 +53,9 @@ func (s *WorkoutGeneratorService) GenerateWorkout(req dto.WorkoutGeneratorReques
 	}
 
 	// 2. Get available exercises (public + tenant)
-	publicExercises, err := s.ExerciseService.GetAllExercises()
-	if err != nil {
-		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to get public exercises", err)
-	}
+	var publicExercises []*exdto.ExerciseResponseDTO //s.ExerciseService.GetAllExercises() TODO: uncomment when exercise generator fixed
 	// For tenant-specific, you may need to pass gymID or tenantID, here assumed as user.GymID
-	var tenantExercises []exdto.ExerciseResponseDTO
+	var tenantExercises []*exdto.ExerciseResponseDTO
 	if user.GymID != "" {
 		// TODO: implement GetTenantExercises if needed
 		// tenantExercises, err = s.ExerciseService.GetTenantExercises(user.GymID)
@@ -79,7 +76,7 @@ func (s *WorkoutGeneratorService) GenerateWorkout(req dto.WorkoutGeneratorReques
 	}
 
 	// 4. Build LLM prompt
-	prompt := buildPrompt(req, exercises, *template, blocks)
+	prompt := buildPrompt(req, exercises, template, blocks)
 
 	// 5. Call LLM
 	llmReq := map[string]interface{}{"prompt": prompt}
@@ -112,13 +109,13 @@ func (s *WorkoutGeneratorService) GenerateWorkout(req dto.WorkoutGeneratorReques
 }
 
 // mergeExercises combines public and tenant exercises, prioritizing tenant-specific
-func mergeExercises(public, tenant []exdto.ExerciseResponseDTO) []exdto.ExerciseResponseDTO {
+func mergeExercises(public, tenant []*exdto.ExerciseResponseDTO) []*exdto.ExerciseResponseDTO {
 	// TODO: implement deduplication/override logic if needed
 	return append(public, tenant...)
 }
 
 // buildPrompt creates a rich prompt for the LLM
-func buildPrompt(req dto.WorkoutGeneratorRequest, exercises []exdto.ExerciseResponseDTO, template wtdto.ResponseWorkoutTemplateDTO, blocks []tbdto.TemplateBlockDTO) string {
+func buildPrompt(req *dto.WorkoutGeneratorRequest, exercises []*exdto.ExerciseResponseDTO, template *wtdto.ResponseWorkoutTemplateDTO, blocks []*tbdto.TemplateBlockDTO) string {
 	var sb strings.Builder
 	sb.WriteString("User Context:\n")
 	sb.WriteString(fmt.Sprintf("ID: %s\n", req.UserID))

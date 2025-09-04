@@ -21,7 +21,7 @@ type MockTemplateBlockService struct {
 	mock.Mock
 }
 
-func (m *MockTemplateBlockService) CreateTemplateBlock(block dto.CreateTemplateBlockDTO) (string, error) {
+func (m *MockTemplateBlockService) CreateTemplateBlock(block *dto.CreateTemplateBlockDTO) (string, error) {
 	args := m.Called(block)
 	return args.String(0), args.Error(1)
 }
@@ -31,12 +31,12 @@ func (m *MockTemplateBlockService) GetTemplateBlockByID(id string) (*dto.Templat
 	return args.Get(0).(*dto.TemplateBlockDTO), args.Error(1)
 }
 
-func (m *MockTemplateBlockService) ListTemplateBlocksByTemplateID(templateID string) ([]dto.TemplateBlockDTO, error) {
+func (m *MockTemplateBlockService) ListTemplateBlocksByTemplateID(templateID string) ([]*dto.TemplateBlockDTO, error) {
 	args := m.Called(templateID)
-	return args.Get(0).([]dto.TemplateBlockDTO), args.Error(1)
+	return args.Get(0).([]*dto.TemplateBlockDTO), args.Error(1)
 }
 
-func (m *MockTemplateBlockService) UpdateTemplateBlock(id string, update dto.UpdateTemplateBlockDTO) (*dto.TemplateBlockDTO, error) {
+func (m *MockTemplateBlockService) UpdateTemplateBlock(id string, update *dto.UpdateTemplateBlockDTO) (*dto.TemplateBlockDTO, error) {
 	args := m.Called(id, update)
 	return args.Get(0).(*dto.TemplateBlockDTO), args.Error(1)
 }
@@ -63,7 +63,7 @@ func TestCreateTemplateBlock(t *testing.T) {
 				ExerciseCount: 3,
 			},
 			setupMock: func(mockService *MockTemplateBlockService) {
-				mockService.On("CreateTemplateBlock", mock.AnythingOfType("dto.CreateTemplateBlockDTO")).Return("block-123", nil)
+				mockService.On("CreateTemplateBlock", mock.AnythingOfType("*dto.CreateTemplateBlockDTO")).Return("block-123", nil)
 			},
 			wantStatus: http.StatusCreated,
 		},
@@ -77,7 +77,7 @@ func TestCreateTemplateBlock(t *testing.T) {
 				ExerciseCount: 3,
 			},
 			setupMock: func(mockService *MockTemplateBlockService) {
-				mockService.On("CreateTemplateBlock", mock.AnythingOfType("dto.CreateTemplateBlockDTO")).Return(
+				mockService.On("CreateTemplateBlock", mock.AnythingOfType("*dto.CreateTemplateBlockDTO")).Return(
 					"", apierror.New(errorcode_enum.CodeConflict, "Template block with name 'Warm-up' already exists in template", nil),
 				)
 			},
@@ -156,7 +156,7 @@ func TestGetTemplateBlock(t *testing.T) {
 
 			// Use chi router to set URL param for id
 			router := chi.NewRouter()
-			router.Get("/{id}", h.GetTemplateBlock)
+			router.Get("/{id}", h.GetTemplateBlockByID)
 
 			req := httptest.NewRequest(http.MethodGet, "/"+tc.blockID, nil)
 			w := httptest.NewRecorder()
@@ -190,7 +190,7 @@ func TestListTemplateBlocksByTemplateID(t *testing.T) {
 			name:       "successful list",
 			templateID: "template123",
 			setupMock: func(mockService *MockTemplateBlockService) {
-				blocks := []dto.TemplateBlockDTO{
+				blocks := []*dto.TemplateBlockDTO{
 					{
 						ID:            "block1",
 						TemplateID:    "template123",
@@ -216,7 +216,7 @@ func TestListTemplateBlocksByTemplateID(t *testing.T) {
 			name:       "empty list",
 			templateID: "template456",
 			setupMock: func(mockService *MockTemplateBlockService) {
-				mockService.On("ListTemplateBlocksByTemplateID", "template456").Return([]dto.TemplateBlockDTO{}, nil)
+				mockService.On("ListTemplateBlocksByTemplateID", "template456").Return([]*dto.TemplateBlockDTO{}, nil)
 			},
 			wantStatus: http.StatusOK,
 		},
@@ -272,7 +272,7 @@ func TestUpdateTemplateBlock(t *testing.T) {
 					Order:         1,
 					ExerciseCount: 5,
 				}
-				mockService.On("UpdateTemplateBlock", "block123", mock.AnythingOfType("dto.UpdateTemplateBlockDTO")).Return(updatedBlock, nil)
+				mockService.On("UpdateTemplateBlock", "block123", mock.AnythingOfType("*dto.UpdateTemplateBlockDTO")).Return(updatedBlock, nil)
 			},
 			wantStatus: http.StatusOK,
 		},
@@ -283,7 +283,7 @@ func TestUpdateTemplateBlock(t *testing.T) {
 				Name: stringPtr("Updated Name"),
 			},
 			setupMock: func(mockService *MockTemplateBlockService) {
-				mockService.On("UpdateTemplateBlock", "nonexistent", mock.AnythingOfType("dto.UpdateTemplateBlockDTO")).Return(
+				mockService.On("UpdateTemplateBlock", "nonexistent", mock.AnythingOfType("*dto.UpdateTemplateBlockDTO")).Return(
 					(*dto.TemplateBlockDTO)(nil), apierror.New(errorcode_enum.CodeNotFound, "Template block not found", nil))
 			},
 			wantStatus: http.StatusNotFound,

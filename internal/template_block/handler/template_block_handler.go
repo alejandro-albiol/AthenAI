@@ -21,7 +21,7 @@ func NewTemplateBlockHandler(service interfaces.TemplateBlockService) *TemplateB
 }
 
 func (h *TemplateBlockHandler) CreateTemplateBlock(w http.ResponseWriter, r *http.Request) {
-	var block dto.CreateTemplateBlockDTO
+	var block *dto.CreateTemplateBlockDTO
 	if err := json.NewDecoder(r.Body).Decode(&block); err != nil {
 		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Invalid request body", err))
 		return
@@ -38,7 +38,7 @@ func (h *TemplateBlockHandler) CreateTemplateBlock(w http.ResponseWriter, r *htt
 	response.WriteAPICreated(w, "Template block created successfully", map[string]string{"id": blockID})
 }
 
-func (h *TemplateBlockHandler) GetTemplateBlock(w http.ResponseWriter, r *http.Request) {
+func (h *TemplateBlockHandler) GetTemplateBlockByID(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
 	if id == "" {
 		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Missing block ID", nil))
@@ -62,7 +62,7 @@ func (h *TemplateBlockHandler) UpdateTemplateBlock(w http.ResponseWriter, r *htt
 		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Missing block ID", nil))
 		return
 	}
-	var update dto.UpdateTemplateBlockDTO
+	var update *dto.UpdateTemplateBlockDTO
 	if err := json.NewDecoder(r.Body).Decode(&update); err != nil {
 		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Invalid request body", err))
 		return

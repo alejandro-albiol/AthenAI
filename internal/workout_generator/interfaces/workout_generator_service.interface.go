@@ -5,5 +5,5 @@ import (
 )
 
 type WorkoutGeneratorService interface {
-	GenerateWorkout(req dto.WorkoutGeneratorRequest) (*dto.WorkoutGeneratorResponse, error)
+	GenerateWorkout(req *dto.WorkoutGeneratorRequest) (*dto.WorkoutGeneratorResponse, error)
 }
