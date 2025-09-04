@@ -20,7 +20,7 @@ func NewGymService(repository interfaces.GymRepository) *GymService {
 	return &GymService{repository: repository}
 }
 
-func (s *GymService) CreateGym(createDTO dto.GymCreationDTO) (string, error) {
+func (s *GymService) CreateGym(createDTO *dto.GymCreationDTO) (string, error) {
 	_, err := s.repository.GetGymByName(createDTO.Name)
 	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to check gym existence", err)
@@ -52,31 +52,31 @@ func (s *GymService) CreateGym(createDTO dto.GymCreationDTO) (string, error) {
 	return gymID, nil
 }
 
-func (s *GymService) GetGymByID(id string) (dto.GymResponseDTO, error) {
+func (s *GymService) GetGymByID(id string) (*dto.GymResponseDTO, error) {
 	gym, err := s.repository.GetGymByID(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", nil)
+			return nil, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", nil)
 		}
-		return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to get gym", err)
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to get gym", err)
 	}
 
 	return gym, nil
 }
 
-func (s *GymService) GetGymByName(name string) (dto.GymResponseDTO, error) {
+func (s *GymService) GetGymByName(name string) (*dto.GymResponseDTO, error) {
 	gym, err := s.repository.GetGymByName(name)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", nil)
+			return nil, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", nil)
 		}
-		return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to get gym", err)
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to get gym", err)
 	}
 
 	return gym, nil
 }
 
-func (s *GymService) GetAllGyms() ([]dto.GymResponseDTO, error) {
+func (s *GymService) GetAllGyms() ([]*dto.GymResponseDTO, error) {
 	gyms, err := s.repository.GetAllGyms()
 	if err != nil {
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to get gyms", err)
@@ -89,32 +89,27 @@ func (s *GymService) GetAllGyms() ([]dto.GymResponseDTO, error) {
 	return gyms, nil
 }
 
-func (s *GymService) UpdateGym(id string, updateDTO dto.GymUpdateDTO) (dto.GymResponseDTO, error) {
+func (s *GymService) UpdateGym(id string, updateDTO *dto.GymUpdateDTO) (*dto.GymResponseDTO, error) {
 
-	_, err := s.repository.GetGymByID(id)
+	// Check if gym exists before updating
+	existingGym, err := s.repository.GetGymByID(id)
 	if err != nil {
-		if errors.Is(err, sql.ErrNoRows) {
-			return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", nil)
+		if err == sql.ErrNoRows {
+			return nil, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", err)
 		}
-		return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to check gym existence", err)
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to get gym", err)
 	}
-
-	// Check if the new name is already used by another gym (if name is being updated)
-	if updateDTO.Name != "" {
-		existingGym, err := s.repository.GetGymByName(updateDTO.Name)
-		if err == nil && existingGym.ID != id {
-			return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeConflict, "Gym with this name already exists", nil)
-		}
-		if err != nil && !errors.Is(err, sql.ErrNoRows) {
-			return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to check gym name uniqueness", err)
-		}
+	if existingGym == nil {
+		return nil, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", nil)
 	}
 
 	updatedGym, err := s.repository.UpdateGym(id, updateDTO)
 	if err != nil {
-		return dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to update gym", err)
+		if err == sql.ErrNoRows {
+			return nil, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", err)
+		}
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to update gym", err)
 	}
-
 	return updatedGym, nil
 }
 

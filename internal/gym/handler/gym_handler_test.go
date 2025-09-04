@@ -2,6 +2,7 @@ package handler_test
 
 import (
 	"bytes"
+	"context"
 	"encoding/json"
 	"net/http"
 	"net/http/httptest"
@@ -11,6 +12,7 @@ import (
 	"github.com/alejandro-albiol/athenai/internal/gym/handler"
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
 	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
+	"github.com/alejandro-albiol/athenai/pkg/middleware"
 	"github.com/alejandro-albiol/athenai/pkg/response"
 	"github.com/go-chi/chi/v5"
 	"github.com/stretchr/testify/assert"
@@ -21,7 +23,7 @@ type MockGymService struct {
 	mock.Mock
 }
 
-func (m *MockGymService) CreateGym(gym dto.GymCreationDTO) (string, error) {
+func (m *MockGymService) CreateGym(gym *dto.GymCreationDTO) (string, error) {
 	args := m.Called(gym)
 	if len(args) > 0 {
 		return args.String(0), args.Error(1)
@@ -29,24 +31,24 @@ func (m *MockGymService) CreateGym(gym dto.GymCreationDTO) (string, error) {
 	return "", args.Error(0)
 }
 
-func (m *MockGymService) GetGymByID(id string) (dto.GymResponseDTO, error) {
+func (m *MockGymService) GetGymByID(id string) (*dto.GymResponseDTO, error) {
 	args := m.Called(id)
-	return args.Get(0).(dto.GymResponseDTO), args.Error(1)
+	return args.Get(0).(*dto.GymResponseDTO), args.Error(1)
 }
 
-func (m *MockGymService) GetGymByName(name string) (dto.GymResponseDTO, error) {
+func (m *MockGymService) GetGymByName(name string) (*dto.GymResponseDTO, error) {
 	args := m.Called(name)
-	return args.Get(0).(dto.GymResponseDTO), args.Error(1)
+	return args.Get(0).(*dto.GymResponseDTO), args.Error(1)
 }
 
-func (m *MockGymService) GetAllGyms() ([]dto.GymResponseDTO, error) {
+func (m *MockGymService) GetAllGyms() ([]*dto.GymResponseDTO, error) {
 	args := m.Called()
-	return args.Get(0).([]dto.GymResponseDTO), args.Error(1)
+	return args.Get(0).([]*dto.GymResponseDTO), args.Error(1)
 }
 
-func (m *MockGymService) UpdateGym(id string, gym dto.GymUpdateDTO) (dto.GymResponseDTO, error) {
+func (m *MockGymService) UpdateGym(id string, gym *dto.GymUpdateDTO) (*dto.GymResponseDTO, error) {
 	args := m.Called(id, gym)
-	return args.Get(0).(dto.GymResponseDTO), args.Error(1)
+	return args.Get(0).(*dto.GymResponseDTO), args.Error(1)
 }
 
 func (m *MockGymService) SetGymActive(id string, active bool) error {
@@ -76,7 +78,7 @@ func TestCreateGym(t *testing.T) {
 				Phone:   "+1234567890",
 			},
 			setupMock: func(mockService *MockGymService) {
-				mockService.On("CreateGym", mock.Anything).Return("gym-uuid-123", nil)
+				mockService.On("CreateGym", mock.AnythingOfType("*dto.GymCreationDTO")).Return("gym-uuid-123", nil)
 			},
 			wantStatus:  http.StatusCreated,
 			gymIDHeader: "gym-uuid-123",
@@ -87,7 +89,7 @@ func TestCreateGym(t *testing.T) {
 				Name: "", // missing required field
 			},
 			setupMock: func(mockService *MockGymService) {
-				mockService.On("CreateGym", mock.AnythingOfType("dto.GymCreationDTO")).Return("", apierror.New(errorcode_enum.CodeBadRequest, "Invalid input", nil))
+				mockService.On("CreateGym", mock.AnythingOfType("*dto.GymCreationDTO")).Return("", apierror.New(errorcode_enum.CodeBadRequest, "Invalid input", nil))
 			},
 			wantStatus:  http.StatusBadRequest,
 			gymIDHeader: "gym-uuid-123",
@@ -106,6 +108,10 @@ func TestCreateGym(t *testing.T) {
 			body, _ := json.Marshal(tc.input)
 			req := httptest.NewRequest(http.MethodPost, "/gyms", bytes.NewBuffer(body))
 			req.Header.Set("Content-Type", "application/json")
+			// Inject platform_admin into context for security check
+			ctx := req.Context()
+			ctx = context.WithValue(ctx, middleware.UserTypeKey, "platform_admin")
+			req = req.WithContext(ctx)
 			w := httptest.NewRecorder()
 
 			h.CreateGym(w, req)
@@ -137,7 +143,7 @@ func TestGetGymByID(t *testing.T) {
 			name:  "successful retrieval",
 			gymID: "gym-uuid-123",
 			setupMock: func(mockService *MockGymService) {
-				mockService.On("GetGymByID", "gym-uuid-123").Return(dto.GymResponseDTO{
+				mockService.On("GetGymByID", "gym-uuid-123").Return(&dto.GymResponseDTO{
 					ID:       "gym-uuid-123",
 					Name:     "Test Gym",
 					Email:    "test@test.com",
@@ -151,7 +157,7 @@ func TestGetGymByID(t *testing.T) {
 			name:  "gym not found",
 			gymID: "nonexistent",
 			setupMock: func(mockService *MockGymService) {
-				mockService.On("GetGymByID", "nonexistent").Return(dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", nil))
+				mockService.On("GetGymByID", "nonexistent").Return(&dto.GymResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", nil))
 			},
 			wantStatus:  http.StatusNotFound,
 			gymIDHeader: "gym-uuid-123",
@@ -170,6 +176,11 @@ func TestGetGymByID(t *testing.T) {
 			router.Get("/{id}", h.GetGymByID)
 
 			req := httptest.NewRequest(http.MethodGet, "/"+tc.gymID, nil)
+			// Inject platform_admin into context for security check
+			ctx := req.Context()
+			ctx = context.WithValue(ctx, middleware.UserTypeKey, "platform_admin")
+			ctx = context.WithValue(ctx, middleware.GymIDKey, tc.gymID)
+			req = req.WithContext(ctx)
 			w := httptest.NewRecorder()
 
 			router.ServeHTTP(w, req)

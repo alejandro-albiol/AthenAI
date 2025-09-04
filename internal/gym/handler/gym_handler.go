@@ -34,7 +34,7 @@ func (h *GymHandler) CreateGym(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var creationDTO dto.GymCreationDTO
+	var creationDTO *dto.GymCreationDTO
 	if err := json.NewDecoder(r.Body).Decode(&creationDTO); err != nil {
 		response.WriteAPIError(w, apierror.New(
 			errorcode_enum.CodeBadRequest,
@@ -149,7 +149,7 @@ func (h *GymHandler) UpdateGym(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	var updateDTO dto.GymUpdateDTO
+	var updateDTO *dto.GymUpdateDTO
 	if err := json.NewDecoder(r.Body).Decode(&updateDTO); err != nil {
 		response.WriteAPIError(w, apierror.New(
 			errorcode_enum.CodeBadRequest,

@@ -15,7 +15,7 @@ func NewGymRepository(db *sql.DB) *GymRepository {
 	return &GymRepository{db: db}
 }
 
-func (r *GymRepository) CreateGym(gym dto.GymCreationDTO) (string, error) {
+func (r *GymRepository) CreateGym(gym *dto.GymCreationDTO) (string, error) {
 	query := `
 		INSERT INTO gym (name, email, address, phone, is_active, created_at, updated_at)
 		VALUES ($1, $2, $3, $4, true, $5, $5)
@@ -38,13 +38,13 @@ func (r *GymRepository) CreateGym(gym dto.GymCreationDTO) (string, error) {
 	return id, nil
 }
 
-func (r *GymRepository) GetGymByID(id string) (dto.GymResponseDTO, error) {
+func (r *GymRepository) GetGymByID(id string) (*dto.GymResponseDTO, error) {
 	query := `
 		SELECT id, name, email, address, phone, is_active, created_at, updated_at
 		FROM gym 
 		WHERE id = $1 AND deleted_at IS NULL`
 
-	var gym dto.GymResponseDTO
+	gym := &dto.GymResponseDTO{}
 
 	err := r.db.QueryRow(query, id).Scan(
 		&gym.ID,
@@ -57,19 +57,19 @@ func (r *GymRepository) GetGymByID(id string) (dto.GymResponseDTO, error) {
 		&gym.UpdatedAt,
 	)
 	if err != nil {
-		return dto.GymResponseDTO{}, err
+		return nil, err
 	}
 
 	return gym, nil
 }
 
-func (r *GymRepository) GetGymByName(name string) (dto.GymResponseDTO, error) {
+func (r *GymRepository) GetGymByName(name string) (*dto.GymResponseDTO, error) {
 	query := `
 		SELECT id, name, email, address, phone, is_active, created_at, updated_at
 		FROM gym 
 		WHERE name = $1 AND deleted_at IS NULL`
 
-	var gym dto.GymResponseDTO
+	gym := &dto.GymResponseDTO{}
 	err := r.db.QueryRow(query, name).Scan(
 		&gym.ID,
 		&gym.Name,
@@ -82,13 +82,13 @@ func (r *GymRepository) GetGymByName(name string) (dto.GymResponseDTO, error) {
 	)
 
 	if err != nil {
-		return dto.GymResponseDTO{}, err
+		return nil, err
 	}
 
 	return gym, nil
 }
 
-func (r *GymRepository) GetAllGyms() ([]dto.GymResponseDTO, error) {
+func (r *GymRepository) GetAllGyms() ([]*dto.GymResponseDTO, error) {
 	query := `
 		SELECT id, name, email, address, phone, is_active, created_at, updated_at
 		FROM gym 
@@ -101,9 +101,9 @@ func (r *GymRepository) GetAllGyms() ([]dto.GymResponseDTO, error) {
 	}
 	defer rows.Close()
 
-	var gyms []dto.GymResponseDTO
+	var gyms []*dto.GymResponseDTO
 	for rows.Next() {
-		var gym dto.GymResponseDTO
+		gym := &dto.GymResponseDTO{}
 
 		err := rows.Scan(
 			&gym.ID,
@@ -129,7 +129,7 @@ func (r *GymRepository) GetAllGyms() ([]dto.GymResponseDTO, error) {
 	return gyms, nil
 }
 
-func (r *GymRepository) UpdateGym(id string, gym dto.GymUpdateDTO) (dto.GymResponseDTO, error) {
+func (r *GymRepository) UpdateGym(id string, gym *dto.GymUpdateDTO) (*dto.GymResponseDTO, error) {
 	query := `
 		UPDATE gym 
 		SET name = $1, email = $2, address = $3, phone = $4, updated_at = $5
@@ -156,10 +156,10 @@ func (r *GymRepository) UpdateGym(id string, gym dto.GymUpdateDTO) (dto.GymRespo
 	)
 
 	if err != nil {
-		return dto.GymResponseDTO{}, err
+		return nil, err
 	}
 
-	return updatedGym, nil
+	return &updatedGym, nil
 }
 
 func (r *GymRepository) SetGymActive(id string, active bool) error {

@@ -17,29 +17,38 @@ type MockGymRepository struct {
 	mock.Mock
 }
 
-func (m *MockGymRepository) CreateGym(gym dto.GymCreationDTO) (string, error) {
+func (m *MockGymRepository) CreateGym(gym *dto.GymCreationDTO) (string, error) {
 	args := m.Called(gym)
 	return args.String(0), args.Error(1)
 }
 
-func (m *MockGymRepository) GetGymByID(id string) (dto.GymResponseDTO, error) {
+func (m *MockGymRepository) GetGymByID(id string) (*dto.GymResponseDTO, error) {
 	args := m.Called(id)
-	return args.Get(0).(dto.GymResponseDTO), args.Error(1)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dto.GymResponseDTO), args.Error(1)
 }
 
-func (m *MockGymRepository) GetGymByName(name string) (dto.GymResponseDTO, error) {
+func (m *MockGymRepository) GetGymByName(name string) (*dto.GymResponseDTO, error) {
 	args := m.Called(name)
-	return args.Get(0).(dto.GymResponseDTO), args.Error(1)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dto.GymResponseDTO), args.Error(1)
 }
 
-func (m *MockGymRepository) GetAllGyms() ([]dto.GymResponseDTO, error) {
+func (m *MockGymRepository) GetAllGyms() ([]*dto.GymResponseDTO, error) {
 	args := m.Called()
-	return args.Get(0).([]dto.GymResponseDTO), args.Error(1)
+	return args.Get(0).([]*dto.GymResponseDTO), args.Error(1)
 }
 
-func (m *MockGymRepository) UpdateGym(id string, gym dto.GymUpdateDTO) (dto.GymResponseDTO, error) {
+func (m *MockGymRepository) UpdateGym(id string, gym *dto.GymUpdateDTO) (*dto.GymResponseDTO, error) {
 	args := m.Called(id, gym)
-	return args.Get(0).(dto.GymResponseDTO), args.Error(1)
+	if args.Get(0) == nil {
+		return nil, args.Error(1)
+	}
+	return args.Get(0).(*dto.GymResponseDTO), args.Error(1)
 }
 
 func (m *MockGymRepository) SetGymActive(id string, active bool) error {
@@ -62,7 +71,7 @@ func TestMain(m *testing.M) {
 }
 
 func TestCreateGym(t *testing.T) {
-	gymDTO := dto.GymCreationDTO{
+	gymDTO := &dto.GymCreationDTO{
 		Name:    "Test Gym",
 		Email:   "test@gym.com",
 		Address: "123 Test St",
@@ -73,7 +82,7 @@ func TestCreateGym(t *testing.T) {
 		mockRepo := new(MockGymRepository)
 		svc := service.NewGymService(mockRepo)
 
-		mockRepo.On("GetGymByName", gymDTO.Name).Return(dto.GymResponseDTO{}, sql.ErrNoRows)
+		mockRepo.On("GetGymByName", gymDTO.Name).Return(nil, sql.ErrNoRows)
 		mockRepo.On("CreateGym", gymDTO).Return("gym123", nil)
 
 		id, err := svc.CreateGym(gymDTO)
@@ -85,7 +94,7 @@ func TestCreateGym(t *testing.T) {
 		mockRepo := new(MockGymRepository)
 		svc := service.NewGymService(mockRepo)
 
-		existingGym := dto.GymResponseDTO{ID: "gym123", Name: gymDTO.Name}
+		existingGym := &dto.GymResponseDTO{ID: "gym123", Name: gymDTO.Name}
 		mockRepo.On("GetGymByName", gymDTO.Name).Return(existingGym, nil)
 
 		_, err := svc.CreateGym(gymDTO)
@@ -101,7 +110,7 @@ func TestGetGym(t *testing.T) {
 	svc := service.NewGymService(mockRepo)
 
 	t.Run("successful retrieval", func(t *testing.T) {
-		expectedGym := dto.GymResponseDTO{
+		expectedGym := &dto.GymResponseDTO{
 			ID:       "gym123",
 			Name:     "Test Gym",
 			Email:    "test@gym.com",
@@ -115,7 +124,7 @@ func TestGetGym(t *testing.T) {
 	})
 
 	t.Run("gym not found", func(t *testing.T) {
-		mockRepo.On("GetGymByID", "nonexistent").Return(dto.GymResponseDTO{}, sql.ErrNoRows)
+		mockRepo.On("GetGymByID", "nonexistent").Return(nil, sql.ErrNoRows)
 
 		_, err := svc.GetGymByID("nonexistent")
 		assert.Error(t, err)
@@ -130,7 +139,7 @@ func TestGetAllGyms(t *testing.T) {
 	svc := service.NewGymService(mockRepo)
 
 	t.Run("successful retrieval", func(t *testing.T) {
-		expectedGyms := []dto.GymResponseDTO{
+		expectedGyms := []*dto.GymResponseDTO{
 			{ID: "gym123", Name: "Test Gym 1"},
 			{ID: "gym456", Name: "Test Gym 2"},
 		}
@@ -146,14 +155,17 @@ func TestUpdateGym(t *testing.T) {
 	mockRepo := new(MockGymRepository)
 	svc := service.NewGymService(mockRepo)
 
-	updateDTO := dto.GymUpdateDTO{
-		Name:  "Updated Gym",
-		Email: "updated@gym.com",
+	// Use local variables for pointer fields
+	name := "Updated Gym"
+	email := "updated@gym.com"
+	updateDTO := &dto.GymUpdateDTO{
+		Name:  &name,
+		Email: &email,
 	}
 
 	t.Run("successful update", func(t *testing.T) {
-		mockRepo.On("GetGymByID", "gym123").Return(dto.GymResponseDTO{ID: "gym123"}, nil)
-		mockRepo.On("UpdateGym", "gym123", updateDTO).Return(dto.GymResponseDTO{ID: "gym123"}, nil)
+		mockRepo.On("GetGymByID", "gym123").Return(&dto.GymResponseDTO{ID: "gym123"}, nil)
+		mockRepo.On("UpdateGym", "gym123", updateDTO).Return(&dto.GymResponseDTO{ID: "gym123"}, nil)
 
 		updatedGym, err := svc.UpdateGym("gym123", updateDTO)
 		assert.NoError(t, err)
@@ -161,8 +173,8 @@ func TestUpdateGym(t *testing.T) {
 	})
 
 	t.Run("gym not found", func(t *testing.T) {
-		mockRepo.On("GetGymByID", "nonexistent").Return(dto.GymResponseDTO{}, sql.ErrNoRows)
-		mockRepo.On("UpdateGym", "nonexistent", updateDTO).Return(dto.GymResponseDTO{}, sql.ErrNoRows)
+		mockRepo.On("GetGymByID", "nonexistent").Return(nil, sql.ErrNoRows)
+		mockRepo.On("UpdateGym", "nonexistent", updateDTO).Return(nil, sql.ErrNoRows)
 
 		_, err := svc.UpdateGym("nonexistent", updateDTO)
 		assert.Error(t, err)
@@ -177,7 +189,7 @@ func TestDeleteGym(t *testing.T) {
 		mockRepo := new(MockGymRepository)
 		svc := service.NewGymService(mockRepo)
 
-		mockRepo.On("GetGymByID", "gym123").Return(dto.GymResponseDTO{ID: "gym123"}, nil)
+		mockRepo.On("GetGymByID", "gym123").Return(&dto.GymResponseDTO{ID: "gym123"}, nil)
 		mockRepo.On("DeleteGym", "gym123").Return(nil)
 
 		err := svc.DeleteGym("gym123")
@@ -188,7 +200,7 @@ func TestDeleteGym(t *testing.T) {
 		mockRepo := new(MockGymRepository)
 		svc := service.NewGymService(mockRepo)
 
-		mockRepo.On("GetGymByID", "nonexistent").Return(dto.GymResponseDTO{}, sql.ErrNoRows)
+		mockRepo.On("GetGymByID", "nonexistent").Return(nil, sql.ErrNoRows)
 
 		err := svc.DeleteGym("nonexistent")
 		assert.Error(t, err)
@@ -203,7 +215,7 @@ func TestSetGymActive(t *testing.T) {
 	svc := service.NewGymService(mockRepo)
 
 	t.Run("successful activation", func(t *testing.T) {
-		mockRepo.On("GetGymByID", "gym123").Return(dto.GymResponseDTO{ID: "gym123"}, nil)
+		mockRepo.On("GetGymByID", "gym123").Return(&dto.GymResponseDTO{ID: "gym123"}, nil)
 		mockRepo.On("SetGymActive", "gym123", true).Return(nil)
 
 		err := svc.SetGymActive("gym123", true)
@@ -211,7 +223,7 @@ func TestSetGymActive(t *testing.T) {
 	})
 
 	t.Run("gym not found", func(t *testing.T) {
-		mockRepo.On("GetGymByID", "nonexistent").Return(dto.GymResponseDTO{}, sql.ErrNoRows)
+		mockRepo.On("GetGymByID", "nonexistent").Return(nil, sql.ErrNoRows)
 
 		err := svc.SetGymActive("nonexistent", true)
 		assert.Error(t, err)

@@ -8,23 +8,23 @@ import "github.com/alejandro-albiol/athenai/internal/gym/dto"
 type GymRepository interface {
 	// CreateGym persists a new gym to the database.
 	// Returns raw database errors without any domain error mapping.
-	CreateGym(gym dto.GymCreationDTO) (string, error)
+	CreateGym(gym *dto.GymCreationDTO) (string, error)
 
 	// GetGymByID retrieves a gym from the database by its ID.
 	// Returns sql.ErrNoRows if not found, or other raw database errors.
-	GetGymByID(id string) (dto.GymResponseDTO, error)
+	GetGymByID(id string) (*dto.GymResponseDTO, error)
 
 	// GetGymByName retrieves a gym from the database by its name.
 	// Returns sql.ErrNoRows if not found, or other raw database errors.
-	GetGymByName(name string) (dto.GymResponseDTO, error)
+	GetGymByName(name string) (*dto.GymResponseDTO, error)
 
 	// GetAllGyms retrieves all active gyms from the database.
 	// Returns raw database errors without any domain error mapping.
-	GetAllGyms() ([]dto.GymResponseDTO, error)
+	GetAllGyms() ([]*dto.GymResponseDTO, error)
 
 	// UpdateGym updates an existing gym in the database.
 	// Returns sql.ErrNoRows if the gym doesn't exist, or other raw database errors.
-	UpdateGym(id string, gym dto.GymUpdateDTO) (dto.GymResponseDTO, error)
+	UpdateGym(id string, gym *dto.GymUpdateDTO) (*dto.GymResponseDTO, error)
 
 	// SetGymActive updates the active status of a gym.
 	// Returns sql.ErrNoRows if the gym doesn't exist, or other raw database errors.

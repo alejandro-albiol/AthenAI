@@ -42,7 +42,7 @@ func TestCreateGym(t *testing.T) {
 			sqlmock.AnyArg(),
 		).WillReturnRows(rows)
 
-	id, err := repo.CreateGym(gymDTO)
+	id, err := repo.CreateGym(&gymDTO)
 	assert.NoError(t, err)
 	assert.Equal(t, "test-gym", id)
 }
@@ -104,11 +104,17 @@ func TestUpdateGym(t *testing.T) {
 	defer db.Close()
 
 	repo := repository.NewGymRepository(db)
+
+	name := "Updated Gym"
+	email := "updated@gym.com"
+	address := "456 Update St"
+	phone := "+0987654321"
+	
 	updateDTO := dto.GymUpdateDTO{
-		Name:    "Updated Gym",
-		Email:   "updated@gym.com",
-		Address: "456 Update St",
-		Phone:   "+0987654321",
+		Name:    &name,
+		Email:   &email,
+		Address: &address,
+		Phone:   &phone,
 	}
 
 	rows := sqlmock.NewRows([]string{
@@ -127,7 +133,7 @@ func TestUpdateGym(t *testing.T) {
 		"gym123",         // id
 	).WillReturnRows(rows)
 
-	updatedGym, err := repo.UpdateGym("gym123", updateDTO)
+	updatedGym, err := repo.UpdateGym("gym123", &updateDTO)
 	assert.NoError(t, err)
 	assert.Equal(t, "gym123", updatedGym.ID)
 }

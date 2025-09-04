@@ -5,8 +5,6 @@ import (
 )
 
 // MuscularGroupHandlerInterface defines the interface for the muscular group handler
-// This should be used for dependency injection in the router layer
-// to ensure strict module boundaries and testability.
 type MuscularGroupHandlerInterface interface {
 	// CreateMuscularGroup creates a new muscular group
 	CreateMuscularGroup(w http.ResponseWriter, r *http.Request)
