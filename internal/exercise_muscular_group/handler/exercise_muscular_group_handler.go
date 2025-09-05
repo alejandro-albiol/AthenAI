@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/alejandro-albiol/athenai/internal/exercise_muscular_group/dto"
-	"github.com/alejandro-albiol/athenai/internal/exercise_muscular_group/service"
+	"github.com/alejandro-albiol/athenai/internal/exercise_muscular_group/interfaces"
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
 	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
 	"github.com/alejandro-albiol/athenai/pkg/response"
@@ -14,10 +14,10 @@ import (
 )
 
 type ExerciseMuscularGroupHandler struct {
-	service *service.ExerciseMuscularGroupService
+	service interfaces.ExerciseMuscularGroupService
 }
 
-func NewExerciseMuscularGroupHandler(service *service.ExerciseMuscularGroupService) *ExerciseMuscularGroupHandler {
+func NewExerciseMuscularGroupHandler(service interfaces.ExerciseMuscularGroupService) *ExerciseMuscularGroupHandler {
 	return &ExerciseMuscularGroupHandler{service: service}
 }
 
