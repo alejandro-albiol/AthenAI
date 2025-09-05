@@ -3,7 +3,7 @@ package interfaces
 import "github.com/alejandro-albiol/athenai/internal/muscular_group/dto"
 
 type MuscularGroupRepository interface {
-	CreateMuscularGroup(mg *dto.CreateMuscularGroupDTO) (string, error)
+	CreateMuscularGroup(mg *dto.CreateMuscularGroupDTO) (*string, error)
 	GetAllMuscularGroups() ([]*dto.MuscularGroupResponseDTO, error)
 	GetMuscularGroupByID(id string) (*dto.MuscularGroupResponseDTO, error)
 	GetMuscularGroupByName(name string) (*dto.MuscularGroupResponseDTO, error)

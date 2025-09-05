@@ -16,14 +16,14 @@ import (
 )
 
 type mockService struct {
-	createFunc func(*dto.CreateMuscularGroupDTO) (string, error)
+	createFunc func(*dto.CreateMuscularGroupDTO) (*string, error)
 	getFunc    func(string) (*dto.MuscularGroupResponseDTO, error)
 	listFunc   func() ([]*dto.MuscularGroupResponseDTO, error)
 	updateFunc func(string, *dto.UpdateMuscularGroupDTO) (*dto.MuscularGroupResponseDTO, error)
 	deleteFunc func(string) error
 }
 
-func (m *mockService) CreateMuscularGroup(dto *dto.CreateMuscularGroupDTO) (string, error) {
+func (m *mockService) CreateMuscularGroup(dto *dto.CreateMuscularGroupDTO) (*string, error) {
 	return m.createFunc(dto)
 }
 func (m *mockService) GetMuscularGroupByID(id string) (*dto.MuscularGroupResponseDTO, error) {
@@ -41,11 +41,12 @@ func (m *mockService) DeleteMuscularGroup(id string) error {
 
 func TestCreateMuscularGroupHandler(t *testing.T) {
 	service := &mockService{
-		createFunc: func(dto *dto.CreateMuscularGroupDTO) (string, error) {
+		createFunc: func(dto *dto.CreateMuscularGroupDTO) (*string, error) {
 			if dto.Name == "error" {
-				return "", apierror.New(enum.CodeConflict, "Duplicate", nil)
+				return nil, apierror.New(enum.CodeConflict, "Duplicate", nil)
 			}
-			return "id123", nil
+			id := "id123"
+			return &id, nil
 		},
 	}
 	h := handler.NewMuscularGroupHandler(service)

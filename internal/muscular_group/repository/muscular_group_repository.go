@@ -14,14 +14,14 @@ func NewMuscularGroupRepository(db *sql.DB) *MuscularGroupRepository {
 	return &MuscularGroupRepository{db: db}
 }
 
-func (r *MuscularGroupRepository) CreateMuscularGroup(mg *dto.CreateMuscularGroupDTO) (string, error) {
+func (r *MuscularGroupRepository) CreateMuscularGroup(mg *dto.CreateMuscularGroupDTO) (*string, error) {
 	query := `INSERT INTO public.muscular_group (name, description, body_part, is_active) VALUES ($1, $2, $3, TRUE) RETURNING id`
 	var id string
 	err := r.db.QueryRow(query, mg.Name, mg.Description, mg.BodyPart).Scan(&id)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return id, nil
+	return &id, nil
 }
 
 func (r *MuscularGroupRepository) GetAllMuscularGroups() ([]*dto.MuscularGroupResponseDTO, error) {

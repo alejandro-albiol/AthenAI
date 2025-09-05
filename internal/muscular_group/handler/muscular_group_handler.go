@@ -39,7 +39,7 @@ func (h *MuscularGroupHandler) CreateMuscularGroup(w http.ResponseWriter, r *htt
 		return
 	}
 
-	response.WriteAPICreated(w, "Muscular group created successfully", map[string]string{"id": muscularGroupID})
+	response.WriteAPICreated(w, "Muscular group created successfully", muscularGroupID)
 }
 
 func (h *MuscularGroupHandler) GetMuscularGroup(w http.ResponseWriter, r *http.Request) {

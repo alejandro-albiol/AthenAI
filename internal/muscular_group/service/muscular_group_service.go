@@ -15,21 +15,21 @@ func NewMuscularGroupService(repository interfaces.MuscularGroupRepository) *Mus
 	return &MuscularGroupService{repository: repository}
 }
 
-func (s *MuscularGroupService) CreateMuscularGroup(mg *dto.CreateMuscularGroupDTO) (string, error) {
+func (s *MuscularGroupService) CreateMuscularGroup(mg *dto.CreateMuscularGroupDTO) (*string, error) {
 	// Check for name uniqueness
 	groups, err := s.repository.GetAllMuscularGroups()
 	if err != nil {
-		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to check muscular group name uniqueness", err)
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to check muscular group name uniqueness", err)
 	}
 	for _, g := range groups {
 		if g.Name == mg.Name {
-			return "", apierror.New(errorcode_enum.CodeConflict, "Muscular group with this name already exists", nil)
+			return nil, apierror.New(errorcode_enum.CodeConflict, "Muscular group with this name already exists", nil)
 		}
 	}
 
 	muscularGroupID, err := s.repository.CreateMuscularGroup(mg)
 	if err != nil {
-		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to create muscular group", err)
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to create muscular group", err)
 	}
 	return muscularGroupID, nil
 }

@@ -20,11 +20,12 @@ type mockRepository struct {
 	getByNameErr error
 }
 
-func (m *mockRepository) CreateMuscularGroup(mg *dto.CreateMuscularGroupDTO) (string, error) {
+func (m *mockRepository) CreateMuscularGroup(mg *dto.CreateMuscularGroupDTO) (*string, error) {
 	if m.createErr != nil {
-		return "", m.createErr
+		return nil, m.createErr
 	}
-	return "new-id", nil
+	id := "new-id"
+	return &id, nil
 }
 func (m *mockRepository) GetAllMuscularGroups() ([]*dto.MuscularGroupResponseDTO, error) {
 	if m.getAllErr != nil {
@@ -75,7 +76,8 @@ func TestCreateMuscularGroup(t *testing.T) {
 	mg := &dto.CreateMuscularGroupDTO{Name: "Back"}
 	id, err := svc.CreateMuscularGroup(mg)
 	assert.NoError(t, err)
-	assert.Equal(t, "new-id", id)
+	assert.NotNil(t, id)
+	assert.Equal(t, "new-id", *id)
 
 	// Duplicate name
 	mg.Name = "Chest"

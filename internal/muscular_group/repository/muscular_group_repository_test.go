@@ -19,7 +19,8 @@ func TestCreateMuscularGroup(t *testing.T) {
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow("1"))
 	id, err := repo.CreateMuscularGroup(mg)
 	assert.NoError(t, err)
-	assert.Equal(t, "1", id)
+	assert.NotNil(t, id)
+	assert.Equal(t, "1", *id)
 }
 
 func TestGetAllMuscularGroups(t *testing.T) {
