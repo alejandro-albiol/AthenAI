@@ -26,47 +26,47 @@ func NewExerciseService(repo interfaces.ExerciseRepository, equipmentService equ
 
 }
 
-func (s *ExerciseService) CreateExercise(exercise dto.ExerciseCreationDTO) (string, error) {
+func (s *ExerciseService) CreateExercise(exercise *dto.ExerciseCreationDTO) (*string, error) {
 	// Validate enums
 	if !exercise.DifficultyLevel.IsValid() {
-		return "", apierror.New(errorcode_enum.CodeBadRequest, "Invalid difficulty level", nil)
+		return nil, apierror.New(errorcode_enum.CodeBadRequest, "Invalid difficulty level", nil)
 	}
 	if !exercise.ExerciseType.IsValid() {
-		return "", apierror.New(errorcode_enum.CodeBadRequest, "Invalid exercise type", nil)
+		return nil, apierror.New(errorcode_enum.CodeBadRequest, "Invalid exercise type", nil)
 	}
 	// Validate synonyms
 	if exercise.Synonyms == nil {
-		return "", apierror.New(errorcode_enum.CodeBadRequest, "Synonyms must be provided as an array", nil)
+		return nil, apierror.New(errorcode_enum.CodeBadRequest, "Synonyms must be provided as an array", nil)
 	}
 	seen := make(map[string]struct{})
 	for _, syn := range exercise.Synonyms {
 		if syn == "" {
-			return "", apierror.New(errorcode_enum.CodeBadRequest, "Synonyms cannot contain empty strings", nil)
+			return nil, apierror.New(errorcode_enum.CodeBadRequest, "Synonyms cannot contain empty strings", nil)
 		}
 		if _, exists := seen[syn]; exists {
-			return "", apierror.New(errorcode_enum.CodeBadRequest, "Synonyms must be unique", nil)
+			return nil, apierror.New(errorcode_enum.CodeBadRequest, "Synonyms must be unique", nil)
 		}
 		seen[syn] = struct{}{}
 	}
 	existingExercise, err := s.repository.GetExerciseByName(exercise.Name)
 	if err == nil && existingExercise.ID != "" {
-		return "", apierror.New(errorcode_enum.CodeConflict, "Exercise with this name already exists", err)
+		return nil, apierror.New(errorcode_enum.CodeConflict, "Exercise with this name already exists", err)
 	}
 	id, err := s.repository.CreateExercise(exercise)
 	if err != nil {
-		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to create exercise", err)
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to create exercise", err)
 	}
 
 	// Create links in join tables
 	if s.exerciseEquipmentService != nil && len(exercise.Equipment) > 0 {
 		for _, eqID := range exercise.Equipment {
-			link := exerciseEquipmentDTO.ExerciseEquipment{
+			link := &exerciseEquipmentDTO.ExerciseEquipment{
 				ExerciseID:  id,
 				EquipmentID: eqID,
 			}
 			_, err := s.exerciseEquipmentService.CreateLink(link)
 			if err != nil {
-				return "", apierror.New(errorcode_enum.CodeInternal, "Failed to link equipment to exercise", err)
+				return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to link equipment to exercise", err)
 			}
 		}
 	}
@@ -78,33 +78,33 @@ func (s *ExerciseService) CreateExercise(exercise dto.ExerciseCreationDTO) (stri
 			}
 			_, err := s.exerciseMuscularGroupService.CreateLink(link)
 			if err != nil {
-				return "", apierror.New(errorcode_enum.CodeInternal, "Failed to link muscular group to exercise", err)
+				return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to link muscular group to exercise", err)
 			}
 		}
 	}
-	return id, nil
+	return &id, nil
 }
 
-func (s *ExerciseService) GetExerciseByID(id string) (dto.ExerciseResponseDTO, error) {
+func (s *ExerciseService) GetExerciseByID(id string) (*dto.ExerciseResponseDTO, error) {
 	exercise, err := s.repository.GetExerciseByID(id)
 	if err != nil {
-		return dto.ExerciseResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Exercise with ID "+id+" not found", err)
+		return nil, apierror.New(errorcode_enum.CodeNotFound, "Exercise with ID "+id+" not found", err)
 	}
 	return exercise, nil
 }
 
-func (s *ExerciseService) GetExerciseByName(name string) (dto.ExerciseResponseDTO, error) {
+func (s *ExerciseService) GetExerciseByName(name string) (*dto.ExerciseResponseDTO, error) {
 	exercise, err := s.repository.GetExerciseByName(name)
 	if err != nil {
-		return dto.ExerciseResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Exercise with name '"+name+"' not found", err)
+		return nil, apierror.New(errorcode_enum.CodeNotFound, "Exercise with name '"+name+"' not found", err)
 	}
 	if exercise.ID == "" {
-		return dto.ExerciseResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Exercise with name '"+name+"' not found", nil)
+		return nil, apierror.New(errorcode_enum.CodeNotFound, "Exercise with name '"+name+"' not found", nil)
 	}
 	return exercise, nil
 }
 
-func (s *ExerciseService) GetExercisesByMuscularGroup(muscularGroups []string) ([]dto.ExerciseResponseDTO, error) {
+func (s *ExerciseService) GetExercisesByMuscularGroup(muscularGroups []string) ([]*dto.ExerciseResponseDTO, error) {
 	exercises, err := s.repository.GetExercisesByMuscularGroup(muscularGroups)
 	if err != nil {
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve exercises by muscular group", err)
@@ -115,7 +115,7 @@ func (s *ExerciseService) GetExercisesByMuscularGroup(muscularGroups []string) (
 	return exercises, nil
 }
 
-func (s *ExerciseService) GetExercisesByEquipment(equipment []string) ([]dto.ExerciseResponseDTO, error) {
+func (s *ExerciseService) GetExercisesByEquipment(equipment []string) ([]*dto.ExerciseResponseDTO, error) {
 	exercises, err := s.repository.GetExercisesByEquipment(equipment)
 	if err != nil {
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve exercises by equipment", err)
@@ -126,7 +126,7 @@ func (s *ExerciseService) GetExercisesByEquipment(equipment []string) ([]dto.Exe
 	return exercises, nil
 }
 
-func (s *ExerciseService) GetAllExercises() ([]dto.ExerciseResponseDTO, error) {
+func (s *ExerciseService) GetAllExercises() ([]*dto.ExerciseResponseDTO, error) {
 	exercises, err := s.repository.GetAllExercises()
 	if err != nil {
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve exercises", err)
@@ -137,48 +137,48 @@ func (s *ExerciseService) GetAllExercises() ([]dto.ExerciseResponseDTO, error) {
 	return exercises, nil
 }
 
-func (s *ExerciseService) UpdateExercise(id string, exercise dto.ExerciseUpdateDTO) (dto.ExerciseResponseDTO, error) {
+func (s *ExerciseService) UpdateExercise(id string, exercise *dto.ExerciseUpdateDTO) (*dto.ExerciseResponseDTO, error) {
 	// Check existence first
 	_, err := s.repository.GetExerciseByID(id)
 	if err != nil {
-		return dto.ExerciseResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Exercise with ID "+id+" not found", err)
+		return nil, apierror.New(errorcode_enum.CodeNotFound, "Exercise with ID "+id+" not found", err)
 	}
 	// Validate enums if provided
 	if exercise.DifficultyLevel != "" && !exercise.DifficultyLevel.IsValid() {
-		return dto.ExerciseResponseDTO{}, apierror.New(errorcode_enum.CodeBadRequest, "Invalid difficulty level", nil)
+		return nil, apierror.New(errorcode_enum.CodeBadRequest, "Invalid difficulty level", nil)
 	}
 	if exercise.ExerciseType != "" && !exercise.ExerciseType.IsValid() {
-		return dto.ExerciseResponseDTO{}, apierror.New(errorcode_enum.CodeBadRequest, "Invalid exercise type", nil)
+		return nil, apierror.New(errorcode_enum.CodeBadRequest, "Invalid exercise type", nil)
 	}
 	// Validate synonyms if provided
 	if exercise.Synonyms != nil {
 		seen := make(map[string]struct{})
 		for _, syn := range exercise.Synonyms {
 			if syn == "" {
-				return dto.ExerciseResponseDTO{}, apierror.New(errorcode_enum.CodeBadRequest, "Synonyms cannot contain empty strings", nil)
+				return nil, apierror.New(errorcode_enum.CodeBadRequest, "Synonyms cannot contain empty strings", nil)
 			}
 			if _, exists := seen[syn]; exists {
-				return dto.ExerciseResponseDTO{}, apierror.New(errorcode_enum.CodeBadRequest, "Synonyms must be unique", nil)
+				return nil, apierror.New(errorcode_enum.CodeBadRequest, "Synonyms must be unique", nil)
 			}
 			seen[syn] = struct{}{}
 		}
 	}
 	updatedExercise, err := s.repository.UpdateExercise(id, exercise)
 	if err != nil {
-		return dto.ExerciseResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to update exercise", err)
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to update exercise", err)
 	}
 	// Update join tables: remove all links, then add new ones if provided
 	if s.exerciseEquipmentService != nil {
 		_ = s.exerciseEquipmentService.RemoveAllLinksForExercise(id)
 		if exercise.Equipment != nil {
 			for _, eqID := range exercise.Equipment {
-				link := exerciseEquipmentDTO.ExerciseEquipment{
+				link := &exerciseEquipmentDTO.ExerciseEquipment{
 					ExerciseID:  id,
 					EquipmentID: eqID,
 				}
 				_, err := s.exerciseEquipmentService.CreateLink(link)
 				if err != nil {
-					return dto.ExerciseResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to update equipment links", err)
+					return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to update equipment links", err)
 				}
 			}
 		}
@@ -193,7 +193,7 @@ func (s *ExerciseService) UpdateExercise(id string, exercise dto.ExerciseUpdateD
 				}
 				_, err := s.exerciseMuscularGroupService.CreateLink(link)
 				if err != nil {
-					return dto.ExerciseResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to update muscular group links", err)
+					return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to update muscular group links", err)
 				}
 			}
 		}
@@ -221,11 +221,11 @@ func (s *ExerciseService) DeleteExercise(id string) error {
 	return nil
 }
 
-func (s *ExerciseService) GetExercisesByMuscularGroupAndEquipment(muscularGroups []string, equipment []string) ([]dto.ExerciseResponseDTO, error) {
+func (s *ExerciseService) GetExercisesByMuscularGroupAndEquipment(muscularGroups []string, equipment []string) ([]*dto.ExerciseResponseDTO, error) {
 	if len(muscularGroups) == 0 && len(equipment) == 0 {
 		return s.GetAllExercises()
 	}
-	var exercisesByGroup, exercisesByEquipment []dto.ExerciseResponseDTO
+	var exercisesByGroup, exercisesByEquipment []*dto.ExerciseResponseDTO
 	var err error
 
 	if len(muscularGroups) > 0 {
@@ -247,7 +247,7 @@ func (s *ExerciseService) GetExercisesByMuscularGroupAndEquipment(muscularGroups
 		for _, e := range exercisesByGroup {
 			idSet[e.ID] = struct{}{}
 		}
-		var intersection []dto.ExerciseResponseDTO
+		var intersection []*dto.ExerciseResponseDTO
 		for _, e := range exercisesByEquipment {
 			if _, found := idSet[e.ID]; found {
 				intersection = append(intersection, e)

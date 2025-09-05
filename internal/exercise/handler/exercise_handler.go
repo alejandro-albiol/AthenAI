@@ -6,7 +6,7 @@ import (
 	"net/http"
 
 	"github.com/alejandro-albiol/athenai/internal/exercise/dto"
-	"github.com/alejandro-albiol/athenai/internal/exercise/service"
+	"github.com/alejandro-albiol/athenai/internal/exercise/interfaces"
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
 	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
 	"github.com/alejandro-albiol/athenai/pkg/response"
@@ -14,17 +14,16 @@ import (
 )
 
 type ExerciseHandler struct {
-	service *service.ExerciseService
+	service interfaces.ExerciseService
 }
 
-func NewExerciseHandler(service *service.ExerciseService) *ExerciseHandler {
+func NewExerciseHandler(service interfaces.ExerciseService) *ExerciseHandler {
 	return &ExerciseHandler{service: service}
 }
 
 func (h *ExerciseHandler) CreateExercise(w http.ResponseWriter, r *http.Request) {
-
-	creationDTO := dto.ExerciseCreationDTO{}
-	if err := json.NewDecoder(r.Body).Decode(&creationDTO); err != nil {
+	creationDTO := &dto.ExerciseCreationDTO{}
+	if err := json.NewDecoder(r.Body).Decode(creationDTO); err != nil {
 		response.WriteAPIError(w, apierror.New(
 			errorcode_enum.CodeBadRequest,
 			"Invalid request payload",
@@ -32,7 +31,7 @@ func (h *ExerciseHandler) CreateExercise(w http.ResponseWriter, r *http.Request)
 		))
 		return
 	}
-	id, err := h.service.CreateExercise(creationDTO)
+	exercise, err := h.service.CreateExercise(creationDTO)
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
@@ -46,7 +45,7 @@ func (h *ExerciseHandler) CreateExercise(w http.ResponseWriter, r *http.Request)
 		}
 		return
 	}
-	response.WriteAPICreated(w, "Exercise created successfully", id)
+	response.WriteAPICreated(w, "Exercise created successfully", exercise)
 }
 
 func (h *ExerciseHandler) GetExerciseByID(w http.ResponseWriter, r *http.Request) {
@@ -145,8 +144,8 @@ func (h *ExerciseHandler) GetAllExercises(w http.ResponseWriter, r *http.Request
 
 func (h *ExerciseHandler) UpdateExercise(w http.ResponseWriter, r *http.Request) {
 	id := chi.URLParam(r, "id")
-	updateDTO := dto.ExerciseUpdateDTO{}
-	if err := json.NewDecoder(r.Body).Decode(&updateDTO); err != nil {
+	updateDTO := &dto.ExerciseUpdateDTO{}
+	if err := json.NewDecoder(r.Body).Decode(updateDTO); err != nil {
 		response.WriteAPIError(w, apierror.New(
 			errorcode_enum.CodeBadRequest,
 			"Invalid request payload",
@@ -194,7 +193,7 @@ func (h *ExerciseHandler) DeleteExercise(w http.ResponseWriter, r *http.Request)
 func (h *ExerciseHandler) GetExercisesByFilters(w http.ResponseWriter, r *http.Request) {
 	groups := r.URL.Query()["group"]
 	equipment := r.URL.Query()["equipment"]
-	var exercises []dto.ExerciseResponseDTO
+	var exercises []*dto.ExerciseResponseDTO
 	var err error
 
 	if len(groups) > 0 && len(equipment) > 0 {

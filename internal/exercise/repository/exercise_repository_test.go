@@ -25,11 +25,11 @@ func TestCreateExercise(t *testing.T) {
 	db, mock, repo := setupMockDB(t)
 	defer db.Close()
 
-	ex := dto.ExerciseCreationDTO{
+	ex := &dto.ExerciseCreationDTO{
 		Name:            "Push Up",
 		Synonyms:        []string{"Press Up"},
 		MuscularGroups:  []string{"chest", "triceps"},
-		Equipment: []string{},
+		Equipment:       []string{},
 		DifficultyLevel: "beginner",
 		ExerciseType:    "strength",
 		Instructions:    "Do a push up.",
@@ -42,8 +42,6 @@ func TestCreateExercise(t *testing.T) {
 		WithArgs(
 			ex.Name,
 			pq.Array(ex.Synonyms),
-			pq.Array(ex.MuscularGroups),
-			pq.Array(ex.Equipment),
 			ex.DifficultyLevel,
 			ex.ExerciseType,
 			ex.Instructions,
@@ -93,7 +91,7 @@ func TestUpdateExercise(t *testing.T) {
 	db, mock, repo := setupMockDB(t)
 	defer db.Close()
 	now := time.Now()
-	update := dto.ExerciseUpdateDTO{
+	update := &dto.ExerciseUpdateDTO{
 		Name:            ptrString("Push Up Updated"),
 		Synonyms:        []string{"Press Up"},
 		MuscularGroups:  []string{"chest", "triceps"},
@@ -110,8 +108,6 @@ func TestUpdateExercise(t *testing.T) {
 			"exercise-uuid",
 			update.Name,
 			pq.Array(update.Synonyms),
-			pq.Array(update.MuscularGroups),
-			pq.Array(update.Equipment),
 			update.DifficultyLevel,
 			update.ExerciseType,
 			update.Instructions,
@@ -146,7 +142,10 @@ func TestGetExercisesByMuscularGroup(t *testing.T) {
 	defer db.Close()
 	now := time.Now()
 	groups := []string{"chest", "triceps"}
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT id, name, synonyms, muscular_groups, equipment_needed, difficulty_level, exercise_type, instructions, video_url, image_url, created_by, is_active, created_at, updated_at FROM public.exercise WHERE is_active = TRUE AND muscular_groups && $1`)).
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT e.id, e.name, e.synonyms, e.muscular_groups, e.equipment_needed, e.difficulty_level, e.exercise_type, e.instructions, e.video_url, e.image_url, e.created_by, e.is_active, e.created_at, e.updated_at
+	   FROM public.exercise e
+	   JOIN public.exercise_muscular_group emg ON e.id = emg.exercise_id
+	   WHERE e.is_active = TRUE AND emg.muscular_group_id = ANY($1)`)).
 		WithArgs(pq.Array(groups)).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "synonyms", "muscular_groups", "equipment_needed", "difficulty_level", "exercise_type", "instructions", "video_url", "image_url", "created_by", "is_active", "created_at", "updated_at"}).
 			AddRow("exercise-uuid", "Push Up", pq.StringArray{"Press Up"}, pq.StringArray{"chest", "triceps"}, pq.StringArray{}, "beginner", "strength", "Do a push up.", nil, nil, "admin-uuid", true, now, now))
@@ -163,7 +162,10 @@ func TestGetExercisesByEquipment(t *testing.T) {
 	defer db.Close()
 	now := time.Now()
 	equip := []string{"barbell"}
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT id, name, synonyms, muscular_groups, equipment_needed, difficulty_level, exercise_type, instructions, video_url, image_url, created_by, is_active, created_at, updated_at FROM public.exercise WHERE is_active = TRUE AND equipment_needed && $1`)).
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT e.id, e.name, e.synonyms, e.muscular_groups, e.equipment_needed, e.difficulty_level, e.exercise_type, e.instructions, e.video_url, e.image_url, e.created_by, e.is_active, e.created_at, e.updated_at
+	   FROM public.exercise e
+	   JOIN public.exercise_equipment ee ON e.id = ee.exercise_id
+	   WHERE e.is_active = TRUE AND ee.equipment_id = ANY($1)`)).
 		WithArgs(pq.Array(equip)).
 		WillReturnRows(sqlmock.NewRows([]string{"id", "name", "synonyms", "muscular_groups", "equipment_needed", "difficulty_level", "exercise_type", "instructions", "video_url", "image_url", "created_by", "is_active", "created_at", "updated_at"}).
 			AddRow("exercise-uuid", "Barbell Curl", pq.StringArray{"Curl"}, pq.StringArray{"biceps"}, pq.StringArray{"barbell"}, "beginner", "strength", "Do a curl.", nil, nil, "admin-uuid", true, now, now))
