@@ -15,10 +15,10 @@ func NewExerciseEquipmentService(repository interfaces.ExerciseEquipmentReposito
 	return &ExerciseEquipmentService{repository: repository}
 }
 
-func (s *ExerciseEquipmentService) CreateLink(link dto.ExerciseEquipment) (string, error) {
+func (s *ExerciseEquipmentService) CreateLink(link *dto.ExerciseEquipment) (*string, error) {
 	linkID, err := s.repository.CreateLink(link)
 	if err != nil {
-		return "", apierror.New(errorcode_enum.CodeInternal, "Failed to create exercise-equipment link", err)
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to create exercise-equipment link", err)
 	}
 	return linkID, nil
 }
@@ -39,15 +39,15 @@ func (s *ExerciseEquipmentService) RemoveAllLinksForExercise(exerciseID string) 
 	return nil
 }
 
-func (s *ExerciseEquipmentService) GetLinkByID(id string) (dto.ExerciseEquipment, error) {
+func (s *ExerciseEquipmentService) GetLinkByID(id string) (*dto.ExerciseEquipment, error) {
 	link, err := s.repository.FindByID(id)
 	if err != nil {
-		return dto.ExerciseEquipment{}, apierror.New(errorcode_enum.CodeNotFound, "Link not found", err)
+		return nil, apierror.New(errorcode_enum.CodeNotFound, "Link not found", err)
 	}
 	return link, nil
 }
 
-func (s *ExerciseEquipmentService) GetLinksByExerciseID(exerciseID string) ([]dto.ExerciseEquipment, error) {
+func (s *ExerciseEquipmentService) GetLinksByExerciseID(exerciseID string) ([]*dto.ExerciseEquipment, error) {
 	links, err := s.repository.FindByExerciseID(exerciseID)
 	if err != nil {
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to get links by exercise ID", err)
@@ -55,7 +55,7 @@ func (s *ExerciseEquipmentService) GetLinksByExerciseID(exerciseID string) ([]dt
 	return links, nil
 }
 
-func (s *ExerciseEquipmentService) GetLinksByEquipmentID(equipmentID string) ([]dto.ExerciseEquipment, error) {
+func (s *ExerciseEquipmentService) GetLinksByEquipmentID(equipmentID string) ([]*dto.ExerciseEquipment, error) {
 	links, err := s.repository.FindByEquipmentID(equipmentID)
 	if err != nil {
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to get links by equipment ID", err)
