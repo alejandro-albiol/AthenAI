@@ -34,7 +34,7 @@ func WriteAPICreated(w http.ResponseWriter, message string, data any) {
 	json.NewEncoder(w).Encode(APIResponse[any]{
 		Status:  "success",
 		Message: message,
-		Data:    data,
+		Data:    map[string]any{"id": data},
 	})
 }
 
