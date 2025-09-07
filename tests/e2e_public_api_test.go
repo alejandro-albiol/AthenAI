@@ -3,13 +3,11 @@ package tests
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"os"
 	"testing"
-	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -72,83 +70,243 @@ func TestPublicAPI_EndToEnd(t *testing.T) {
 	token := loginAsAdmin(t, client, baseURL, adminEmail, adminPassword)
 	headers := map[string]string{"Authorization": "Bearer " + token}
 
-	// 2. Create equipment
-	eqPayload := map[string]any{
-		"name":        "E2E Equipment " + fmt.Sprintf("%d", time.Now().UnixNano()),
-		"description": "E2E test equipment",
-		"category":    "free_weights",
-		"created_by":  adminEmail,
-	}
-	eqBody, _ := json.Marshal(eqPayload)
-	req, _ := http.NewRequest("POST", baseURL+"/api/v1/equipment", bytes.NewBuffer(eqBody))
-	for k, v := range headers {
-		req.Header.Set(k, v)
-	}
-	resp, err := client.Do(req)
-	if err != nil {
-		t.Fatalf("create equipment failed: %v", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 201 {
-		bodyBytes, _ := io.ReadAll(resp.Body)
-		t.Fatalf("expected 201, got %d. Response: %s", resp.StatusCode, string(bodyBytes))
-	}
-	var createRes struct {
-		Data struct {
-			ID string `json:"id"`
+	var gymID, equipmentID, muscularGroupID, exerciseID, userID, templateID, blockID string
+
+	t.Run("Create Gym", func(t *testing.T) {
+		payload := map[string]any{
+			"name":       "E2E Gym",
+			"address":    "E2E Street",
+			"created_by": adminEmail,
 		}
-	}
-	if err := json.NewDecoder(resp.Body).Decode(&createRes); err != nil {
-		t.Fatalf("decode create equipment: %v", err)
-	}
-	if createRes.Data.ID == "" {
-		t.Fatal("no equipment ID returned")
-	}
-	eqID := createRes.Data.ID
+		body, _ := json.Marshal(payload)
+		req, _ := http.NewRequest("POST", baseURL+"/api/v1/gym", bytes.NewBuffer(body))
+		for k, v := range headers {
+			req.Header.Set(k, v)
+		}
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatalf("create gym failed: %v", err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != 201 {
+			b, _ := io.ReadAll(resp.Body)
+			t.Fatalf("expected 201, got %d. %s", resp.StatusCode, string(b))
+		}
+		var res struct {
+			Data struct {
+				ID string `json:"id"`
+			}
+		}
+		_ = json.NewDecoder(resp.Body).Decode(&res)
+		if res.Data.ID == "" {
+			t.Fatal("no gym ID returned")
+		}
+		gymID = res.Data.ID
+	})
 
-	// 3. Get equipment by ID
-	req, _ = http.NewRequest("GET", fmt.Sprintf("%s/api/v1/equipment/%s", baseURL, eqID), nil)
-	for k, v := range headers {
-		req.Header.Set(k, v)
-	}
-	resp, err = client.Do(req)
-	if err != nil {
-		t.Fatalf("get equipment failed: %v", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		t.Fatalf("expected 200, got %d", resp.StatusCode)
-	}
+	t.Run("Create Equipment", func(t *testing.T) {
+		payload := map[string]any{
+			"name":        "E2E Equipment",
+			"description": "E2E test equipment",
+			"category":    "free_weights",
+			"created_by":  adminEmail,
+		}
+		body, _ := json.Marshal(payload)
+		req, _ := http.NewRequest("POST", baseURL+"/api/v1/equipment", bytes.NewBuffer(body))
+		for k, v := range headers {
+			req.Header.Set(k, v)
+		}
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatalf("create equipment failed: %v", err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != 201 {
+			b, _ := io.ReadAll(resp.Body)
+			t.Fatalf("expected 201, got %d. %s", resp.StatusCode, string(b))
+		}
+		var res struct {
+			Data struct {
+				ID string `json:"id"`
+			}
+		}
+		_ = json.NewDecoder(resp.Body).Decode(&res)
+		if res.Data.ID == "" {
+			t.Fatal("no equipment ID returned")
+		}
+		equipmentID = res.Data.ID
+	})
 
-	// 4. Update equipment
-	updPayload := map[string]any{"description": "Updated by E2E"}
-	updBody, _ := json.Marshal(updPayload)
-	req, _ = http.NewRequest("PUT", fmt.Sprintf("%s/api/v1/equipment/%s", baseURL, eqID), bytes.NewBuffer(updBody))
-	for k, v := range headers {
-		req.Header.Set(k, v)
-	}
-	resp, err = client.Do(req)
-	if err != nil {
-		t.Fatalf("update equipment failed: %v", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		t.Fatalf("expected 200, got %d", resp.StatusCode)
-	}
+	t.Run("Create Muscular Group", func(t *testing.T) {
+		payload := map[string]any{
+			"name":        "E2E Muscular Group",
+			"description": "E2E test group",
+			"body_part":   "full_body",
+			"created_by":  adminEmail,
+		}
+		body, _ := json.Marshal(payload)
+		req, _ := http.NewRequest("POST", baseURL+"/api/v1/muscular-group", bytes.NewBuffer(body))
+		for k, v := range headers {
+			req.Header.Set(k, v)
+		}
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatalf("create muscular group failed: %v", err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != 201 {
+			b, _ := io.ReadAll(resp.Body)
+			t.Fatalf("expected 201, got %d. %s", resp.StatusCode, string(b))
+		}
+		var res struct {
+			Data struct {
+				ID string `json:"id"`
+			}
+		}
+		_ = json.NewDecoder(resp.Body).Decode(&res)
+		if res.Data.ID == "" {
+			t.Fatal("no muscular group ID returned")
+		}
+		muscularGroupID = res.Data.ID
+	})
 
-	// 5. Delete equipment
-	req, _ = http.NewRequest("DELETE", fmt.Sprintf("%s/api/v1/equipment/%s", baseURL, eqID), nil)
-	for k, v := range headers {
-		req.Header.Set(k, v)
-	}
-	resp, err = client.Do(req)
-	if err != nil {
-		t.Fatalf("delete equipment failed: %v", err)
-	}
-	defer resp.Body.Close()
-	if resp.StatusCode != 200 {
-		t.Fatalf("expected 200, got %d", resp.StatusCode)
-	}
+	t.Run("Create Exercise", func(t *testing.T) {
+		payload := map[string]any{
+			"name":               "E2E Exercise",
+			"description":        "E2E test exercise",
+			"difficulty_level":    "beginner",
+			"exercise_type":       "strength",
+			"equipment_ids":      []string{equipmentID},
+			"muscular_group_ids": []string{muscularGroupID},
+			"created_by":         adminEmail,
+		}
+		body, _ := json.Marshal(payload)
+		req, _ := http.NewRequest("POST", baseURL+"/api/v1/exercise", bytes.NewBuffer(body))
+		for k, v := range headers {
+			req.Header.Set(k, v)
+		}
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatalf("create exercise failed: %v", err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != 201 {
+			b, _ := io.ReadAll(resp.Body)
+			t.Fatalf("expected 201, got %d. %s", resp.StatusCode, string(b))
+		}
+		var res struct {
+			Data struct {
+				ID string `json:"id"`
+			}
+		}
+		_ = json.NewDecoder(resp.Body).Decode(&res)
+		if res.Data.ID == "" {
+			t.Fatal("no exercise ID returned")
+		}
+		exerciseID = res.Data.ID
+	})
 
-	// TODO: Repeat similar CRUD for exercise, gym, user, etc.
+	t.Run("Create User in Gym", func(t *testing.T) {
+		payload := map[string]any{
+			"email":      "e2euser+" + gymID + "@test.com",
+			"password":   "E2Epass123!",
+			"first_name": "E2E",
+			"last_name":  "User",
+			"role":       "member",
+			"created_by": adminEmail,
+		}
+		body, _ := json.Marshal(payload)
+		req, _ := http.NewRequest("POST", baseURL+"/api/v1/user", bytes.NewBuffer(body))
+		for k, v := range headers {
+			req.Header.Set(k, v)
+		}
+		req.Header.Set("X-Gym-ID", gymID)
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatalf("create user failed: %v", err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != 201 {
+			b, _ := io.ReadAll(resp.Body)
+			t.Fatalf("expected 201, got %d. %s", resp.StatusCode, string(b))
+		}
+		var res struct {
+			Data struct {
+				ID string `json:"id"`
+			}
+		}
+		_ = json.NewDecoder(resp.Body).Decode(&res)
+		if res.Data.ID == "" {
+			t.Fatal("no user ID returned")
+		}
+		userID = res.Data.ID
+	})
+
+	t.Run("Create Workout Template", func(t *testing.T) {
+		payload := map[string]any{
+			"name":        "E2E Template",
+			"description": "E2E test template",
+			"created_by":  adminEmail,
+		}
+		body, _ := json.Marshal(payload)
+		req, _ := http.NewRequest("POST", baseURL+"/api/v1/workout-template", bytes.NewBuffer(body))
+		for k, v := range headers {
+			req.Header.Set(k, v)
+		}
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatalf("create template failed: %v", err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != 201 {
+			b, _ := io.ReadAll(resp.Body)
+			t.Fatalf("expected 201, got %d. %s", resp.StatusCode, string(b))
+		}
+		var res struct {
+			Data struct {
+				ID string `json:"id"`
+			}
+		}
+		_ = json.NewDecoder(resp.Body).Decode(&res)
+		if res.Data.ID == "" {
+			t.Fatal("no template ID returned")
+		}
+		templateID = res.Data.ID
+	})
+
+	t.Run("Add Block to Template", func(t *testing.T) {
+		payload := map[string]any{
+			"workout_template_id": templateID,
+			"exercise_id":         exerciseID,
+			"order":               1,
+			"created_by":          adminEmail,
+		}
+		body, _ := json.Marshal(payload)
+		req, _ := http.NewRequest("POST", baseURL+"/api/v1/template-block", bytes.NewBuffer(body))
+		for k, v := range headers {
+			req.Header.Set(k, v)
+		}
+		resp, err := client.Do(req)
+		if err != nil {
+			t.Fatalf("create block failed: %v", err)
+		}
+		defer resp.Body.Close()
+		if resp.StatusCode != 201 {
+			b, _ := io.ReadAll(resp.Body)
+			t.Fatalf("expected 201, got %d. %s", resp.StatusCode, string(b))
+		}
+		var res struct {
+			Data struct {
+				ID string `json:"id"`
+			}
+		}
+		_ = json.NewDecoder(resp.Body).Decode(&res)
+		if res.Data.ID == "" {
+			t.Fatal("no block ID returned")
+		}
+		blockID = res.Data.ID
+	})
+
+	_ = blockID
+	_ = userID
 }

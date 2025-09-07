@@ -9,10 +9,10 @@ import (
 
 func NewTemplateBlockRouter(h interfaces.TemplateBlockHandlerInterface) http.Handler {
 	r := chi.NewRouter()
-	r.Post("/template-blocks", h.CreateTemplateBlock)
-	r.Get("/template-blocks/{id}", h.GetTemplateBlockByID)
-	r.Put("/template-blocks/{id}", h.UpdateTemplateBlock)
-	r.Delete("/template-blocks/{id}", h.DeleteTemplateBlock)
-	r.Get("/templates/{templateId}/blocks", h.ListTemplateBlocksByTemplateID)
+	r.Post("/template-block", h.CreateTemplateBlock)
+	r.Get("/template-block/{id}", h.GetTemplateBlockByID)
+	r.Put("/template-block/{id}", h.UpdateTemplateBlock)
+	r.Delete("/template-block/{id}", h.DeleteTemplateBlock)
+	r.Get("/template/{templateId}/block", h.ListTemplateBlocksByTemplateID)
 	return r
 }

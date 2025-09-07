@@ -1,6 +1,9 @@
 package service
 
 import (
+	"database/sql"
+	"errors"
+
 	"github.com/alejandro-albiol/athenai/internal/workout_template/dto"
 	"github.com/alejandro-albiol/athenai/internal/workout_template/interfaces"
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
@@ -49,11 +52,14 @@ func (s *WorkoutTemplateService) GetWorkoutTemplateByID(id string) (*dto.Respons
 // GetWorkoutTemplateByName retrieves a workout template by its name.
 func (s *WorkoutTemplateService) GetWorkoutTemplateByName(name string) (*dto.ResponseWorkoutTemplateDTO, error) {
 	template, err := s.repository.GetWorkoutTemplateByName(name)
-	if (template == nil || template.ID == "") && err != nil {
-		return nil, apierror.New(errorcode_enum.CodeNotFound, "Workout template not found", err)
-	}
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, apierror.New(errorcode_enum.CodeNotFound, "Workout template not found", err)
+		}
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve workout template by name", err)
+	}
+	if template == nil || template.ID == "" {
+		return nil, apierror.New(errorcode_enum.CodeNotFound, "Workout template not found", nil)
 	}
 	return template, nil
 }
