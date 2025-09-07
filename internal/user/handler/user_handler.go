@@ -62,7 +62,9 @@ func (h *UsersHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.WriteAPICreated(w, "User registered successfully", userID)
+	response.WriteAPICreated(w, "User registered successfully", struct {
+		ID string `json:"id"`
+	}{ID: *userID})
 }
 
 func (h *UsersHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {

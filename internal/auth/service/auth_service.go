@@ -36,7 +36,7 @@ func NewAuthService(
 }
 
 // Login handles the simplified login logic based on X-Gym-ID header
-func (s *AuthService) Login(r *http.Request, loginReq authdto.LoginRequestDTO) (*authdto.LoginResponseDTO, *apierror.APIError) {
+func (s *AuthService) Login(r *http.Request, loginReq *authdto.LoginRequestDTO) (*authdto.LoginResponseDTO, *apierror.APIError) {
 	// Check for X-Gym-ID header
 	gymID := r.Header.Get("X-Gym-ID")
 
@@ -50,7 +50,7 @@ func (s *AuthService) Login(r *http.Request, loginReq authdto.LoginRequestDTO) (
 }
 
 // loginPlatformAdmin handles platform admin authentication
-func (s *AuthService) loginPlatformAdmin(loginReq authdto.LoginRequestDTO) (*authdto.LoginResponseDTO, *apierror.APIError) {
+func (s *AuthService) loginPlatformAdmin(loginReq *authdto.LoginRequestDTO) (*authdto.LoginResponseDTO, *apierror.APIError) {
 	// Authenticate against public.admin table
 	admin, err := s.authRepo.AuthenticatePlatformAdmin(loginReq.Email, loginReq.Password)
 	if err != nil {
@@ -96,7 +96,7 @@ func (s *AuthService) loginPlatformAdmin(loginReq authdto.LoginRequestDTO) (*aut
 }
 
 // loginTenantUser handles tenant user authentication
-func (s *AuthService) loginTenantUser(gymID string, loginReq authdto.LoginRequestDTO) (*authdto.LoginResponseDTO, *apierror.APIError) {
+func (s *AuthService) loginTenantUser(gymID string, loginReq *authdto.LoginRequestDTO) (*authdto.LoginResponseDTO, *apierror.APIError) {
 	// First, lookup the gym to get its domain
 	gym, err := s.gymRepo.GetGymByID(gymID)
 	if err != nil {
@@ -290,7 +290,7 @@ func (s *AuthService) ValidateToken(tokenString string) (*authdto.TokenValidatio
 }
 
 // RefreshToken generates a new access token using a refresh token
-func (s *AuthService) RefreshToken(refreshReq authdto.RefreshTokenRequestDTO) (*authdto.LoginResponseDTO, *apierror.APIError) {
+func (s *AuthService) RefreshToken(refreshReq *authdto.RefreshTokenRequestDTO) (*authdto.LoginResponseDTO, *apierror.APIError) {
 	// Validate the refresh token directly (no hashing needed)
 	tokenData, err := s.authRepo.ValidateRefreshToken(refreshReq.RefreshToken)
 	if err != nil {
@@ -390,7 +390,7 @@ func (s *AuthService) RefreshToken(refreshReq authdto.RefreshTokenRequestDTO) (*
 }
 
 // Logout revokes a refresh token
-func (s *AuthService) Logout(logoutReq authdto.LogoutRequestDTO) *apierror.APIError {
+func (s *AuthService) Logout(logoutReq *authdto.LogoutRequestDTO) *apierror.APIError {
 	// Revoke the refresh token directly (no hashing needed)
 	err := s.authRepo.RevokeRefreshToken(logoutReq.RefreshToken)
 	if err != nil {

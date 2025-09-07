@@ -50,7 +50,9 @@ func (h *WorkoutTemplateHandler) CreateWorkoutTemplate(w http.ResponseWriter, r 
 		))
 		return
 	}
-	response.WriteAPICreated(w, "Workout template created successfully", templateID)
+	response.WriteAPICreated(w, "Workout template created successfully", struct {
+		ID string `json:"id"`
+	}{ID: *templateID})
 }
 
 // GetWorkoutTemplateByID handles HTTP requests to retrieve a workout template by ID.

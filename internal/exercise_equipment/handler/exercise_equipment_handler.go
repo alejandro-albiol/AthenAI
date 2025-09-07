@@ -40,7 +40,9 @@ func (h *ExerciseEquipmentHandler) CreateLink(w http.ResponseWriter, r *http.Req
 		))
 		return
 	}
-	response.WriteAPISuccess(w, "Link created", linkID)
+	response.WriteAPISuccess(w, "Link created", struct {
+		ID string `json:"id"`
+	}{ID: *linkID})
 }
 
 // DELETE /link/{id}

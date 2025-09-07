@@ -31,7 +31,7 @@ func (h *ExerciseHandler) CreateExercise(w http.ResponseWriter, r *http.Request)
 		))
 		return
 	}
-	exercise, err := h.service.CreateExercise(creationDTO)
+	exerciseID, err := h.service.CreateExercise(creationDTO)
 	if err != nil {
 		var apiErr *apierror.APIError
 		if errors.As(err, &apiErr) {
@@ -45,7 +45,9 @@ func (h *ExerciseHandler) CreateExercise(w http.ResponseWriter, r *http.Request)
 		}
 		return
 	}
-	response.WriteAPICreated(w, "Exercise created successfully", exercise)
+	response.WriteAPICreated(w, "Exercise created successfully", struct {
+		ID string `json:"id"`
+	}{ID: *exerciseID})
 }
 
 func (h *ExerciseHandler) GetExerciseByID(w http.ResponseWriter, r *http.Request) {

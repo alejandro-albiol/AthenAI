@@ -39,7 +39,9 @@ func (h *EquipmentHandler) CreateEquipment(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	response.WriteAPISuccess(w, "Equipment created successfully", equipmentID)
+	response.WriteAPICreated(w, "Equipment created successfully", struct {
+		ID string `json:"id"`
+	}{ID: *equipmentID})
 }
 
 func (h *EquipmentHandler) GetEquipment(w http.ResponseWriter, r *http.Request) {

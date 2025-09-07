@@ -23,7 +23,7 @@ func NewAuthHandler(authService authinterfaces.AuthServiceInterface) authinterfa
 }
 
 func (h *AuthHandler) Login(w http.ResponseWriter, r *http.Request) {
-	var loginReq authdto.LoginRequestDTO
+	var loginReq *authdto.LoginRequestDTO
 
 	if err := json.NewDecoder(r.Body).Decode(&loginReq); err != nil {
 		response.WriteAPIError(w, apierror.New(
@@ -86,7 +86,7 @@ func (h *AuthHandler) ValidateToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
-	var refreshReq authdto.RefreshTokenRequestDTO
+	var refreshReq *authdto.RefreshTokenRequestDTO
 
 	if err := json.NewDecoder(r.Body).Decode(&refreshReq); err != nil {
 		response.WriteAPIError(w, apierror.New(
@@ -107,7 +107,7 @@ func (h *AuthHandler) RefreshToken(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *AuthHandler) Logout(w http.ResponseWriter, r *http.Request) {
-	var logoutReq authdto.LogoutRequestDTO
+	var logoutReq *authdto.LogoutRequestDTO
 
 	if err := json.NewDecoder(r.Body).Decode(&logoutReq); err != nil {
 		response.WriteAPIError(w, apierror.New(

@@ -45,7 +45,9 @@ func (h *ExerciseMuscularGroupHandler) CreateLink(w http.ResponseWriter, r *http
 		}
 		return
 	}
-	response.WriteAPICreated(w, "Link created successfully", linkID)
+	response.WriteAPICreated(w, "Link created successfully", struct {
+		ID string `json:"id"`
+	}{ID: *linkID})
 }
 
 func (h *ExerciseMuscularGroupHandler) DeleteLink(w http.ResponseWriter, r *http.Request) {

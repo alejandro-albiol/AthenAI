@@ -2,6 +2,7 @@ package service
 
 import (
 	"github.com/alejandro-albiol/athenai/internal/equipment/dto"
+	"github.com/alejandro-albiol/athenai/internal/equipment/enum"
 	"github.com/alejandro-albiol/athenai/internal/equipment/interfaces"
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
 	errorcode_enum "github.com/alejandro-albiol/athenai/pkg/apierror/enum"
@@ -16,6 +17,10 @@ func NewEquipmentService(repo interfaces.EquipmentRepository) *EquipmentService 
 }
 
 func (s *EquipmentService) CreateEquipment(equipment *dto.EquipmentCreationDTO) (*string, error) {
+	// Validate category
+	if !enum.EquipmentCategory(equipment.Category).IsValid() {
+		return nil, apierror.New(errorcode_enum.CodeBadRequest, "Invalid equipment category", nil)
+	}
 	// Uniqueness check by name (assuming name is unique)
 	allEquipment, err := s.repo.GetAllEquipment()
 	if err != nil {
@@ -54,6 +59,12 @@ func (s *EquipmentService) UpdateEquipment(id string, update *dto.EquipmentUpdat
 	_, err := s.repo.GetEquipmentByID(id)
 	if err != nil {
 		return nil, apierror.New(errorcode_enum.CodeNotFound, "Equipment with ID not found", err)
+	}
+	// Validate category if present
+	if update.Category != nil {
+		if !enum.EquipmentCategory(*update.Category).IsValid() {
+			return nil, apierror.New(errorcode_enum.CodeBadRequest, "Invalid equipment category", nil)
+		}
 	}
 	equipment, err := s.repo.UpdateEquipment(id, update)
 	if err != nil {
