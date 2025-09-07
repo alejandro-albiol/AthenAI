@@ -2,12 +2,15 @@ package tests
 
 import (
 	"bytes"
+	"encoding/base64"
 	"encoding/json"
 	"io"
 	"net/http"
 	"net/http/cookiejar"
 	"os"
+	"strings"
 	"testing"
+	"time"
 
 	"github.com/joho/godotenv"
 )
@@ -25,19 +28,51 @@ func getAdminCredentials() (string, string) {
 
 // Setup/teardown helpers, test data, and E2E test functions will go here.
 
-func loginAsAdmin(t *testing.T, client *http.Client, baseURL, email, password string) string {
+func extractUUIDFromJWT(token string, t *testing.T) (string, error) {
+	parts := strings.Split(token, ".")
+	if len(parts) < 2 {
+		return "", io.ErrUnexpectedEOF
+	}
+	payload, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return "", err
+	}
+	var claims map[string]any
+	if err := json.Unmarshal(payload, &claims); err != nil {
+		return "", err
+	}
+	// Print the decoded JWT payload for debugging
+	payloadJson, _ := json.MarshalIndent(claims, "", "  ")
+	t.Logf("Decoded JWT payload: %s", payloadJson)
+	// Try common claim keys
+	if sub, ok := claims["sub"].(string); ok {
+		return sub, nil
+	}
+	if uid, ok := claims["user_id"].(string); ok {
+		return uid, nil
+	}
+	return "", io.ErrUnexpectedEOF
+}
+
+func loginAsAdminWithGymID(t *testing.T, client *http.Client, baseURL, email, password, gymID string) (string, string) {
 	loginPayload := map[string]string{
 		"email":    email,
 		"password": password,
 	}
 	body, _ := json.Marshal(loginPayload)
-	resp, err := client.Post(baseURL+"/api/v1/auth/login", "application/json", bytes.NewBuffer(body))
+	req, _ := http.NewRequest("POST", baseURL+"/api/v1/auth/login", bytes.NewBuffer(body))
+	req.Header.Set("Content-Type", "application/json")
+	if gymID != "" {
+		req.Header.Set("X-Gym-ID", gymID)
+	}
+	resp, err := client.Do(req)
 	if err != nil {
 		t.Fatalf("login request failed: %v", err)
 	}
 	defer resp.Body.Close()
 	if resp.StatusCode != 200 {
-		t.Fatalf("login failed, status: %d", resp.StatusCode)
+		b, _ := io.ReadAll(resp.Body)
+		t.Fatalf("login failed, status: %d. Response: %s", resp.StatusCode, string(b))
 	}
 	var result struct {
 		Status  string `json:"status"`
@@ -53,7 +88,11 @@ func loginAsAdmin(t *testing.T, client *http.Client, baseURL, email, password st
 	if result.Data.AccessToken == "" {
 		t.Fatal("no access_token returned from login")
 	}
-	return result.Data.AccessToken
+	uuid, err := extractUUIDFromJWT(result.Data.AccessToken, t)
+	if err != nil {
+		t.Fatalf("failed to extract admin UUID from token: %v", err)
+	}
+	return result.Data.AccessToken, uuid
 }
 
 func TestPublicAPI_EndToEnd(t *testing.T) {
@@ -66,17 +105,59 @@ func TestPublicAPI_EndToEnd(t *testing.T) {
 	jar, _ := cookiejar.New(nil)
 	client := &http.Client{Jar: jar}
 
-	// 1. Login as admin
-	token := loginAsAdmin(t, client, baseURL, adminEmail, adminPassword)
-	headers := map[string]string{"Authorization": "Bearer " + token}
-
 	var gymID, equipmentID, muscularGroupID, exerciseID, userID, templateID, blockID string
+	var headers map[string]string
+	var adminUuid string
+	var adminToken string
 
+	// Cleanup logic: delete in reverse dependency order
+	defer func() {
+		deleteIfExists := func(url string) {
+			req, _ := http.NewRequest("DELETE", url, nil)
+			for k, v := range headers {
+				req.Header.Set(k, v)
+			}
+			resp, err := client.Do(req)
+			if err == nil {
+				resp.Body.Close()
+			}
+		}
+		if blockID != "" {
+			deleteIfExists(baseURL + "/api/v1/template-block/" + blockID)
+		}
+		if templateID != "" {
+			deleteIfExists(baseURL + "/api/v1/workout-template/" + templateID)
+		}
+		if userID != "" {
+			deleteIfExists(baseURL + "/api/v1/users/" + userID)
+		}
+		if exerciseID != "" {
+			deleteIfExists(baseURL + "/api/v1/exercise/" + exerciseID)
+		}
+		if muscularGroupID != "" {
+			deleteIfExists(baseURL + "/api/v1/muscular-group/" + muscularGroupID)
+		}
+		if equipmentID != "" {
+			deleteIfExists(baseURL + "/api/v1/equipment/" + equipmentID)
+		}
+		if gymID != "" {
+			deleteIfExists(baseURL + "/api/v1/gym/" + gymID)
+		}
+	}()
+
+	// 1. Login as admin (no gym ID) to get JWT for gym creation
+	t.Run("Login as Platform Admin", func(t *testing.T) {
+		token, uuid := loginAsAdminWithGymID(t, client, baseURL, adminEmail, adminPassword, "")
+		adminToken = token
+		adminUuid = uuid
+		headers = map[string]string{"Authorization": "Bearer " + adminToken}
+	})
+
+	// 2. Create Gym using admin JWT
 	t.Run("Create Gym", func(t *testing.T) {
 		payload := map[string]any{
-			"name":       "E2E Gym",
-			"address":    "E2E Street",
-			"created_by": adminEmail,
+			"name":    "E2E Gym " + time.Now().Format("20060102150405"),
+			"address": "E2E Street",
 		}
 		body, _ := json.Marshal(payload)
 		req, _ := http.NewRequest("POST", baseURL+"/api/v1/gym", bytes.NewBuffer(body))
@@ -109,7 +190,7 @@ func TestPublicAPI_EndToEnd(t *testing.T) {
 			"name":        "E2E Equipment",
 			"description": "E2E test equipment",
 			"category":    "free_weights",
-			"created_by":  adminEmail,
+			"created_by":  adminUuid,
 		}
 		body, _ := json.Marshal(payload)
 		req, _ := http.NewRequest("POST", baseURL+"/api/v1/equipment", bytes.NewBuffer(body))
@@ -139,10 +220,10 @@ func TestPublicAPI_EndToEnd(t *testing.T) {
 
 	t.Run("Create Muscular Group", func(t *testing.T) {
 		payload := map[string]any{
-			"name":        "E2E Muscular Group",
+			"name":        "E2E Muscular Group " + time.Now().Format("20060102150405"),
 			"description": "E2E test group",
 			"body_part":   "full_body",
-			"created_by":  adminEmail,
+			"created_by":  adminUuid,
 		}
 		body, _ := json.Marshal(payload)
 		req, _ := http.NewRequest("POST", baseURL+"/api/v1/muscular-group", bytes.NewBuffer(body))
@@ -172,13 +253,14 @@ func TestPublicAPI_EndToEnd(t *testing.T) {
 
 	t.Run("Create Exercise", func(t *testing.T) {
 		payload := map[string]any{
-			"name":               "E2E Exercise",
+			"name":               "E2E Exercise " + time.Now().Format("20060102150405"),
 			"description":        "E2E test exercise",
-			"difficulty_level":    "beginner",
-			"exercise_type":       "strength",
+			"difficulty_level":   "beginner",
+			"exercise_type":      "strength",
+			"synonyms":           []string{"E2E Exo", "E2E Move"},
 			"equipment_ids":      []string{equipmentID},
 			"muscular_group_ids": []string{muscularGroupID},
-			"created_by":         adminEmail,
+			"created_by":         adminUuid,
 		}
 		body, _ := json.Marshal(payload)
 		req, _ := http.NewRequest("POST", baseURL+"/api/v1/exercise", bytes.NewBuffer(body))
@@ -206,21 +288,25 @@ func TestPublicAPI_EndToEnd(t *testing.T) {
 		exerciseID = res.Data.ID
 	})
 
+	// After gym creation, use the admin token to register a user for this gym.
+	// The request must include the gym UUID in the X-Gym-ID header.
 	t.Run("Create User in Gym", func(t *testing.T) {
 		payload := map[string]any{
-			"email":      "e2euser+" + gymID + "@test.com",
-			"password":   "E2Epass123!",
-			"first_name": "E2E",
-			"last_name":  "User",
-			"role":       "member",
-			"created_by": adminEmail,
+			"username":          "e2euser_" + gymID,
+			"email":             "e2euser+" + gymID + "@test.com",
+			"password":          "E2Epass123!",
+			"role":              "user",
+			"description":       "E2E test user",
+			"training_phase":    "maintenance",
+			"motivation":        "wellbeing",
+			"special_situation": "none",
 		}
 		body, _ := json.Marshal(payload)
 		req, _ := http.NewRequest("POST", baseURL+"/api/v1/user", bytes.NewBuffer(body))
 		for k, v := range headers {
 			req.Header.Set(k, v)
 		}
-		req.Header.Set("X-Gym-ID", gymID)
+		req.Header.Set("X-Gym-ID", gymID) // Add gym context for registration
 		resp, err := client.Do(req)
 		if err != nil {
 			t.Fatalf("create user failed: %v", err)
@@ -244,9 +330,10 @@ func TestPublicAPI_EndToEnd(t *testing.T) {
 
 	t.Run("Create Workout Template", func(t *testing.T) {
 		payload := map[string]any{
-			"name":        "E2E Template",
-			"description": "E2E test template",
-			"created_by":  adminEmail,
+			"name":             "E2E Template",
+			"description":      "E2E test template",
+			"difficulty_level": "beginner",
+			"created_by":       adminUuid,
 		}
 		body, _ := json.Marshal(payload)
 		req, _ := http.NewRequest("POST", baseURL+"/api/v1/workout-template", bytes.NewBuffer(body))
@@ -260,26 +347,46 @@ func TestPublicAPI_EndToEnd(t *testing.T) {
 		defer resp.Body.Close()
 		if resp.StatusCode != 201 {
 			b, _ := io.ReadAll(resp.Body)
-			t.Fatalf("expected 201, got %d. %s", resp.StatusCode, string(b))
+			t.Fatalf("expected 201, got %d. Response: %s", resp.StatusCode, string(b))
 		}
 		var res struct {
 			Data struct {
 				ID string `json:"id"`
 			}
 		}
-		_ = json.NewDecoder(resp.Body).Decode(&res)
+		if err := json.NewDecoder(resp.Body).Decode(&res); err != nil {
+			t.Fatalf("failed to decode template creation response: %v", err)
+		}
 		if res.Data.ID == "" {
-			t.Fatal("no template ID returned")
+			t.Fatalf("no template ID returned. Full response: %+v", res)
 		}
 		templateID = res.Data.ID
 	})
 
+	// Ensure IDs are set before dependent calls
+	if templateID == "" {
+		t.Fatal("templateID is empty before creating template block")
+	}
+	if exerciseID == "" {
+		t.Fatal("exerciseID is empty before creating template block")
+	}
+
 	t.Run("Add Block to Template", func(t *testing.T) {
+		// Ensure templateID and exerciseID are set and not empty
+		if templateID == "" {
+			t.Fatal("templateID is empty before creating template block")
+		}
+		if exerciseID == "" {
+			t.Fatal("exerciseID is empty before creating template block")
+		}
 		payload := map[string]any{
-			"workout_template_id": templateID,
-			"exercise_id":         exerciseID,
-			"order":               1,
-			"created_by":          adminEmail,
+			"template_id":    templateID,
+			"block_name":     "E2E Block",
+			"block_type":     "main",
+			"block_order":    1,
+			"exercise_count": 1,
+			"exercise_id":    exerciseID,
+			"created_by":     adminUuid,
 		}
 		body, _ := json.Marshal(payload)
 		req, _ := http.NewRequest("POST", baseURL+"/api/v1/template-block", bytes.NewBuffer(body))
