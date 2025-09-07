@@ -1,6 +1,9 @@
 package service
 
 import (
+	"database/sql"
+	"errors"
+
 	"github.com/alejandro-albiol/athenai/internal/exercise_equipment/dto"
 	"github.com/alejandro-albiol/athenai/internal/exercise_equipment/interfaces"
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
@@ -42,7 +45,10 @@ func (s *ExerciseEquipmentService) RemoveAllLinksForExercise(exerciseID string) 
 func (s *ExerciseEquipmentService) GetLinkByID(id string) (*dto.ExerciseEquipment, error) {
 	link, err := s.repository.FindByID(id)
 	if err != nil {
-		return nil, apierror.New(errorcode_enum.CodeNotFound, "Link not found", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, apierror.New(errorcode_enum.CodeNotFound, "Link not found", err)
+		}
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve link by ID", err)
 	}
 	return link, nil
 }

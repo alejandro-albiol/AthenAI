@@ -1,6 +1,9 @@
 package service
 
 import (
+	"database/sql"
+	"errors"
+
 	"github.com/alejandro-albiol/athenai/internal/exercise/dto"
 	"github.com/alejandro-albiol/athenai/internal/exercise/interfaces"
 	exerciseEquipmentDTO "github.com/alejandro-albiol/athenai/internal/exercise_equipment/dto"
@@ -88,7 +91,10 @@ func (s *ExerciseService) CreateExercise(exercise *dto.ExerciseCreationDTO) (*st
 func (s *ExerciseService) GetExerciseByID(id string) (*dto.ExerciseResponseDTO, error) {
 	exercise, err := s.repository.GetExerciseByID(id)
 	if err != nil {
-		return nil, apierror.New(errorcode_enum.CodeNotFound, "Exercise with ID "+id+" not found", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, apierror.New(errorcode_enum.CodeNotFound, "Exercise not found", err)
+		}
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve exercise by ID", err)
 	}
 	return exercise, nil
 }

@@ -40,8 +40,8 @@ func (r *ExerciseRepository) CreateExercise(exercise *dto.ExerciseCreationDTO) (
 }
 
 func (r *ExerciseRepository) GetExerciseByID(id string) (*dto.ExerciseResponseDTO, error) {
-	exercise := &dto.ExerciseResponseDTO{}
 	query := `SELECT id, name, synonyms, muscular_groups, equipment_needed, difficulty_level, exercise_type, instructions, video_url, image_url, created_by, is_active, created_at, updated_at FROM public.exercise WHERE id = $1 AND is_active = TRUE`
+	var exercise dto.ExerciseResponseDTO
 	err := r.db.QueryRow(query, id).Scan(
 		&exercise.ID,
 		&exercise.Name,
@@ -59,9 +59,12 @@ func (r *ExerciseRepository) GetExerciseByID(id string) (*dto.ExerciseResponseDT
 		&exercise.UpdatedAt,
 	)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, sql.ErrNoRows
+		}
 		return nil, err
 	}
-	return exercise, nil
+	return &exercise, nil
 }
 
 func (r *ExerciseRepository) GetExerciseByName(name string) (*dto.ExerciseResponseDTO, error) {

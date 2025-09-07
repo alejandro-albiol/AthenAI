@@ -45,9 +45,7 @@ func (h *ExerciseHandler) CreateExercise(w http.ResponseWriter, r *http.Request)
 		}
 		return
 	}
-	response.WriteAPICreated(w, "Exercise created successfully", struct {
-		ID string `json:"id"`
-	}{ID: *exerciseID})
+	response.WriteAPICreated(w, "Exercise created successfully", *exerciseID)
 }
 
 func (h *ExerciseHandler) GetExerciseByID(w http.ResponseWriter, r *http.Request) {
