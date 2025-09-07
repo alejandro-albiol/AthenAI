@@ -26,7 +26,7 @@ func (s *WorkoutTemplateService) CreateWorkoutTemplate(input *dto.CreateWorkoutT
 	if err == nil && existingTemplate != nil && existingTemplate.ID != "" {
 		return nil, apierror.New(errorcode_enum.CodeConflict, "Workout template already exists", nil)
 	}
-	if err != nil && err.Error() != "not found" {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to check existing workout template", err)
 	}
 
@@ -40,10 +40,10 @@ func (s *WorkoutTemplateService) CreateWorkoutTemplate(input *dto.CreateWorkoutT
 // GetWorkoutTemplateByID retrieves a workout template by its unique ID.
 func (s *WorkoutTemplateService) GetWorkoutTemplateByID(id string) (*dto.ResponseWorkoutTemplateDTO, error) {
 	template, err := s.repository.GetWorkoutTemplateByID(id)
-	if (template == nil || template.ID == "") && err != nil {
-		return nil, apierror.New(errorcode_enum.CodeNotFound, "Workout template not found", err)
-	}
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, apierror.New(errorcode_enum.CodeNotFound, "Workout template not found", err)
+		}
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve workout template by ID", err)
 	}
 	return template, nil
@@ -58,19 +58,16 @@ func (s *WorkoutTemplateService) GetWorkoutTemplateByName(name string) (*dto.Res
 		}
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve workout template by name", err)
 	}
-	if template == nil || template.ID == "" {
-		return nil, apierror.New(errorcode_enum.CodeNotFound, "Workout template not found", nil)
-	}
 	return template, nil
 }
 
 // GetWorkoutTemplatesByDifficulty retrieves all workout templates matching a given difficulty level.
 func (s *WorkoutTemplateService) GetWorkoutTemplatesByDifficulty(difficulty string) ([]*dto.ResponseWorkoutTemplateDTO, error) {
 	templates, err := s.repository.GetWorkoutTemplatesByDifficulty(difficulty)
-	if templates == nil && err != nil {
-		return nil, apierror.New(errorcode_enum.CodeNotFound, "There are no workout templates found for the given difficulty", err)
-	}
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, apierror.New(errorcode_enum.CodeNotFound, "There are no workout templates found for the given difficulty", err)
+		}
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to list workout templates by difficulty", err)
 	}
 	return templates, nil
@@ -79,10 +76,10 @@ func (s *WorkoutTemplateService) GetWorkoutTemplatesByDifficulty(difficulty stri
 // GetWorkoutTemplatesByTargetAudience retrieves all workout templates for a specific target audience.
 func (s *WorkoutTemplateService) GetWorkoutTemplatesByTargetAudience(targetAudience string) ([]*dto.ResponseWorkoutTemplateDTO, error) {
 	templates, err := s.repository.GetWorkoutTemplatesByTargetAudience(targetAudience)
-	if templates == nil && err != nil {
-		return nil, apierror.New(errorcode_enum.CodeNotFound, "There are no workout templates found for the given target audience", err)
-	}
 	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, apierror.New(errorcode_enum.CodeNotFound, "There are no workout templates found for the given target audience", err)
+		}
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to list workout templates by target audience", err)
 	}
 	return templates, nil
@@ -92,7 +89,10 @@ func (s *WorkoutTemplateService) GetWorkoutTemplatesByTargetAudience(targetAudie
 func (s *WorkoutTemplateService) GetAllWorkoutTemplates() ([]*dto.ResponseWorkoutTemplateDTO, error) {
 	templates, err := s.repository.GetAllWorkoutTemplates()
 	if err != nil {
-		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to list all workout templates", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, apierror.New(errorcode_enum.CodeNotFound, "There are no workout templates found", err)
+		}
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to list workout templates", err)
 	}
 	return templates, nil
 }

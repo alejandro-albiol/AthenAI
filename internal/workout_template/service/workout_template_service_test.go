@@ -1,6 +1,7 @@
 package service_test
 
 import (
+	"database/sql"
 	"errors"
 	"testing"
 
@@ -64,7 +65,7 @@ func TestCreateWorkoutTemplate_Success(t *testing.T) {
 	repo := new(MockWorkoutTemplateRepository)
 	svc := service.NewWorkoutTemplateService(repo)
 	createDTO := &dto.CreateWorkoutTemplateDTO{Name: "Test Template"}
-	repo.On("GetWorkoutTemplateByName", createDTO.Name).Return(nil, errors.New("not found"))
+	repo.On("GetWorkoutTemplateByName", createDTO.Name).Return(nil, sql.ErrNoRows)
 	repo.On("CreateWorkoutTemplate", createDTO).Return("123", nil)
 
 	id, err := svc.CreateWorkoutTemplate(createDTO)

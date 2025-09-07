@@ -30,15 +30,27 @@ func (r *WorkoutTemplateRepository) CreateWorkoutTemplate(template *dto.CreateWo
 // Get a workout template by its ID from the database
 func (r *WorkoutTemplateRepository) GetWorkoutTemplateByID(id string) (*dto.ResponseWorkoutTemplateDTO, error) {
 	query := `SELECT id, name, description, difficulty_level, estimated_duration_minutes, target_audience, created_by, is_active, is_public, created_at, updated_at FROM public.workout_template WHERE id = $1`
-	var template dto.ResponseWorkoutTemplateDTO
-	err := r.db.QueryRow(query, id).Scan(&template.ID, &template.Name, &template.Description,
-		&template.DifficultyLevel, &template.EstimatedDurationMinutes,
-		&template.TargetAudience, &template.CreatedBy, &template.IsActive,
-		&template.IsPublic, &template.CreatedAt, &template.UpdatedAt)
+	var wt dto.ResponseWorkoutTemplateDTO
+	err := r.db.QueryRow(query, id).Scan(
+		&wt.ID,
+		&wt.Name,
+		&wt.Description,
+		&wt.DifficultyLevel,
+		&wt.EstimatedDurationMinutes,
+		&wt.TargetAudience,
+		&wt.CreatedBy,
+		&wt.IsActive,
+		&wt.IsPublic,
+		&wt.CreatedAt,
+		&wt.UpdatedAt,
+	)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get workout template by ID: %w", err)
+		if err == sql.ErrNoRows {
+			return nil, sql.ErrNoRows
+		}
+		return nil, err
 	}
-	return &template, nil
+	return &wt, nil
 }
 
 // Get a workout template by its name from the database
@@ -50,7 +62,10 @@ func (r *WorkoutTemplateRepository) GetWorkoutTemplateByName(name string) (*dto.
 		&template.TargetAudience, &template.CreatedBy, &template.IsActive,
 		&template.IsPublic, &template.CreatedAt, &template.UpdatedAt)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get workout template by name: %w", err)
+		if err == sql.ErrNoRows {
+			return nil, sql.ErrNoRows
+		}
+		return nil, err
 	}
 	return &template, nil
 }
@@ -60,7 +75,7 @@ func (r *WorkoutTemplateRepository) GetWorkoutTemplatesByDifficulty(difficulty s
 	query := `SELECT id, name, description, difficulty_level, estimated_duration_minutes, target_audience, created_by, is_active, is_public, created_at, updated_at FROM public.workout_template WHERE difficulty_level = $1`
 	rows, err := r.db.Query(query, difficulty)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get workout templates by difficulty: %w", err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -72,14 +87,13 @@ func (r *WorkoutTemplateRepository) GetWorkoutTemplatesByDifficulty(difficulty s
 			&template.TargetAudience, &template.CreatedBy, &template.IsActive,
 			&template.IsPublic, &template.CreatedAt, &template.UpdatedAt)
 		if err != nil {
-			return nil, fmt.Errorf("failed to scan workout template: %w", err)
+			return nil, err
 		}
 		templates = append(templates, &template)
 	}
 
-	err = rows.Err()
-	if err != nil {
-		return nil, fmt.Errorf("failed during iteration over workout templates: %w", err)
+	if len(templates) == 0 {
+		return nil, sql.ErrNoRows
 	}
 
 	return templates, nil
@@ -90,7 +104,7 @@ func (r *WorkoutTemplateRepository) GetWorkoutTemplatesByTargetAudience(targetAu
 	query := `SELECT id, name, description, difficulty_level, estimated_duration_minutes, target_audience, created_by, is_active, is_public, created_at, updated_at FROM public.workout_template WHERE target_audience = $1`
 	rows, err := r.db.Query(query, targetAudience)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get workout templates by target audience: %w", err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -102,14 +116,13 @@ func (r *WorkoutTemplateRepository) GetWorkoutTemplatesByTargetAudience(targetAu
 			&template.TargetAudience, &template.CreatedBy, &template.IsActive,
 			&template.IsPublic, &template.CreatedAt, &template.UpdatedAt)
 		if err != nil {
-			return nil, fmt.Errorf("failed to scan workout template: %w", err)
+			return nil, err
 		}
 		templates = append(templates, &template)
 	}
 
-	err = rows.Err()
-	if err != nil {
-		return nil, fmt.Errorf("failed during iteration over workout templates: %w", err)
+	if len(templates) == 0 {
+		return nil, sql.ErrNoRows
 	}
 
 	return templates, nil
@@ -120,7 +133,7 @@ func (r *WorkoutTemplateRepository) GetAllWorkoutTemplates() ([]*dto.ResponseWor
 	query := `SELECT id, name, description, difficulty_level, estimated_duration_minutes, target_audience, created_by, is_active, is_public, created_at, updated_at FROM public.workout_template`
 	rows, err := r.db.Query(query)
 	if err != nil {
-		return nil, fmt.Errorf("failed to get all workout templates: %w", err)
+		return nil, err
 	}
 	defer rows.Close()
 
@@ -132,14 +145,13 @@ func (r *WorkoutTemplateRepository) GetAllWorkoutTemplates() ([]*dto.ResponseWor
 			&template.TargetAudience, &template.CreatedBy, &template.IsActive,
 			&template.IsPublic, &template.CreatedAt, &template.UpdatedAt)
 		if err != nil {
-			return nil, fmt.Errorf("failed to scan workout template: %w", err)
+			return nil, err
 		}
 		templates = append(templates, &template)
 	}
 
-	err = rows.Err()
-	if err != nil {
-		return nil, fmt.Errorf("failed during iteration over workout templates: %w", err)
+	if len(templates) == 0 {
+		return nil, sql.ErrNoRows
 	}
 
 	return templates, nil

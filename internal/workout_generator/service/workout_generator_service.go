@@ -47,7 +47,7 @@ func NewWorkoutGeneratorService(
 
 func (s *WorkoutGeneratorService) GenerateWorkout(req *dto.WorkoutGeneratorRequest) (*dto.WorkoutGeneratorResponse, error) {
 	// 1. Get user context
-	user, err := s.UserService.GetUserByID("", req.UserID)
+	_, err := s.UserService.GetUserByID("", req.UserID)
 	if err != nil {
 		return nil, apierror.New(errorcode_enum.CodeNotFound, "User not found", err)
 	}
@@ -56,13 +56,8 @@ func (s *WorkoutGeneratorService) GenerateWorkout(req *dto.WorkoutGeneratorReque
 	var publicExercises []*exdto.ExerciseResponseDTO //s.ExerciseService.GetAllExercises() TODO: uncomment when exercise generator fixed
 	// For tenant-specific, you may need to pass gymID or tenantID, here assumed as user.GymID
 	var tenantExercises []*exdto.ExerciseResponseDTO
-	if user.GymID != "" {
-		// TODO: implement GetTenantExercises if needed
-		// tenantExercises, err = s.ExerciseService.GetTenantExercises(user.GymID)
-		// if err != nil {
-		//     return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to get tenant exercises", err)
-		// }
-	}
+	// tenantExercises, err := s.ExerciseService.GetExercisesByGymID(user.GymID) // TODO: uncomment when exercise generator fixed
+	// Get the gym ID from user context if needed
 	exercises := mergeExercises(publicExercises, tenantExercises)
 
 	// 3. Get workout template
@@ -133,7 +128,7 @@ func buildPrompt(req *dto.WorkoutGeneratorRequest, exercises []*exdto.ExerciseRe
 	sb.WriteString(fmt.Sprintf("Difficulty: %s\n", template.DifficultyLevel))
 	sb.WriteString("Blocks:\n")
 	for _, block := range blocks {
-		sb.WriteString(fmt.Sprintf("- %s (%s): %d exercises\n", block.Name, block.Type, block.ExerciseCount))
+		sb.WriteString(fmt.Sprintf("- %s (%s): %d exercises\n", block.BlockName, block.BlockType, block.ExerciseCount))
 	}
 	sb.WriteString("\nPlease generate a workout plan for this user based on the above context, available exercises, and template structure.")
 	return sb.String()
