@@ -43,7 +43,7 @@ func TestEquipmentService_CreateEquipment(t *testing.T) {
 			},
 		}
 		service := NewEquipmentService(mockRepo)
-		input := &dto.EquipmentCreationDTO{Name: "Dumbbell"}
+		input := &dto.EquipmentCreationDTO{Name: "Dumbbell", Description: "A dumbbell", Category: "free_weights"}
 		id, err := service.CreateEquipment(input)
 		if err != nil {
 			t.Errorf("expected no error, got %v", err)

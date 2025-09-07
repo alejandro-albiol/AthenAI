@@ -67,7 +67,7 @@ func TestCreateEquipment(t *testing.T) {
 			setupMock: func(mockService *MockEquipmentService) {
 				mockService.On("CreateEquipment", mock.AnythingOfType("*dto.EquipmentCreationDTO")).Return("equipment123", nil)
 			},
-			wantStatus: http.StatusOK,
+			wantStatus: http.StatusCreated,
 		},
 		{
 			name: "duplicate name conflict",
@@ -102,7 +102,7 @@ func TestCreateEquipment(t *testing.T) {
 			var resp response.APIResponse[any]
 			err := json.Unmarshal(w.Body.Bytes(), &resp)
 			assert.NoError(t, err)
-			if tc.wantStatus == http.StatusOK {
+			if tc.wantStatus == http.StatusOK || tc.wantStatus == http.StatusCreated {
 				assert.Equal(t, "success", resp.Status)
 			} else {
 				assert.Equal(t, "error", resp.Status)

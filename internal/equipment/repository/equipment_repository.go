@@ -35,6 +35,9 @@ func (r *EquipmentRepository) GetEquipmentByID(id string) (*dto.EquipmentRespons
 		&equipment.UpdatedAt,
 	)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, sql.ErrNoRows
+		}
 		return nil, err
 	}
 	return &equipment, nil

@@ -1,6 +1,9 @@
 package service
 
 import (
+	"database/sql"
+	"errors"
+
 	"github.com/alejandro-albiol/athenai/internal/equipment/dto"
 	"github.com/alejandro-albiol/athenai/internal/equipment/enum"
 	"github.com/alejandro-albiol/athenai/internal/equipment/interfaces"
@@ -41,7 +44,10 @@ func (s *EquipmentService) CreateEquipment(equipment *dto.EquipmentCreationDTO) 
 func (s *EquipmentService) GetEquipmentByID(id string) (*dto.EquipmentResponseDTO, error) {
 	equipment, err := s.repo.GetEquipmentByID(id)
 	if err != nil {
-		return nil, apierror.New(errorcode_enum.CodeNotFound, "Equipment with ID not found", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, apierror.New(errorcode_enum.CodeNotFound, "Equipment not found", err)
+		}
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve equipment by ID", err)
 	}
 	return equipment, nil
 }
