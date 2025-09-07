@@ -56,11 +56,10 @@ func (s *GymService) GetGymByID(id string) (*dto.GymResponseDTO, error) {
 	gym, err := s.repository.GetGymByID(id)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return nil, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", nil)
+			return nil, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", err)
 		}
-		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to get gym", err)
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve gym by ID", err)
 	}
-
 	return gym, nil
 }
 

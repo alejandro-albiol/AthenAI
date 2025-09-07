@@ -44,7 +44,9 @@ func TestCreateGym(t *testing.T) {
 
 	id, err := repo.CreateGym(&gymDTO)
 	assert.NoError(t, err)
-	assert.Equal(t, "test-gym", id)
+	if assert.NotNil(t, id) {
+		assert.Equal(t, "test-gym", *id)
+	}
 }
 
 func TestGetGymByID(t *testing.T) {
@@ -109,7 +111,7 @@ func TestUpdateGym(t *testing.T) {
 	email := "updated@gym.com"
 	address := "456 Update St"
 	phone := "+0987654321"
-	
+
 	updateDTO := dto.GymUpdateDTO{
 		Name:    &name,
 		Email:   &email,

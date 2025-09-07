@@ -57,6 +57,9 @@ func (r *GymRepository) GetGymByID(id string) (*dto.GymResponseDTO, error) {
 		&gym.UpdatedAt,
 	)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, sql.ErrNoRows
+		}
 		return nil, err
 	}
 

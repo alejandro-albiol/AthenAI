@@ -58,9 +58,7 @@ func (h *GymHandler) CreateGym(w http.ResponseWriter, r *http.Request) {
 		))
 		return
 	}
-	response.WriteAPICreated(w, "Gym created successfully", struct {
-		ID string `json:"id"`
-	}{ID: *id})
+	response.WriteAPICreated(w, "Gym created successfully", *id)
 }
 
 func (h *GymHandler) GetGymByID(w http.ResponseWriter, r *http.Request) {
