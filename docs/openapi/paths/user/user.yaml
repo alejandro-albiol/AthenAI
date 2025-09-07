@@ -29,34 +29,48 @@ get:
       $ref: "../../openapi.yaml#/components/responses/BadRequest"
     "401":
       $ref: "../../openapi.yaml#/components/responses/Unauthorized"
-    "403":
-      $ref: "../../openapi.yaml#/components/responses/Forbidden"
 
 post:
   tags:
     - User
   summary: Register a new user
   description: |
-    Creates a new user in the authenticated user's gym.
-    
-    **Authorization**: GYM ADMINS ONLY
-    - Only users with gym admin privileges can register new users
-    - New user created in same gym as authenticated admin
-    - Gym context automatically extracted from JWT token
-    
-    **Security**: 
-    - Uses JWT token for authentication (no headers required)
-    - Gym context from JWT claims, not headers
+    Creates a new user in a gym.
+
+    **Registration Scenarios:**
+    - **Superadmin:** Can register tenant admins or users for any gym. Must provide `X-Gym-ID` header (if gym context is not in JWT).
+    - **Tenant Admin:** Can register users (not admins) for their own gym. Gym context is extracted from JWT.
+    - **Public (Self-Registration):** Can self-register as a user for a specific gym. Must provide `X-Gym-ID` header.
+
+    **Role Restrictions:**
+    - Only `superadmin` can register tenant admins.
+    - Tenant admins and public users can only register users (not admins).
+
+    **Headers:**
+    - `X-Gym-ID`: Required for public/self-registration and for superadmin registration (if gym context is not in JWT). Not used for tenant admin registration.
+
+    **Security:**
+    - Uses JWT token for authentication (except for public self-registration).
+    - Gym context from JWT claims or `X-Gym-ID` header as described above.
+
   security:
     - bearerAuth: []
-  
+
+  parameters:
+    - in: header
+      name: X-Gym-ID
+      schema:
+        type: string
+      required: false
+      description: Gym UUID. Required for public/self-registration and for superadmin registration (if gym context is not in JWT). Not used for tenant admin registration.
+
   requestBody:
     required: true
     content:
       application/json:
         schema:
           $ref: "../../openapi.yaml#/components/schemas/UserCreationDTO"
-  
+
   responses:
     "201":
       $ref: "/swagger/components/responses.yaml#/Created"

@@ -253,6 +253,9 @@ components:
         - email
         - password
         - role
+        - training_phase
+        - motivation
+        - special_situation
       properties:
         username:
           type: string
@@ -269,6 +272,22 @@ components:
           type: string
           enum: [user, admin]
           example: "user"
+        description:
+          type: string
+          nullable: true
+          example: "Professional athlete focused on strength training"
+        training_phase:
+          type: string
+          enum: [weight_loss, muscle_gain, cardio_improve, maintenance]
+          example: "muscle_gain"
+        motivation:
+          type: string
+          enum: [medical_recommendation, self_improvement, competition, rehabilitation, wellbeing]
+          example: "self_improvement"
+        special_situation:
+          type: string
+          enum: [pregnancy, post_partum, injury_recovery, chronic_condition, elderly_population, physical_limitation, none]
+          example: "none"
 
     UserUpdateDTO:
       type: object
