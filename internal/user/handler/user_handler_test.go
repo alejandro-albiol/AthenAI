@@ -159,6 +159,8 @@ func TestRegisterUser(t *testing.T) {
 			input: dto.UserCreationDTO{
 				Username: "existing",
 				Email:    "test@test.com",
+				Password: "password123",
+				Role:     userrole_enum.User,
 			},
 			setupMock: func(mockService *MockUserService) {
 				mockService.On("RegisterUser", "gym123", mock.AnythingOfType("*dto.UserCreationDTO")).Return(
@@ -776,7 +778,7 @@ func TestGetUserByIDInternalError(t *testing.T) {
 	handler := handler.NewUsersHandler(mockService)
 
 	// Mock service returns a non-APIError
-	mockService.On("GetUserByID", "gym123", "user123").Return(dto.UserResponseDTO{}, assert.AnError)
+	mockService.On("GetUserByID", "gym123", "user123").Return(nil, assert.AnError)
 
 	w := httptest.NewRecorder()
 	req := createTestRequestWithParams(http.MethodGet, "/user/user123", nil, "gym123", map[string]string{"id": "user123"})

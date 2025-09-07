@@ -24,18 +24,9 @@ func NewUsersHandler(service interfaces.UserService) *UsersHandler {
 }
 
 func (h *UsersHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
-	// Extract gym ID from JWT token
+	// Extract gym ID from JWT token or header
 	gymID := middleware.GetGymID(r)
-
-	// Security: Ensure user has admin privileges
-	if !middleware.IsGymAdmin(r) {
-		response.WriteAPIError(w, apierror.New(
-			errorcode_enum.CodeForbidden,
-			"Access denied: Only administrators can register new users",
-			nil,
-		))
-		return
-	}
+	requesterRole := middleware.GetUserRole(r)
 
 	var userDTO dto.UserCreationDTO
 	if err := json.NewDecoder(r.Body).Decode(&userDTO); err != nil {
@@ -43,6 +34,86 @@ func (h *UsersHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 			errorcode_enum.CodeBadRequest,
 			"Invalid request payload",
 			err,
+		))
+		return
+	}
+	// Validate required fields (username, email, password, role)
+	if userDTO.Username == "" || userDTO.Email == "" || userDTO.Password == "" || userDTO.Role == "" {
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeBadRequest,
+			"Missing required user fields",
+			nil,
+		))
+		return
+	}
+
+	// Registration logic by requester role
+	switch requesterRole {
+	case "": // Public/self-registration
+		// Only allow self-registration as user, gymID must be present (from header or JWT)
+		if gymID == "" {
+			gymID = r.Header.Get("X-Gym-ID")
+		}
+		if gymID == "" {
+			response.WriteAPIError(w, apierror.New(
+				errorcode_enum.CodeBadRequest,
+				"Missing or invalid gym ID for self-registration",
+				nil,
+			))
+			return
+		}
+		if userDTO.Role != "user" {
+			response.WriteAPIError(w, apierror.New(
+				errorcode_enum.CodeForbidden,
+				"Only user role can self-register",
+				nil,
+			))
+			return
+		}
+	case "superadmin":
+		// Can register tenant admins or users for any gym (gymID required)
+		if gymID == "" {
+			gymID = r.Header.Get("X-Gym-ID")
+		}
+		if gymID == "" {
+			response.WriteAPIError(w, apierror.New(
+				errorcode_enum.CodeBadRequest,
+				"Missing or invalid gym ID for superadmin registration",
+				nil,
+			))
+			return
+		}
+		if userDTO.Role != "admin" && userDTO.Role != "user" {
+			response.WriteAPIError(w, apierror.New(
+				errorcode_enum.CodeForbidden,
+				"Superadmin can only register admin or user roles",
+				nil,
+			))
+			return
+		}
+	case "admin":
+		// Can only register users for their own gym
+		if gymID == "" {
+			response.WriteAPIError(w, apierror.New(
+				errorcode_enum.CodeBadRequest,
+				"Missing or invalid gym ID for tenant admin registration",
+				nil,
+			))
+			return
+		}
+		if userDTO.Role != "user" {
+			response.WriteAPIError(w, apierror.New(
+				errorcode_enum.CodeForbidden,
+				"Tenant admin can only register user roles",
+				nil,
+			))
+			return
+		}
+	default:
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeForbidden,
+			"Access denied: insufficient privileges to register user",
+			nil,
 		))
 		return
 	}
@@ -62,9 +133,7 @@ func (h *UsersHandler) RegisterUser(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	response.WriteAPICreated(w, "User registered successfully", struct {
-		ID string `json:"id"`
-	}{ID: *userID})
+	response.WriteAPICreated(w, "User registered successfully", *userID)
 }
 
 func (h *UsersHandler) GetAllUsers(w http.ResponseWriter, r *http.Request) {

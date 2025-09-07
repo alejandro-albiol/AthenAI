@@ -11,7 +11,6 @@ type UserResponseDTO struct {
 	Username         string                 `json:"username"`
 	Email            string                 `json:"email"`
 	Role             userrole_enum.UserRole `json:"role"`
-	GymID            string                 `json:"gym_id"`
 	Verified         bool                   `json:"verified"`
 	IsActive         bool                   `json:"is_active"`
 	Phone            string                 `json:"phone"`

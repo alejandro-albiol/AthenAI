@@ -32,18 +32,18 @@ func (r *usersRepository) CreateUser(gymID string, dto *dto.UserCreationDTO) (*s
 	tableName := pq.QuoteIdentifier(gym.ID) + ".user"
 
 	query := fmt.Sprintf(`
-        INSERT INTO %s (
-            username, email, password_hash, role, gym_id, 
-            is_verified, is_active, description, training_phase, motivation, special_situation,
-            created_at, updated_at
-        ) VALUES (
-            $1, $2, $3, $4, $5, 
-            false, true, $6, $7, $8, $9,
-            NOW(), NOW()
-        ) RETURNING id`, tableName)
+		INSERT INTO %s (
+			username, email, password_hash, role,
+			is_verified, is_active, description, training_phase, motivation, special_situation,
+			created_at, updated_at
+		) VALUES (
+			$1, $2, $3, $4,
+			false, true, $5, $6, $7, $8,
+			NOW(), NOW()
+		) RETURNING id`, tableName)
 
 	var userID string
-	err = r.db.QueryRow(query, dto.Username, dto.Email, dto.Password, dto.Role, gymID,
+	err = r.db.QueryRow(query, dto.Username, dto.Email, dto.Password, dto.Role,
 		dto.Description, dto.TrainingPhase, dto.Motivation, dto.SpecialSituation).Scan(&userID)
 	if err != nil {
 		return nil, err
@@ -62,22 +62,25 @@ func (r *usersRepository) GetUserByID(gymID, id string) (*dto.UserResponseDTO, e
 	tableName := pq.QuoteIdentifier(gym.ID) + ".user"
 
 	query := fmt.Sprintf(`
-        SELECT id, username, email, password_hash, role, is_verified, is_active, gym_id,
-               description, training_phase, motivation, special_situation,
-               created_at, updated_at 
-        FROM %s 
-        WHERE id = $1 AND deleted_at IS NULL`, tableName)
+		SELECT id, username, email, password_hash, role, is_verified, is_active,
+			   description, training_phase, motivation, special_situation,
+			   created_at, updated_at 
+		FROM %s 
+		WHERE id = $1 AND deleted_at IS NULL`, tableName)
 
 	row := r.db.QueryRow(query, id)
 	user := &dto.UserResponseDTO{}
 	var passwordHash string
 	err = row.Scan(
 		&user.ID, &user.Username, &user.Email, &passwordHash, &user.Role,
-		&user.Verified, &user.IsActive, &user.GymID,
+		&user.Verified, &user.IsActive,
 		&user.Description, &user.TrainingPhase, &user.Motivation, &user.SpecialSituation,
 		&user.CreatedAt, &user.UpdatedAt,
 	)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, sql.ErrNoRows
+		}
 		return nil, err
 	}
 	return user, nil
@@ -94,16 +97,21 @@ func (r *usersRepository) GetUserByUsername(gymID, username string) (*dto.UserRe
 	tableName := pq.QuoteIdentifier(gym.ID) + ".user"
 
 	query := fmt.Sprintf(`
-        SELECT id, username, email, password_hash, role, is_verified, is_active, gym_id,
-               description, training_phase, motivation, special_situation,
-               created_at, updated_at 
-        FROM %s 
-        WHERE username = $1 AND deleted_at IS NULL`, tableName)
+		SELECT id, username, email, password_hash, role, is_verified, is_active,
+			   description, training_phase, motivation, special_situation,
+			   created_at, updated_at 
+		FROM %s 
+		WHERE username = $1 AND deleted_at IS NULL`, tableName)
 	row := r.db.QueryRow(query, username)
 	user := &dto.UserResponseDTO{}
 	var passwordHash string // We don't return this in the DTO
-	err = row.Scan(&user.ID, &user.Username, &user.Email, &passwordHash, &user.Role, &user.Verified, &user.IsActive, &user.GymID, &user.CreatedAt, &user.UpdatedAt)
+	err = row.Scan(&user.ID, &user.Username, &user.Email, &passwordHash, &user.Role, &user.Verified, &user.IsActive,
+		&user.Description, &user.TrainingPhase, &user.Motivation, &user.SpecialSituation,
+		&user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, sql.ErrNoRows
+		}
 		return nil, err
 	}
 	return user, nil
@@ -119,12 +127,17 @@ func (r *usersRepository) GetUserByEmail(gymID, email string) (*dto.UserResponse
 	// Construct tenant-specific table name
 	tableName := pq.QuoteIdentifier(gym.ID) + ".user"
 
-	query := fmt.Sprintf("SELECT id, username, email, password_hash, role, is_verified, is_active, gym_id, created_at, updated_at FROM %s WHERE email = $1 AND deleted_at IS NULL", tableName)
+	query := fmt.Sprintf("SELECT id, username, email, password_hash, role, is_verified, is_active, description, training_phase, motivation, special_situation, created_at, updated_at FROM %s WHERE email = $1 AND deleted_at IS NULL", tableName)
 	row := r.db.QueryRow(query, email)
 	user := &dto.UserResponseDTO{}
 	var passwordHash string // We don't return this in the DTO
-	err = row.Scan(&user.ID, &user.Username, &user.Email, &passwordHash, &user.Role, &user.Verified, &user.IsActive, &user.GymID, &user.CreatedAt, &user.UpdatedAt)
+	err = row.Scan(&user.ID, &user.Username, &user.Email, &passwordHash, &user.Role, &user.Verified, &user.IsActive,
+		&user.Description, &user.TrainingPhase, &user.Motivation, &user.SpecialSituation,
+		&user.CreatedAt, &user.UpdatedAt)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, sql.ErrNoRows
+		}
 		return nil, err
 	}
 	return user, nil
@@ -143,9 +156,9 @@ func (r *usersRepository) GetAllUsers(gymID string) ([]*dto.UserResponseDTO, err
 	users := make([]*dto.UserResponseDTO, 0) // Initialize empty slice
 
 	query := fmt.Sprintf(`
-        SELECT id, username, email, password_hash, role, is_verified, is_active, gym_id, created_at, updated_at 
-        FROM %s 
-        WHERE deleted_at IS NULL`, tableName)
+		SELECT id, username, email, password_hash, role, is_verified, is_active, description, training_phase, motivation, special_situation, created_at, updated_at 
+		FROM %s 
+		WHERE deleted_at IS NULL`, tableName)
 
 	rows, err := r.db.Query(query)
 	if err != nil {
@@ -158,7 +171,7 @@ func (r *usersRepository) GetAllUsers(gymID string) ([]*dto.UserResponseDTO, err
 		var passwordHash string // We don't return this in the DTO
 		if err := rows.Scan(
 			&user.ID, &user.Username, &user.Email, &passwordHash, &user.Role,
-			&user.Verified, &user.IsActive, &user.GymID,
+			&user.Verified, &user.IsActive,
 			&user.Description, &user.TrainingPhase, &user.Motivation, &user.SpecialSituation,
 			&user.CreatedAt, &user.UpdatedAt); err != nil {
 			return nil, err

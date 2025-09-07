@@ -223,7 +223,6 @@ func TestGetUserByID(t *testing.T) {
 					Username: "testuser",
 					Email:    "test@test.com",
 					Role:     userrole_enum.User,
-					GymID:    "gym123",
 				}, nil)
 			},
 			wantErr: false,
@@ -232,7 +231,6 @@ func TestGetUserByID(t *testing.T) {
 				Username: "testuser",
 				Email:    "test@test.com",
 				Role:     userrole_enum.User,
-				GymID:    "gym123",
 			},
 		},
 		{
@@ -282,7 +280,6 @@ func TestGetUserByUsername(t *testing.T) {
 					Username: "testuser",
 					Email:    "test@test.com",
 					Role:     userrole_enum.User,
-					GymID:    "gym123",
 				}, nil)
 			},
 			wantErr: false,
@@ -291,7 +288,6 @@ func TestGetUserByUsername(t *testing.T) {
 				Username: "testuser",
 				Email:    "test@test.com",
 				Role:     userrole_enum.User,
-				GymID:    "gym123",
 			},
 		},
 		{
@@ -341,7 +337,6 @@ func TestGetUserByEmail(t *testing.T) {
 					Username: "testuser",
 					Email:    "test@test.com",
 					Role:     userrole_enum.User,
-					GymID:    "gym123",
 				}, nil)
 			},
 			wantErr: false,
@@ -350,7 +345,6 @@ func TestGetUserByEmail(t *testing.T) {
 				Username: "testuser",
 				Email:    "test@test.com",
 				Role:     userrole_enum.User,
-				GymID:    "gym123",
 			},
 		},
 		{
@@ -447,14 +441,12 @@ func TestGetAllUsers(t *testing.T) {
 						Username: "testuser1",
 						Email:    "test1@test.com",
 						Role:     userrole_enum.User,
-						GymID:    "gym123",
 					},
 					{
 						ID:       "user2",
 						Username: "testuser2",
 						Email:    "test2@test.com",
 						Role:     userrole_enum.Admin,
-						GymID:    "gym123",
 					},
 				}
 				mockRepo.On("GetAllUsers", "gym123").Return(users, nil)
@@ -466,14 +458,12 @@ func TestGetAllUsers(t *testing.T) {
 					Username: "testuser1",
 					Email:    "test1@test.com",
 					Role:     userrole_enum.User,
-					GymID:    "gym123",
 				},
 				{
 					ID:       "user2",
 					Username: "testuser2",
 					Email:    "test2@test.com",
 					Role:     userrole_enum.Admin,
-					GymID:    "gym123",
 				},
 			},
 		},
@@ -537,7 +527,6 @@ func TestUpdateUser(t *testing.T) {
 					Username: "olduser",
 					Email:    "old@test.com",
 					Role:     userrole_enum.User,
-					GymID:    "gym123",
 				}, nil)
 				// Username doesn't already exist
 				mockRepo.On("GetUserByUsername", "gym123", "updateduser").Return((*dto.UserResponseDTO)(nil), assert.AnError)
@@ -576,7 +565,6 @@ func TestUpdateUser(t *testing.T) {
 					Username: "olduser",
 					Email:    "old@test.com",
 					Role:     userrole_enum.User,
-					GymID:    "gym123",
 				}, nil)
 				// Username already exists (different user)
 				mockRepo.On("GetUserByUsername", "gym123", "existinguser").Return(&dto.UserResponseDTO{
@@ -600,7 +588,6 @@ func TestUpdateUser(t *testing.T) {
 					Username: "olduser",
 					Email:    "old@test.com",
 					Role:     userrole_enum.User,
-					GymID:    "gym123",
 				}, nil)
 				// Username doesn't already exist
 				mockRepo.On("GetUserByUsername", "gym123", "updateduser").Return((*dto.UserResponseDTO)(nil), assert.AnError)
@@ -646,7 +633,8 @@ func TestUpdatePassword(t *testing.T) {
 				// User exists
 				mockRepo.On("GetUserByID", "gym123", "user123").Return(&dto.UserResponseDTO{
 					ID:    "user123",
-					GymID: "gym123",
+					Email: "old@test.com",
+					Role:  userrole_enum.User,
 				}, nil)
 				// Update succeeds
 				mockRepo.On("UpdatePassword", "gym123", "user123", mock.AnythingOfType("string")).Return(nil)
@@ -696,7 +684,8 @@ func TestDeleteUser(t *testing.T) {
 				// User exists
 				mockRepo.On("GetUserByID", "gym123", "user123").Return(&dto.UserResponseDTO{
 					ID:    "user123",
-					GymID: "gym123",
+					Email: "old@test.com",
+					Role:  userrole_enum.User,
 				}, nil)
 				// Delete succeeds
 				mockRepo.On("DeleteUser", "gym123", "user123").Return(nil)
@@ -747,7 +736,8 @@ func TestSetUserActive(t *testing.T) {
 				// User exists and is currently inactive
 				mockRepo.On("GetUserByID", "gym123", "user123").Return(&dto.UserResponseDTO{
 					ID:       "user123",
-					GymID:    "gym123",
+					Email:    "old@test.com",
+					Role:     userrole_enum.User,
 					IsActive: false,
 				}, nil)
 				// Activation succeeds
@@ -764,7 +754,8 @@ func TestSetUserActive(t *testing.T) {
 				// User exists and is currently active
 				mockRepo.On("GetUserByID", "gym123", "user123").Return(&dto.UserResponseDTO{
 					ID:       "user123",
-					GymID:    "gym123",
+					Email:    "old@test.com",
+					Role:     userrole_enum.User,
 					IsActive: true,
 				}, nil)
 				// Deactivation succeeds
@@ -791,7 +782,8 @@ func TestSetUserActive(t *testing.T) {
 				// User exists and is already active
 				mockRepo.On("GetUserByID", "gym123", "user123").Return(dto.UserResponseDTO{
 					ID:       "user123",
-					GymID:    "gym123",
+					Email:    "old@test.com",
+					Role:     userrole_enum.User,
 					IsActive: true,
 				}, nil)
 			},
@@ -806,7 +798,8 @@ func TestSetUserActive(t *testing.T) {
 				// User exists and is already inactive
 				mockRepo.On("GetUserByID", "gym123", "user123").Return(dto.UserResponseDTO{
 					ID:       "user123",
-					GymID:    "gym123",
+					Email:    "old@test.com",
+					Role:     userrole_enum.User,
 					IsActive: false,
 				}, nil)
 			},

@@ -1,6 +1,8 @@
 package service
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 
 	dto "github.com/alejandro-albiol/athenai/internal/user/dto"
@@ -39,24 +41,33 @@ func (s *UsersService) RegisterUser(gymID string, user *dto.UserCreationDTO) (*s
 
 func (s *UsersService) GetUserByID(gymID, id string) (*dto.UserResponseDTO, error) {
 	user, err := s.repository.GetUserByID(gymID, id)
-	if err != nil || user == nil {
-		return nil, apierror.New(errorcode_enum.CodeNotFound, fmt.Sprintf("User with ID %s not found", id), err)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, apierror.New(errorcode_enum.CodeNotFound, "User not found", err)
+		}
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve user by ID", err)
 	}
 	return user, nil
 }
 
 func (s *UsersService) GetUserByUsername(gymID, username string) (*dto.UserResponseDTO, error) {
 	user, err := s.repository.GetUserByUsername(gymID, username)
-	if err != nil || user == nil {
-		return nil, apierror.New(errorcode_enum.CodeNotFound, fmt.Sprintf("User with username %s not found", username), err)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, apierror.New(errorcode_enum.CodeNotFound, fmt.Sprintf("User with username %s not found", username), err)
+		}
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve user by username", err)
 	}
 	return user, nil
 }
 
 func (s *UsersService) GetUserByEmail(gymID, email string) (*dto.UserResponseDTO, error) {
 	user, err := s.repository.GetUserByEmail(gymID, email)
-	if err != nil || user == nil {
-		return nil, apierror.New(errorcode_enum.CodeNotFound, fmt.Sprintf("User with email %s not found", email), err)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, apierror.New(errorcode_enum.CodeNotFound, fmt.Sprintf("User with email %s not found", email), err)
+		}
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve user by email", err)
 	}
 	return user, nil
 }

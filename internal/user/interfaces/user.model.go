@@ -12,13 +12,11 @@ type User struct {
 	Email            string        `json:"email"`
 	Password         string        `json:"password,omitempty"`
 	Role             enum.UserRole `json:"role,omitempty"`
-	GymID            string        `json:"gym_id"`
 	Verified         bool          `json:"verified,omitempty"`
 	Description      *string       `json:"description,omitempty"`
 	TrainingPhase    string        `json:"training_phase"`
 	Motivation       string        `json:"motivation"`
 	SpecialSituation string        `json:"special_situation"`
-
-	CreatedAt time.Time `json:"created_at"`
-	UpdatedAt time.Time `json:"updated_at"`
+	CreatedAt        time.Time     `json:"created_at"`
+	UpdatedAt        time.Time     `json:"updated_at"`
 }
