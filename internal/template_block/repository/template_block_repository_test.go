@@ -18,18 +18,20 @@ func TestCreateTemplateBlock(t *testing.T) {
 
 	repo := repository.NewTemplateBlockRepository(mockDB)
 
+	instructions := "Do this"
+	estimatedDurationMinutes := 30
 	block := &dto.CreateTemplateBlockDTO{
 		TemplateID:               "template-uuid",
-		Name:                     "Block Name",
-		Type:                     "Type",
-		Order:                    1,
+		BlockName:                "Block Name",
+		BlockType:                "Type",
+		BlockOrder:               1,
 		ExerciseCount:            5,
-		EstimatedDurationMinutes: 30,
-		Instructions:             "Do this",
+		EstimatedDurationMinutes: &estimatedDurationMinutes,
+		Instructions:             &instructions,
 	}
 
 	mock.ExpectQuery("INSERT INTO public.template_block").
-		WithArgs(block.TemplateID, block.Name, block.Type, block.Order, block.ExerciseCount, block.EstimatedDurationMinutes, block.Instructions).
+		WithArgs(block.TemplateID, block.BlockName, block.BlockType, block.BlockOrder, block.ExerciseCount, block.EstimatedDurationMinutes, block.Instructions).
 		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow("block-uuid"))
 
 	id, err := repo.CreateTemplateBlock(block)
@@ -54,9 +56,9 @@ func TestGetByID(t *testing.T) {
 
 	repo := repository.NewTemplateBlockRepository(mockDB)
 
-	row := sqlmock.NewRows([]string{"id", "template_id", "name", "type", "order", "exercise_count", "estimated_duration_minutes", "instructions", "created_at"}).
+	row := sqlmock.NewRows([]string{"id", "template_id", "block_name", "block_type", "block_order", "exercise_count", "estimated_duration_minutes", "instructions", "created_at"}).
 		AddRow("block-uuid", "template-uuid", "Block Name", "Type", 1, 5, 30, "Do this", "2025-09-04T12:00:00Z")
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT id, template_id, name, type, \"order\", exercise_count, estimated_duration_minutes, instructions, created_at FROM public.template_block WHERE id = $1")).
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id, template_id, block_name, block_type, block_order, exercise_count, estimated_duration_minutes, instructions, created_at\n\t\tFROM public.template_block WHERE id = $1")).
 		WithArgs("block-uuid").
 		WillReturnRows(row)
 
@@ -81,10 +83,10 @@ func TestGetByTemplateID(t *testing.T) {
 
 	repo := repository.NewTemplateBlockRepository(mockDB)
 
-	rows := sqlmock.NewRows([]string{"id", "template_id", "name", "type", "order", "exercise_count", "estimated_duration_minutes", "instructions", "created_at"}).
+	rows := sqlmock.NewRows([]string{"id", "template_id", "block_name", "block_type", "block_order", "exercise_count", "estimated_duration_minutes", "instructions", "created_at"}).
 		AddRow("block-uuid-1", "template-uuid", "Block 1", "Type", 1, 5, 30, "Do this", "2025-09-04T12:00:00Z").
 		AddRow("block-uuid-2", "template-uuid", "Block 2", "Type", 2, 6, 40, "Do that", "2025-09-04T12:01:00Z")
-	mock.ExpectQuery(regexp.QuoteMeta("SELECT id, template_id, name, type, \"order\", exercise_count, estimated_duration_minutes, instructions, created_at FROM public.template_block WHERE template_id = $1 ORDER BY \"order\"")).
+	mock.ExpectQuery(regexp.QuoteMeta("SELECT id, template_id, block_name, block_type, block_order, exercise_count, estimated_duration_minutes, instructions, created_at\n\t\tFROM public.template_block WHERE template_id = $1 ORDER BY block_order")).
 		WithArgs("template-uuid").
 		WillReturnRows(rows)
 
@@ -117,25 +119,25 @@ func TestUpdateTemplateBlock(t *testing.T) {
 	instructions := "Updated instructions"
 
 	update := &dto.UpdateTemplateBlockDTO{
-		Name:  &name,
-		Type:  &typ,
-		Order: &order,
-		ExerciseCount: &exerciseCount,
+		BlockName:                &name,
+		BlockType:                &typ,
+		BlockOrder:               &order,
+		ExerciseCount:            &exerciseCount,
 		EstimatedDurationMinutes: &duration,
-		Instructions: &instructions,
+		Instructions:             &instructions,
 	}
 
-	row := sqlmock.NewRows([]string{"id", "template_id", "name", "type", "order", "exercise_count", "estimated_duration_minutes", "instructions", "created_at"}).
-		AddRow("block-uuid", "template-uuid", update.Name, update.Type, update.Order, update.ExerciseCount, update.EstimatedDurationMinutes, update.Instructions, "2025-09-04T12:02:00Z")
-	mock.ExpectQuery(regexp.QuoteMeta("UPDATE public.template_block SET name = $1, type = $2, \"order\" = $3, exercise_count = $4, estimated_duration_minutes = $5, instructions = $6 WHERE id = $7 RETURNING id, template_id, name, type, \"order\", exercise_count, estimated_duration_minutes, instructions, created_at")).
-		WithArgs(update.Name, update.Type, update.Order, update.ExerciseCount, update.EstimatedDurationMinutes, update.Instructions, "block-uuid").
+	row := sqlmock.NewRows([]string{"id", "template_id", "block_name", "block_type", "block_order", "exercise_count", "estimated_duration_minutes", "instructions", "created_at"}).
+		AddRow("block-uuid", "template-uuid", update.BlockName, update.BlockType, update.BlockOrder, update.ExerciseCount, update.EstimatedDurationMinutes, update.Instructions, "2025-09-04T12:02:00Z")
+	mock.ExpectQuery(regexp.QuoteMeta("UPDATE public.template_block\n\t\tSET block_name = $1, block_type = $2, block_order = $3, exercise_count = $4, estimated_duration_minutes = $5, instructions = $6\n\t\tWHERE id = $7\n\t\tRETURNING id, template_id, block_name, block_type, block_order, exercise_count, estimated_duration_minutes, instructions, created_at")).
+		WithArgs(update.BlockName, update.BlockType, update.BlockOrder, update.ExerciseCount, update.EstimatedDurationMinutes, update.Instructions, "block-uuid").
 		WillReturnRows(row)
 
 	updatedBlock, err := repo.UpdateTemplateBlock("block-uuid", update)
 	if err != nil {
 		t.Errorf("unexpected error: %v", err)
 	}
-	if updatedBlock == nil || updatedBlock.Name != "Updated Name" {
+	if updatedBlock == nil || updatedBlock.BlockName != "Updated Name" {
 		t.Errorf("expected updated block name 'Updated Name', got '%v'", updatedBlock)
 	}
 

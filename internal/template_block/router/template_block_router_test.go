@@ -63,9 +63,9 @@ func TestCreateTemplateBlockRoute(t *testing.T) {
 
 	input := dto.CreateTemplateBlockDTO{
 		TemplateID:    "template123",
-		Name:          "Warm-up",
-		Type:          "warmup",
-		Order:         1,
+		BlockName:          "Warm-up",
+		BlockType:          "warmup",
+		BlockOrder:         1,
 		ExerciseCount: 3,
 	}
 	body, _ := json.Marshal(input)
@@ -89,9 +89,9 @@ func TestGetTemplateBlockByIDRoute(t *testing.T) {
 		block := dto.TemplateBlockDTO{
 			ID:            "block123",
 			TemplateID:    "template123",
-			Name:          "Warm-up",
-			Type:          "warmup",
-			Order:         1,
+			BlockName:          "Warm-up",
+			BlockType:          "warmup",
+			BlockOrder:         1,
 			ExerciseCount: 3,
 		}
 		response.WriteAPISuccess(w, "Template block retrieved successfully", block)
@@ -120,17 +120,17 @@ func TestListTemplateBlocksByTemplateIDRoute(t *testing.T) {
 			{
 				ID:            "block1",
 				TemplateID:    "template123",
-				Name:          "Warm-up",
-				Type:          "warmup",
-				Order:         1,
+				BlockName:          "Warm-up",
+				BlockType:          "warmup",
+				BlockOrder:         1,
 				ExerciseCount: 3,
 			},
 			{
 				ID:            "block2",
 				TemplateID:    "template123",
-				Name:          "Main Set",
-				Type:          "main",
-				Order:         2,
+				BlockName:          "Main Set",
+				BlockType:          "main",
+				BlockOrder:         2,
 				ExerciseCount: 5,
 			},
 		}
@@ -159,9 +159,9 @@ func TestUpdateTemplateBlockRoute(t *testing.T) {
 		updatedBlock := dto.TemplateBlockDTO{
 			ID:            "block123",
 			TemplateID:    "template123",
-			Name:          "Updated Warm-up",
-			Type:          "warmup",
-			Order:         1,
+			BlockName:          "Updated Warm-up",
+			BlockType:          "warmup",
+			BlockOrder:         1,
 			ExerciseCount: 5,
 		}
 		response.WriteAPISuccess(w, "Template block updated successfully", updatedBlock)
@@ -170,7 +170,7 @@ func TestUpdateTemplateBlockRoute(t *testing.T) {
 	r := router.NewTemplateBlockRouter(mockHandler)
 
 	update := dto.UpdateTemplateBlockDTO{
-		Name:          stringPtr("Updated Warm-up"),
+		BlockName:          stringPtr("Updated Warm-up"),
 		ExerciseCount: intPtr(5),
 	}
 	body, _ := json.Marshal(update)

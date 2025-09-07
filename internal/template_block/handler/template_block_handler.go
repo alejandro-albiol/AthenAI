@@ -21,12 +21,17 @@ func NewTemplateBlockHandler(service interfaces.TemplateBlockService) *TemplateB
 }
 
 func (h *TemplateBlockHandler) CreateTemplateBlock(w http.ResponseWriter, r *http.Request) {
-	var block *dto.CreateTemplateBlockDTO
+	var block dto.CreateTemplateBlockDTO
 	if err := json.NewDecoder(r.Body).Decode(&block); err != nil {
 		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Invalid request body", err))
 		return
 	}
-	blockID, err := h.service.CreateTemplateBlock(block)
+	// Validate required fields
+	if block.TemplateID == "" || block.BlockName == "" || block.BlockType == "" || block.BlockOrder == 0 || block.ExerciseCount == 0 {
+		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Missing or invalid required fields: template_id, block_name, block_type, block_order, exercise_count", nil))
+		return
+	}
+	blockID, err := h.service.CreateTemplateBlock(&block)
 	if err != nil {
 		if apiErr, ok := err.(*apierror.APIError); ok {
 			response.WriteAPIError(w, apiErr)
@@ -35,9 +40,7 @@ func (h *TemplateBlockHandler) CreateTemplateBlock(w http.ResponseWriter, r *htt
 		}
 		return
 	}
-	response.WriteAPICreated(w, "Template block created successfully", struct {
-		ID string `json:"id"`
-	}{ID: *blockID})
+	response.WriteAPICreated(w, "Template block created successfully", *blockID)
 }
 
 func (h *TemplateBlockHandler) GetTemplateBlockByID(w http.ResponseWriter, r *http.Request) {

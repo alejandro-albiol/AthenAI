@@ -60,9 +60,9 @@ func TestCreateTemplateBlock(t *testing.T) {
 			name: "successful creation",
 			input: dto.CreateTemplateBlockDTO{
 				TemplateID:    "template123",
-				Name:          "Warm-up",
-				Type:          "warmup",
-				Order:         1,
+				BlockName:          "Warm-up",
+				BlockType:          "warmup",
+				BlockOrder:         1,
 				ExerciseCount: 3,
 			},
 			setupMock: func(mockService *MockTemplateBlockService) {
@@ -74,9 +74,9 @@ func TestCreateTemplateBlock(t *testing.T) {
 			name: "duplicate name conflict",
 			input: dto.CreateTemplateBlockDTO{
 				TemplateID:    "template123",
-				Name:          "Warm-up",
-				Type:          "warmup",
-				Order:         1,
+				BlockName:          "Warm-up",
+				BlockType:          "warmup",
+				BlockOrder:         1,
 				ExerciseCount: 3,
 			},
 			setupMock: func(mockService *MockTemplateBlockService) {
@@ -130,9 +130,9 @@ func TestGetTemplateBlock(t *testing.T) {
 				block := &dto.TemplateBlockDTO{
 					ID:            "block123",
 					TemplateID:    "template123",
-					Name:          "Warm-up",
-					Type:          "warmup",
-					Order:         1,
+					BlockName:          "Warm-up",
+					BlockType:          "warmup",
+					BlockOrder:         1,
 					ExerciseCount: 3,
 				}
 				mockService.On("GetTemplateBlockByID", "block123").Return(block, nil)
@@ -197,17 +197,17 @@ func TestListTemplateBlocksByTemplateID(t *testing.T) {
 					{
 						ID:            "block1",
 						TemplateID:    "template123",
-						Name:          "Warm-up",
-						Type:          "warmup",
-						Order:         1,
+						BlockName:          "Warm-up",
+						BlockType:          "warmup",
+						BlockOrder:         1,
 						ExerciseCount: 3,
 					},
 					{
 						ID:            "block2",
 						TemplateID:    "template123",
-						Name:          "Main Set",
-						Type:          "main",
-						Order:         2,
+						BlockName:          "Main Set",
+						BlockType:          "main",
+						BlockOrder:         2,
 						ExerciseCount: 5,
 					},
 				}
@@ -263,17 +263,17 @@ func TestUpdateTemplateBlock(t *testing.T) {
 			name:    "successful update",
 			blockID: "block123",
 			input: dto.UpdateTemplateBlockDTO{
-				Name:          stringPtr("Updated Warm-up"),
-				ExerciseCount: intPtr(5),
+				BlockName:      stringPtr("Updated Warm-up"),
+				ExerciseCount:  intPtr(5),
 			},
 			setupMock: func(mockService *MockTemplateBlockService) {
 				updatedBlock := &dto.TemplateBlockDTO{
 					ID:            "block123",
 					TemplateID:    "template123",
-					Name:          "Updated Warm-up",
-					Type:          "warmup",
-					Order:         1,
-					ExerciseCount: 5,
+					BlockName:      "Updated Warm-up",
+					BlockType:      "warmup",
+					BlockOrder:     1,
+					ExerciseCount:  5,
 				}
 				mockService.On("UpdateTemplateBlock", "block123", mock.AnythingOfType("*dto.UpdateTemplateBlockDTO")).Return(updatedBlock, nil)
 			},
@@ -283,7 +283,7 @@ func TestUpdateTemplateBlock(t *testing.T) {
 			name:    "block not found",
 			blockID: "nonexistent",
 			input: dto.UpdateTemplateBlockDTO{
-				Name: stringPtr("Updated Name"),
+				BlockName: stringPtr("Updated Name"),
 			},
 			setupMock: func(mockService *MockTemplateBlockService) {
 				mockService.On("UpdateTemplateBlock", "nonexistent", mock.AnythingOfType("*dto.UpdateTemplateBlockDTO")).Return(

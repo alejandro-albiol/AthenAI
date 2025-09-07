@@ -1,6 +1,8 @@
 package service
 
 import (
+	"database/sql"
+	"errors"
 	"fmt"
 
 	"github.com/alejandro-albiol/athenai/internal/template_block/dto"
@@ -18,17 +20,29 @@ func NewTemplateBlockService(repository interfaces.TemplateBlockRepository) *Tem
 }
 
 func (s *TemplateBlockService) CreateTemplateBlock(block *dto.CreateTemplateBlockDTO) (*string, error) {
-	existingBlock, err := s.repository.GetTemplateBlockByTemplateIDAndName(block.TemplateID, block.Name)
-	if err == nil && existingBlock.ID != "" {
-		return nil, apierror.New(errorcode_enum.CodeConflict, fmt.Sprintf("Template block with name '%s' already exists in template", block.Name), nil)
+	if block == nil {
+		return nil, apierror.New(errorcode_enum.CodeBadRequest, "Block payload is nil", nil)
 	}
-	return s.repository.CreateTemplateBlock(block)
+	existingBlock, err := s.repository.GetTemplateBlockByTemplateIDAndName(block.TemplateID, block.BlockName)
+	if err == nil && existingBlock != nil && existingBlock.ID != "" {
+		return nil, apierror.New(errorcode_enum.CodeConflict, fmt.Sprintf("Template block with name '%s' already exists in template", block.BlockName), nil)
+	}
+	id, err := s.repository.CreateTemplateBlock(block)
+	if err != nil {
+		// Log the error for debugging
+		fmt.Printf("[TemplateBlockService] CreateTemplateBlock DB error: %v\n", err)
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to create template block (DB error)", err)
+	}
+	return id, nil
 }
 
 func (s *TemplateBlockService) GetTemplateBlockByID(id string) (*dto.TemplateBlockDTO, error) {
 	block, err := s.repository.GetTemplateBlockByID(id)
 	if err != nil {
-		return nil, apierror.New(errorcode_enum.CodeNotFound, "Template block not found", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, apierror.New(errorcode_enum.CodeNotFound, "Template block not found", err)
+		}
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve template block by ID", err)
 	}
 	return block, nil
 }

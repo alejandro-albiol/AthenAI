@@ -25,7 +25,7 @@ func (m *mockRepository) CreateTemplateBlock(block *dto.CreateTemplateBlockDTO) 
 	id := "new-id"
 	m.blocks[id] = &dto.TemplateBlockDTO{
 		ID:         id,
-		Name:       block.Name,
+		BlockName:  block.BlockName,
 		TemplateID: block.TemplateID,
 	}
 	return &id, nil
@@ -33,7 +33,7 @@ func (m *mockRepository) CreateTemplateBlock(block *dto.CreateTemplateBlockDTO) 
 
 func (m *mockRepository) GetTemplateBlockByTemplateIDAndName(templateID, name string) (*dto.TemplateBlockDTO, error) {
 	for _, b := range m.blocks {
-		if b.TemplateID == templateID && b.Name == name {
+		if b.TemplateID == templateID && b.BlockName == name {
 			return b, nil
 		}
 	}
@@ -72,8 +72,8 @@ func (m *mockRepository) UpdateTemplateBlock(id string, update *dto.UpdateTempla
 	if !ok {
 		return nil, errors.New("not found")
 	}
-	if update.Name != nil {
-		b.Name = *update.Name
+	if update.BlockName != nil {
+		b.BlockName = *update.BlockName
 	}
 	return b, nil
 }
@@ -92,7 +92,7 @@ func (m *mockRepository) DeleteTemplateBlock(id string) error {
 func TestTemplateBlockService_CreateTemplateBlock(t *testing.T) {
 	mock := &mockRepository{blocks: map[string]*dto.TemplateBlockDTO{}}
 	service := service.NewTemplateBlockService(mock)
-	block := &dto.CreateTemplateBlockDTO{Name: "Block1", TemplateID: "T1"}
+	block := &dto.CreateTemplateBlockDTO{BlockName: "Block1", TemplateID: "T1"}
 	id, err := service.CreateTemplateBlock(block)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
@@ -102,7 +102,7 @@ func TestTemplateBlockService_CreateTemplateBlock(t *testing.T) {
 	}
 
 	// Duplicate name
-	mock.blocks[*id] = &dto.TemplateBlockDTO{ID: *id, Name: "Block1", TemplateID: "T1"}
+	mock.blocks[*id] = &dto.TemplateBlockDTO{ID: *id, BlockName: "Block1", TemplateID: "T1"}
 	_, err = service.CreateTemplateBlock(block)
 	if err == nil {
 		t.Fatalf("expected conflict error, got nil")
@@ -114,7 +114,7 @@ func TestTemplateBlockService_CreateTemplateBlock(t *testing.T) {
 }
 
 func TestTemplateBlockService_GetTemplateBlockByID(t *testing.T) {
-	mock := &mockRepository{blocks: map[string]*dto.TemplateBlockDTO{"id1": {ID: "id1", Name: "Block1", TemplateID: "T1"}}}
+	mock := &mockRepository{blocks: map[string]*dto.TemplateBlockDTO{"id1": {ID: "id1", BlockName: "Block1", TemplateID: "T1"}}}
 	service := service.NewTemplateBlockService(mock)
 	block, err := service.GetTemplateBlockByID("id1")
 	if err != nil {
@@ -136,9 +136,9 @@ func TestTemplateBlockService_GetTemplateBlockByID(t *testing.T) {
 
 func TestTemplateBlockService_ListTemplateBlocksByTemplateID(t *testing.T) {
 	mock := &mockRepository{blocks: map[string]*dto.TemplateBlockDTO{
-		"id1": {ID: "id1", Name: "Block1", TemplateID: "T1"},
-		"id2": {ID: "id2", Name: "Block2", TemplateID: "T1"},
-		"id3": {ID: "id3", Name: "Block3", TemplateID: "T2"},
+		"id1": {ID: "id1", BlockName: "Block1", TemplateID: "T1"},
+		"id2": {ID: "id2", BlockName: "Block2", TemplateID: "T1"},
+		"id3": {ID: "id3", BlockName: "Block3", TemplateID: "T2"},
 	}}
 	service := service.NewTemplateBlockService(mock)
 	blocks, err := service.ListTemplateBlocksByTemplateID("T1")
@@ -157,16 +157,16 @@ func TestTemplateBlockService_ListTemplateBlocksByTemplateID(t *testing.T) {
 }
 
 func TestTemplateBlockService_UpdateTemplateBlock(t *testing.T) {
-	mock := &mockRepository{blocks: map[string]*dto.TemplateBlockDTO{"id1": {ID: "id1", Name: "Block1", TemplateID: "T1"}}}
+	mock := &mockRepository{blocks: map[string]*dto.TemplateBlockDTO{"id1": {ID: "id1", BlockName: "Block1", TemplateID: "T1"}}}
 	service := service.NewTemplateBlockService(mock)
 	newName := "Updated"
-	update := &dto.UpdateTemplateBlockDTO{Name: &newName}
+	update := &dto.UpdateTemplateBlockDTO{BlockName: &newName}
 	block, err := service.UpdateTemplateBlock("id1", update)
 	if err != nil {
 		t.Fatalf("unexpected error: %v", err)
 	}
-	if block.Name != "Updated" {
-		t.Fatalf("expected Updated, got %v", block.Name)
+	if block.BlockName != "Updated" {
+		t.Fatalf("expected Updated, got %v", block.BlockName)
 	}
 
 	mock.updateErr = errors.New("fail")
@@ -177,7 +177,7 @@ func TestTemplateBlockService_UpdateTemplateBlock(t *testing.T) {
 }
 
 func TestTemplateBlockService_DeleteTemplateBlock(t *testing.T) {
-	mock := &mockRepository{blocks: map[string]*dto.TemplateBlockDTO{"id1": {ID: "id1", Name: "Block1", TemplateID: "T1"}}}
+	mock := &mockRepository{blocks: map[string]*dto.TemplateBlockDTO{"id1": {ID: "id1", BlockName: "Block1", TemplateID: "T1"}}}
 	service := service.NewTemplateBlockService(mock)
 	err := service.DeleteTemplateBlock("id1")
 	if err != nil {
