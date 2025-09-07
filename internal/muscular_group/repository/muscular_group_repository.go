@@ -44,13 +44,16 @@ func (r *MuscularGroupRepository) GetAllMuscularGroups() ([]*dto.MuscularGroupRe
 }
 
 func (r *MuscularGroupRepository) GetMuscularGroupByID(id string) (*dto.MuscularGroupResponseDTO, error) {
-	mg := &dto.MuscularGroupResponseDTO{}
 	query := `SELECT id, name, description, body_part, is_active FROM public.muscular_group WHERE id = $1 AND is_active = TRUE`
+	var mg dto.MuscularGroupResponseDTO
 	err := r.db.QueryRow(query, id).Scan(&mg.ID, &mg.Name, &mg.Description, &mg.BodyPart, &mg.IsActive)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, sql.ErrNoRows
+		}
 		return nil, err
 	}
-	return mg, nil
+	return &mg, nil
 }
 
 func (r *MuscularGroupRepository) GetMuscularGroupByName(name string) (*dto.MuscularGroupResponseDTO, error) {

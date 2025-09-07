@@ -1,6 +1,9 @@
 package service
 
 import (
+	"database/sql"
+	"errors"
+
 	"github.com/alejandro-albiol/athenai/internal/muscular_group/dto"
 	"github.com/alejandro-albiol/athenai/internal/muscular_group/interfaces"
 	"github.com/alejandro-albiol/athenai/pkg/apierror"
@@ -16,15 +19,13 @@ func NewMuscularGroupService(repository interfaces.MuscularGroupRepository) *Mus
 }
 
 func (s *MuscularGroupService) CreateMuscularGroup(mg *dto.CreateMuscularGroupDTO) (*string, error) {
-	// Check for name uniqueness
-	groups, err := s.repository.GetAllMuscularGroups()
-	if err != nil {
+	// Optimized: Check for name uniqueness using GetMuscularGroupByName
+	existing, err := s.repository.GetMuscularGroupByName(mg.Name)
+	if err != nil && err != sql.ErrNoRows {
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to check muscular group name uniqueness", err)
 	}
-	for _, g := range groups {
-		if g.Name == mg.Name {
-			return nil, apierror.New(errorcode_enum.CodeConflict, "Muscular group with this name already exists", nil)
-		}
+	if existing != nil {
+		return nil, apierror.New(errorcode_enum.CodeConflict, "Muscular group with this name already exists", nil)
 	}
 
 	muscularGroupID, err := s.repository.CreateMuscularGroup(mg)
@@ -35,11 +36,14 @@ func (s *MuscularGroupService) CreateMuscularGroup(mg *dto.CreateMuscularGroupDT
 }
 
 func (s *MuscularGroupService) GetMuscularGroupByID(id string) (*dto.MuscularGroupResponseDTO, error) {
-	muscularGroup, err := s.repository.GetMuscularGroupByID(id)
+	mg, err := s.repository.GetMuscularGroupByID(id)
 	if err != nil {
-		return nil, apierror.New(errorcode_enum.CodeNotFound, "Muscular group not found", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, apierror.New(errorcode_enum.CodeNotFound, "Muscular group not found", err)
+		}
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve muscular group by ID", err)
 	}
-	return muscularGroup, nil
+	return mg, nil
 }
 
 func (s *MuscularGroupService) GetAllMuscularGroups() ([]*dto.MuscularGroupResponseDTO, error) {

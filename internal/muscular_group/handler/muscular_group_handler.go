@@ -39,9 +39,7 @@ func (h *MuscularGroupHandler) CreateMuscularGroup(w http.ResponseWriter, r *htt
 		return
 	}
 
-	response.WriteAPICreated(w, "Muscular group created successfully", struct {
-		ID string `json:"id"`
-	}{ID: *muscularGroupID})
+	response.WriteAPICreated(w, "Muscular group created successfully", *muscularGroupID)
 }
 
 func (h *MuscularGroupHandler) GetMuscularGroup(w http.ResponseWriter, r *http.Request) {

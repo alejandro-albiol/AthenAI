@@ -1,6 +1,7 @@
 package service_test
 
 import (
+	"database/sql"
 	"errors"
 	"testing"
 
@@ -42,7 +43,8 @@ func (m *mockRepository) GetMuscularGroupByID(id string) (*dto.MuscularGroupResp
 			return g, nil
 		}
 	}
-	return nil, errors.New("not found")
+	// Simulate not found as sql.ErrNoRows for service logic compatibility
+	return nil, sql.ErrNoRows
 }
 func (m *mockRepository) UpdateMuscularGroup(id string, mg *dto.UpdateMuscularGroupDTO) (*dto.MuscularGroupResponseDTO, error) {
 	if m.updateErr != nil {
@@ -67,7 +69,8 @@ func (m *mockRepository) GetMuscularGroupByName(name string) (*dto.MuscularGroup
 			return g, nil
 		}
 	}
-	return nil, errors.New("not found")
+	// Simulate not found as sql.ErrNoRows for service logic compatibility
+	return nil, sql.ErrNoRows
 }
 
 func TestCreateMuscularGroup(t *testing.T) {
@@ -87,11 +90,11 @@ func TestCreateMuscularGroup(t *testing.T) {
 	assert.True(t, ok)
 	assert.Equal(t, "CONFLICT", apiErr.Code)
 
-	// Repo error
-	mock.getAllErr = errors.New("fail")
+	// Repo error (uniqueness check)
+	mock.getByNameErr = errors.New("fail")
 	_, err = svc.CreateMuscularGroup(&dto.CreateMuscularGroupDTO{Name: "Any"})
 	assert.Error(t, err)
-	mock.getAllErr = nil
+	mock.getByNameErr = nil
 	mock.createErr = errors.New("fail")
 	_, err = svc.CreateMuscularGroup(&dto.CreateMuscularGroupDTO{Name: "Unique"})
 	assert.Error(t, err)
@@ -104,7 +107,7 @@ func TestGetMuscularGroupByID(t *testing.T) {
 	assert.NoError(t, err)
 	assert.Equal(t, "Chest", mg.Name)
 
-	mock.getByIDErr = errors.New("fail")
+	mock.getByIDErr = sql.ErrNoRows
 	_, err = svc.GetMuscularGroupByID("2")
 	assert.Error(t, err)
 	apiErr, ok := err.(*apierror.APIError)
