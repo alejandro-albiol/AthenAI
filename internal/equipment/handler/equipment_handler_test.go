@@ -21,24 +21,28 @@ type MockEquipmentService struct {
 	mock.Mock
 }
 
-func (m *MockEquipmentService) CreateEquipment(equipment dto.EquipmentCreationDTO) (string, error) {
+func (m *MockEquipmentService) CreateEquipment(equipment *dto.EquipmentCreationDTO) (*string, error) {
 	args := m.Called(equipment)
-	return args.String(0), args.Error(1)
+	if args.Get(0) != nil {
+		id := args.Get(0).(string)
+		return &id, args.Error(1)
+	}
+	return nil, args.Error(1)
 }
 
-func (m *MockEquipmentService) GetEquipmentByID(id string) (dto.EquipmentResponseDTO, error) {
+func (m *MockEquipmentService) GetEquipmentByID(id string) (*dto.EquipmentResponseDTO, error) {
 	args := m.Called(id)
-	return args.Get(0).(dto.EquipmentResponseDTO), args.Error(1)
+	return args.Get(0).(*dto.EquipmentResponseDTO), args.Error(1)
 }
 
-func (m *MockEquipmentService) GetAllEquipment() ([]dto.EquipmentResponseDTO, error) {
+func (m *MockEquipmentService) GetAllEquipment() ([]*dto.EquipmentResponseDTO, error) {
 	args := m.Called()
-	return args.Get(0).([]dto.EquipmentResponseDTO), args.Error(1)
+	return args.Get(0).([]*dto.EquipmentResponseDTO), args.Error(1)
 }
 
-func (m *MockEquipmentService) UpdateEquipment(id string, update dto.EquipmentUpdateDTO) (dto.EquipmentResponseDTO, error) {
+func (m *MockEquipmentService) UpdateEquipment(id string, update *dto.EquipmentUpdateDTO) (*dto.EquipmentResponseDTO, error) {
 	args := m.Called(id, update)
-	return args.Get(0).(dto.EquipmentResponseDTO), args.Error(1)
+	return args.Get(0).(*dto.EquipmentResponseDTO), args.Error(1)
 }
 
 func (m *MockEquipmentService) DeleteEquipment(id string) error {
@@ -61,7 +65,7 @@ func TestCreateEquipment(t *testing.T) {
 				Category:    "Cardio",
 			},
 			setupMock: func(mockService *MockEquipmentService) {
-				mockService.On("CreateEquipment", mock.AnythingOfType("dto.EquipmentCreationDTO")).Return("equipment123", nil)
+				mockService.On("CreateEquipment", mock.AnythingOfType("*dto.EquipmentCreationDTO")).Return("equipment123", nil)
 			},
 			wantStatus: http.StatusOK,
 		},
@@ -73,7 +77,7 @@ func TestCreateEquipment(t *testing.T) {
 				Category:    "Cardio",
 			},
 			setupMock: func(mockService *MockEquipmentService) {
-				mockService.On("CreateEquipment", mock.AnythingOfType("dto.EquipmentCreationDTO")).Return("",
+				mockService.On("CreateEquipment", mock.AnythingOfType("*dto.EquipmentCreationDTO")).Return("",
 					apierror.New(errorcode_enum.CodeConflict, "Equipment with name 'Treadmill' already exists", nil),
 				)
 			},
@@ -120,7 +124,7 @@ func TestGetEquipment(t *testing.T) {
 			name:        "successful retrieval",
 			equipmentID: "equipment123",
 			setupMock: func(mockService *MockEquipmentService) {
-				equipment := dto.EquipmentResponseDTO{
+				equipment := &dto.EquipmentResponseDTO{
 					ID:          "equipment123",
 					Name:        "Treadmill",
 					Description: "Cardio equipment for running",
@@ -137,7 +141,7 @@ func TestGetEquipment(t *testing.T) {
 			name:        "equipment not found",
 			equipmentID: "nonexistent",
 			setupMock: func(mockService *MockEquipmentService) {
-				mockService.On("GetEquipmentByID", "nonexistent").Return(dto.EquipmentResponseDTO{},
+				mockService.On("GetEquipmentByID", "nonexistent").Return((*dto.EquipmentResponseDTO)(nil),
 					apierror.New(errorcode_enum.CodeNotFound, "Equipment not found", nil))
 			},
 			wantStatus: http.StatusNotFound,
@@ -185,7 +189,7 @@ func TestListEquipment(t *testing.T) {
 		{
 			name: "successful list",
 			setupMock: func(mockService *MockEquipmentService) {
-				equipment := []dto.EquipmentResponseDTO{
+				equipment := []*dto.EquipmentResponseDTO{
 					{
 						ID:          "equipment1",
 						Name:        "Treadmill",
@@ -212,7 +216,7 @@ func TestListEquipment(t *testing.T) {
 		{
 			name: "empty list",
 			setupMock: func(mockService *MockEquipmentService) {
-				mockService.On("GetAllEquipment").Return([]dto.EquipmentResponseDTO{}, nil)
+				mockService.On("GetAllEquipment").Return([]*dto.EquipmentResponseDTO{}, nil)
 			},
 			wantStatus: http.StatusOK,
 		},
@@ -256,7 +260,7 @@ func TestUpdateEquipment(t *testing.T) {
 				Description: stringPtr("Updated description"),
 			},
 			setupMock: func(mockService *MockEquipmentService) {
-				updatedEquipment := dto.EquipmentResponseDTO{
+				updatedEquipment := &dto.EquipmentResponseDTO{
 					ID:          "equipment123",
 					Name:        "Updated Treadmill",
 					Description: "Updated description",
@@ -265,7 +269,7 @@ func TestUpdateEquipment(t *testing.T) {
 					CreatedAt:   "2023-01-01T00:00:00Z",
 					UpdatedAt:   "2023-01-01T01:00:00Z",
 				}
-				mockService.On("UpdateEquipment", "equipment123", mock.AnythingOfType("dto.EquipmentUpdateDTO")).Return(updatedEquipment, nil)
+				mockService.On("UpdateEquipment", "equipment123", mock.AnythingOfType("*dto.EquipmentUpdateDTO")).Return(updatedEquipment, nil)
 			},
 			wantStatus: http.StatusOK,
 		},
@@ -276,8 +280,8 @@ func TestUpdateEquipment(t *testing.T) {
 				Name: stringPtr("Updated Name"),
 			},
 			setupMock: func(mockService *MockEquipmentService) {
-				mockService.On("UpdateEquipment", "nonexistent", mock.AnythingOfType("dto.EquipmentUpdateDTO")).Return(
-					dto.EquipmentResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Equipment not found", nil))
+				mockService.On("UpdateEquipment", "nonexistent", mock.AnythingOfType("*dto.EquipmentUpdateDTO")).Return(
+					(*dto.EquipmentResponseDTO)(nil), apierror.New(errorcode_enum.CodeNotFound, "Equipment not found", nil))
 			},
 			wantStatus: http.StatusNotFound,
 		},

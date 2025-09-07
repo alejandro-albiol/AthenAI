@@ -23,7 +23,7 @@ func NewEquipmentHandler(service interfaces.EquipmentService) *EquipmentHandler 
 }
 
 func (h *EquipmentHandler) CreateEquipment(w http.ResponseWriter, r *http.Request) {
-	var createDTO dto.EquipmentCreationDTO
+	var createDTO *dto.EquipmentCreationDTO
 	if err := json.NewDecoder(r.Body).Decode(&createDTO); err != nil {
 		response.WriteAPIError(w, apierror.New(
 			errorcode_enum.CodeBadRequest,
@@ -39,7 +39,7 @@ func (h *EquipmentHandler) CreateEquipment(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	response.WriteAPISuccess(w, "Equipment created successfully", map[string]string{"id": equipmentID})
+	response.WriteAPISuccess(w, "Equipment created successfully", equipmentID)
 }
 
 func (h *EquipmentHandler) GetEquipment(w http.ResponseWriter, r *http.Request) {
@@ -83,7 +83,7 @@ func (h *EquipmentHandler) UpdateEquipment(w http.ResponseWriter, r *http.Reques
 		return
 	}
 
-	var updateDTO dto.EquipmentUpdateDTO
+	var updateDTO *dto.EquipmentUpdateDTO
 	if err := json.NewDecoder(r.Body).Decode(&updateDTO); err != nil {
 		response.WriteAPIError(w, apierror.New(
 			errorcode_enum.CodeBadRequest,
