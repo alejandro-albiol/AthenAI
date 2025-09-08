@@ -17,19 +17,25 @@ func NewCustomEquipmentService(repo interfaces.CustomEquipmentRepository) *Custo
 	return &CustomEquipmentService{Repo: repo}
 }
 
-func (s *CustomEquipmentService) CreateCustomEquipment(gymID string, equipment *dto.CreateCustomEquipmentDTO) error {
+func (s *CustomEquipmentService) CreateCustomEquipment(gymID string, equipment *dto.CreateCustomEquipmentDTO) (*string, error) {
+	if equipment.Name == "" {
+		return nil, apierror.New(errorcode_enum.CodeBadRequest, "Name is required", nil)
+	}
+	if equipment.CreatedBy == "" {
+		return nil, apierror.New(errorcode_enum.CodeBadRequest, "CreatedBy is required", nil)
+	}
 	existingEquipment, err := s.Repo.GetByName(gymID, equipment.Name)
 	if err != nil && err != sql.ErrNoRows {
-		return apierror.New(errorcode_enum.CodeInternal, "Failed to check existing equipment", err)
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to check existing equipment", err)
 	}
 	if existingEquipment != nil && existingEquipment.ID != "" {
-		return apierror.New(errorcode_enum.CodeConflict, "Equipment already exists", nil)
+		return nil, apierror.New(errorcode_enum.CodeConflict, "Equipment already exists", nil)
 	}
-	err = s.Repo.Create(gymID, equipment)
+	id, err := s.Repo.Create(gymID, equipment)
 	if err != nil {
-		return apierror.New(errorcode_enum.CodeInternal, "Failed to create equipment", err)
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to create equipment", err)
 	}
-	return nil
+	return id, nil
 }
 
 func (s *CustomEquipmentService) GetCustomEquipmentByID(gymID, id string) (*dto.ResponseCustomEquipmentDTO, error) {

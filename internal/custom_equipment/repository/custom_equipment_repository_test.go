@@ -14,7 +14,7 @@ func setupMockDB(t *testing.T) (*sql.DB, sqlmock.Sqlmock, *CustomEquipmentReposi
 	db, mock, err := sqlmock.New()
 	assert.NoError(t, err)
 	repo := NewCustomEquipmentRepository(db)
-	return db, mock, repo
+	return db, mock, repo.(*CustomEquipmentRepository)
 }
 
 func TestCreateCustomEquipment(t *testing.T) {
@@ -30,13 +30,14 @@ func TestCreateCustomEquipment(t *testing.T) {
 		IsActive:    true,
 	}
 
-	query := `INSERT INTO "` + gymID + `".custom_equipment (created_by, name, description, category, is_active) VALUES ($1, $2, $3, $4, $5)`
-	mock.ExpectExec(regexp.QuoteMeta(query)).
+	query := `INSERT INTO "` + gymID + `".custom_equipment (created_by, name, description, category, is_active) VALUES ($1, $2, $3, $4, $5) RETURNING id`
+	mock.ExpectQuery(regexp.QuoteMeta(query)).
 		WithArgs(equipment.CreatedBy, equipment.Name, equipment.Description, equipment.Category, equipment.IsActive).
-		WillReturnResult(sqlmock.NewResult(1, 1))
+		WillReturnRows(sqlmock.NewRows([]string{"id"}).AddRow("eq-1"))
 
-	err := repo.Create(gymID, equipment)
+	id, err := repo.Create(gymID, equipment)
 	assert.NoError(t, err)
+	assert.Equal(t, "eq-1", *id)
 }
 
 func TestGetCustomEquipmentByID(t *testing.T) {

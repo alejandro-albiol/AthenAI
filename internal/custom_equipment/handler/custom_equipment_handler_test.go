@@ -13,14 +13,14 @@ import (
 
 type mockService struct {
 	interfaces.CustomEquipmentService
-	CreateFn  func(gymID string, equipment *dto.CreateCustomEquipmentDTO) error
+	CreateFn  func(gymID string, equipment *dto.CreateCustomEquipmentDTO) (*string, error)
 	GetByIDFn func(gymID, id string) (*dto.ResponseCustomEquipmentDTO, error)
 	ListFn    func(gymID string) ([]*dto.ResponseCustomEquipmentDTO, error)
 	UpdateFn  func(gymID string, equipment *dto.UpdateCustomEquipmentDTO) error
 	DeleteFn  func(gymID, id string) error
 }
 
-func (m *mockService) CreateCustomEquipment(gymID string, equipment *dto.CreateCustomEquipmentDTO) error {
+func (m *mockService) CreateCustomEquipment(gymID string, equipment *dto.CreateCustomEquipmentDTO) (*string, error) {
 	return m.CreateFn(gymID, equipment)
 }
 func (m *mockService) GetCustomEquipmentByID(gymID, id string) (*dto.ResponseCustomEquipmentDTO, error) {
@@ -38,11 +38,12 @@ func (m *mockService) DeleteCustomEquipment(gymID, id string) error {
 
 func TestCreateCustomEquipmentHandler(t *testing.T) {
 	service := &mockService{
-		CreateFn: func(gymID string, equipment *dto.CreateCustomEquipmentDTO) error {
+		CreateFn: func(gymID string, equipment *dto.CreateCustomEquipmentDTO) (*string, error) {
 			if equipment == nil || equipment.Name == "" {
-				return assert.AnError
+				return nil, assert.AnError
 			}
-			return nil
+			id := "eq-1"
+			return &id, nil
 		},
 	}
 	h := NewCustomEquipmentHandler(service)
@@ -50,9 +51,21 @@ func TestCreateCustomEquipmentHandler(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPost, "/custom-equipment", strings.NewReader(body))
 	w := httptest.NewRecorder()
 
-	h.Create(w, req)
+	h.CreateCustomEquipment(w, req)
 	resp := w.Result()
-	assert.Equal(t, http.StatusOK, resp.StatusCode)
+	assert.Equal(t, http.StatusCreated, resp.StatusCode)
+}
+
+func TestCreateCustomEquipmentHandler_InvalidBody(t *testing.T) {
+	service := &mockService{}
+	h := NewCustomEquipmentHandler(service)
+	body := `{"created_by":"user123","name":"Dumbbell","is_active":true}`
+	req := httptest.NewRequest(http.MethodPost, "/custom-equipment", strings.NewReader(body))
+	w := httptest.NewRecorder()
+
+	h.CreateCustomEquipment(w, req)
+	resp := w.Result()
+	assert.Equal(t, http.StatusBadRequest, resp.StatusCode)
 }
 
 func TestGetCustomEquipmentByIDHandler(t *testing.T) {
@@ -68,7 +81,7 @@ func TestGetCustomEquipmentByIDHandler(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/custom-equipment/eq-1", nil)
 	w := httptest.NewRecorder()
 
-	h.GetByID(w, req)
+	h.GetCustomEquipmentByID(w, req)
 	resp := w.Result()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
@@ -83,7 +96,7 @@ func TestListCustomEquipmentHandler(t *testing.T) {
 	req := httptest.NewRequest(http.MethodGet, "/custom-equipment", nil)
 	w := httptest.NewRecorder()
 
-	h.List(w, req)
+	h.ListCustomEquipment(w, req)
 	resp := w.Result()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
@@ -102,7 +115,7 @@ func TestUpdateCustomEquipmentHandler(t *testing.T) {
 	req := httptest.NewRequest(http.MethodPut, "/custom-equipment/eq-1", strings.NewReader(body))
 	w := httptest.NewRecorder()
 
-	h.Update(w, req)
+	h.UpdateCustomEquipment(w, req)
 	resp := w.Result()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }
@@ -120,7 +133,7 @@ func TestDeleteCustomEquipmentHandler(t *testing.T) {
 	req := httptest.NewRequest(http.MethodDelete, "/custom-equipment/eq-1", nil)
 	w := httptest.NewRecorder()
 
-	h.Delete(w, req)
+	h.DeleteCustomEquipment(w, req)
 	resp := w.Result()
 	assert.Equal(t, http.StatusOK, resp.StatusCode)
 }

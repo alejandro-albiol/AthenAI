@@ -18,18 +18,22 @@ type CustomEquipmentHandler struct {
 	Service interfaces.CustomEquipmentService
 }
 
-func NewCustomEquipmentHandler(service interfaces.CustomEquipmentService) *CustomEquipmentHandler {
+func NewCustomEquipmentHandler(service interfaces.CustomEquipmentService) interfaces.CustomEquipmentHandler {
 	return &CustomEquipmentHandler{Service: service}
 }
 
-func (h *CustomEquipmentHandler) Create(w http.ResponseWriter, r *http.Request) {
+func (h *CustomEquipmentHandler) CreateCustomEquipment(w http.ResponseWriter, r *http.Request) {
 	var dtoReq dto.CreateCustomEquipmentDTO
 	if err := json.NewDecoder(r.Body).Decode(&dtoReq); err != nil {
 		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Invalid request body", err))
 		return
 	}
+	if dtoReq.Name == "" || dtoReq.CreatedBy == "" || dtoReq.Category == "" || dtoReq.Description == "" {
+		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Missing required fields", nil))
+		return
+	}
 	gymID := middleware.GetGymID(r)
-	err := h.Service.CreateCustomEquipment(gymID, &dtoReq)
+	id, err := h.Service.CreateCustomEquipment(gymID, &dtoReq)
 	if err != nil {
 		if apiErr, ok := err.(*apierror.APIError); ok {
 			response.WriteAPIError(w, apiErr)
@@ -38,10 +42,10 @@ func (h *CustomEquipmentHandler) Create(w http.ResponseWriter, r *http.Request) 
 		}
 		return
 	}
-	response.WriteAPISuccess(w, "Equipment created", nil)
+	response.WriteAPICreated(w, "Equipment created", id)
 }
 
-func (h *CustomEquipmentHandler) GetByID(w http.ResponseWriter, r *http.Request) {
+func (h *CustomEquipmentHandler) GetCustomEquipmentByID(w http.ResponseWriter, r *http.Request) {
 	gymID := middleware.GetGymID(r)
 	id := r.URL.Query().Get("id")
 	equipment, err := h.Service.GetCustomEquipmentByID(gymID, id)
@@ -56,8 +60,8 @@ func (h *CustomEquipmentHandler) GetByID(w http.ResponseWriter, r *http.Request)
 	response.WriteAPISuccess(w, "Equipment found", equipment)
 }
 
-// GetByName handles GET /custom-equipment/search?name=...
-func (h *CustomEquipmentHandler) GetByName(w http.ResponseWriter, r *http.Request) {
+// GetCustomEquipmentByName handles GET /custom-equipment/search?name=...
+func (h *CustomEquipmentHandler) GetCustomEquipmentByName(w http.ResponseWriter, r *http.Request) {
 	gymID := middleware.GetGymID(r)
 	name := r.URL.Query().Get("name")
 	equipment, err := h.Service.GetCustomEquipmentByName(gymID, name)
@@ -72,7 +76,7 @@ func (h *CustomEquipmentHandler) GetByName(w http.ResponseWriter, r *http.Reques
 	response.WriteAPISuccess(w, "Equipment found", equipment)
 }
 
-func (h *CustomEquipmentHandler) List(w http.ResponseWriter, r *http.Request) {
+func (h *CustomEquipmentHandler) ListCustomEquipment(w http.ResponseWriter, r *http.Request) {
 	gymID := middleware.GetGymID(r)
 	equipment, err := h.Service.ListCustomEquipment(gymID)
 	if err != nil {
@@ -86,7 +90,7 @@ func (h *CustomEquipmentHandler) List(w http.ResponseWriter, r *http.Request) {
 	response.WriteAPISuccess(w, "Equipment list", equipment)
 }
 
-func (h *CustomEquipmentHandler) Update(w http.ResponseWriter, r *http.Request) {
+func (h *CustomEquipmentHandler) UpdateCustomEquipment(w http.ResponseWriter, r *http.Request) {
 	var dtoReq dto.UpdateCustomEquipmentDTO
 	if err := json.NewDecoder(r.Body).Decode(&dtoReq); err != nil {
 		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Invalid request body", err))
@@ -105,7 +109,7 @@ func (h *CustomEquipmentHandler) Update(w http.ResponseWriter, r *http.Request) 
 	response.WriteAPISuccess(w, "Equipment updated", nil)
 }
 
-func (h *CustomEquipmentHandler) Delete(w http.ResponseWriter, r *http.Request) {
+func (h *CustomEquipmentHandler) DeleteCustomEquipment(w http.ResponseWriter, r *http.Request) {
 	gymID := middleware.GetGymID(r)
 	id := r.URL.Query().Get("id")
 	err := h.Service.DeleteCustomEquipment(gymID, id)

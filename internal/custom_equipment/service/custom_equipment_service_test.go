@@ -9,7 +9,7 @@ import (
 )
 
 type mockRepo struct {
-	CreateFn    func(gymID string, equipment *dto.CreateCustomEquipmentDTO) error
+	CreateFn    func(gymID string, equipment *dto.CreateCustomEquipmentDTO) (*string, error)
 	GetByIDFn   func(gymID, id string) (*dto.ResponseCustomEquipmentDTO, error)
 	GetByNameFn func(gymID string, name string) (*dto.ResponseCustomEquipmentDTO, error)
 	ListFn      func(gymID string) ([]*dto.ResponseCustomEquipmentDTO, error)
@@ -25,7 +25,7 @@ func (m *mockRepo) GetByName(gymID string, name string) (*dto.ResponseCustomEqui
 	return nil, nil
 }
 
-func (m *mockRepo) Create(gymID string, equipment *dto.CreateCustomEquipmentDTO) error {
+func (m *mockRepo) Create(gymID string, equipment *dto.CreateCustomEquipmentDTO) (*string, error) {
 	return m.CreateFn(gymID, equipment)
 }
 func (m *mockRepo) GetByID(gymID, id string) (*dto.ResponseCustomEquipmentDTO, error) {
@@ -44,11 +44,12 @@ func (m *mockRepo) Delete(gymID, id string) error {
 func TestCreateCustomEquipmentService(t *testing.T) {
 	gymID := "tenant_schema"
 	repo := &mockRepo{
-		CreateFn: func(gymID string, equipment *dto.CreateCustomEquipmentDTO) error {
+		CreateFn: func(gymID string, equipment *dto.CreateCustomEquipmentDTO) (*string, error) {
 			if equipment.Name == "" {
-				return errors.New("name required")
+				return nil, errors.New("name required")
 			}
-			return nil
+			id := "eq-1"
+			return &id, nil
 		},
 		GetByNameFn: func(gymID string, name string) (*dto.ResponseCustomEquipmentDTO, error) {
 			return nil, nil
@@ -62,19 +63,22 @@ func TestCreateCustomEquipmentService(t *testing.T) {
 		Category:    "weight",
 		IsActive:    true,
 	}
-	err := svc.CreateCustomEquipment(gymID, equipment)
+	id, err := svc.CreateCustomEquipment(gymID, equipment)
 	assert.NoError(t, err)
+	assert.NotNil(t, id)
 
 	badEquipment := &dto.CreateCustomEquipmentDTO{CreatedBy: "user123"}
-	err = svc.CreateCustomEquipment(gymID, badEquipment)
+	id, err = svc.CreateCustomEquipment(gymID, badEquipment)
 	assert.Error(t, err)
+	assert.Nil(t, id)
 }
 
 func TestCreateCustomEquipmentService_Duplicate(t *testing.T) {
 	gymID := "tenant_schema"
 	repo := &mockRepo{
-		CreateFn: func(gymID string, equipment *dto.CreateCustomEquipmentDTO) error {
-			return nil
+		CreateFn: func(gymID string, equipment *dto.CreateCustomEquipmentDTO) (*string, error) {
+			id := "eq-1"
+			return &id, nil
 		},
 		GetByNameFn: func(gymID string, name string) (*dto.ResponseCustomEquipmentDTO, error) {
 			return &dto.ResponseCustomEquipmentDTO{ID: "eq-1", Name: name}, nil
@@ -88,8 +92,9 @@ func TestCreateCustomEquipmentService_Duplicate(t *testing.T) {
 		Category:    "weight",
 		IsActive:    true,
 	}
-	err := svc.CreateCustomEquipment(gymID, equipment)
+	id, err := svc.CreateCustomEquipment(gymID, equipment)
 	assert.Error(t, err)
+	assert.Nil(t, id)
 }
 
 func TestGetCustomEquipmentByIDService(t *testing.T) {

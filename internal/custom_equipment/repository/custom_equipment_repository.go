@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/alejandro-albiol/athenai/internal/custom_equipment/dto"
+	"github.com/alejandro-albiol/athenai/internal/custom_equipment/interfaces"
 )
 
 // CustomEquipmentRepositoryImpl implements interfaces.CustomEquipmentRepository
@@ -13,22 +14,25 @@ type CustomEquipmentRepository struct {
 	DB *sql.DB
 }
 
-func NewCustomEquipmentRepository(db *sql.DB) *CustomEquipmentRepository {
+func NewCustomEquipmentRepository(db *sql.DB) interfaces.CustomEquipmentRepository {
 	return &CustomEquipmentRepository{DB: db}
 }
 
-func (r *CustomEquipmentRepository) Create(gymID string, equipment *dto.CreateCustomEquipmentDTO) error {
-	query := `INSERT INTO "%s".custom_equipment (created_by, name, description, category, is_active) VALUES ($1, $2, $3, $4, $5)`
-	schema := gymID
-	_, err := r.DB.Exec(
-		fmt.Sprintf(query, schema),
+func (r *CustomEquipmentRepository) Create(gymID string, equipment *dto.CreateCustomEquipmentDTO) (*string, error) {
+	query := `INSERT INTO "%s".custom_equipment (created_by, name, description, category, is_active) VALUES ($1, $2, $3, $4, $5) RETURNING id`
+	var id string
+	err := r.DB.QueryRow(
+		fmt.Sprintf(query, gymID),
 		equipment.CreatedBy,
 		equipment.Name,
 		equipment.Description,
 		equipment.Category,
 		equipment.IsActive,
-	)
-	return err
+	).Scan(&id)
+	if err != nil {
+		return nil, err
+	}
+	return &id, nil
 }
 
 func (r *CustomEquipmentRepository) GetByID(gymID, id string) (*dto.ResponseCustomEquipmentDTO, error) {
