@@ -23,17 +23,23 @@ func NewCustomExerciseEquipmentHandler(svc interfaces.CustomExerciseEquipmentSer
 
 func (h *CustomExerciseEquipmentHandler) CreateLink(w http.ResponseWriter, r *http.Request) {
 	gymID := middleware.GetGymID(r)
-	var link dto.CustomExerciseEquipment
+	var link *dto.CustomExerciseEquipment
 	if err := json.NewDecoder(r.Body).Decode(&link); err != nil {
 		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Invalid request body", err))
 		return
 	}
-	err := h.service.CreateLink(gymID, link)
+
+	if link.CustomExerciseID == "" || link.EquipmentID == "" {
+		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "CustomExerciseID and EquipmentID are required", nil))
+		return
+	}
+	
+	id, err := h.service.CreateLink(gymID, link)
 	if apiErr, ok := err.(*apierror.APIError); err != nil && ok {
 		response.WriteAPIError(w, apiErr)
 		return
 	}
-	response.WriteAPISuccess(w, "Custom exercise equipment link created", nil)
+	response.WriteAPISuccess(w, "Custom exercise equipment link created", id)
 }
 
 func (h *CustomExerciseEquipmentHandler) DeleteLink(w http.ResponseWriter, r *http.Request) {

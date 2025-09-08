@@ -16,15 +16,15 @@ func NewCustomExerciseEquipmentRepository(db *sql.DB) interfaces.CustomExerciseE
 	return &CustomExerciseEquipmentRepositoryImpl{db: db}
 }
 
-func (r *CustomExerciseEquipmentRepositoryImpl) CreateLink(gymID string, link dto.CustomExerciseEquipment) error {
+func (r *CustomExerciseEquipmentRepositoryImpl) CreateLink(gymID string, link *dto.CustomExerciseEquipment) (*string, error) {
 	schema := gymID
 	query := fmt.Sprintf("INSERT INTO %s.custom_exercise_equipment (custom_exercise_id, equipment_id) VALUES ($1, $2) RETURNING id", schema)
 	var id string
 	err := r.db.QueryRow(query, link.CustomExerciseID, link.EquipmentID).Scan(&id)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return &id, nil
 }
 
 func (r *CustomExerciseEquipmentRepositoryImpl) DeleteLink(gymID, id string) error {
@@ -54,18 +54,18 @@ func (r *CustomExerciseEquipmentRepositoryImpl) RemoveAllLinksForExercise(gymID,
 	return nil
 }
 
-func (r *CustomExerciseEquipmentRepositoryImpl) FindByID(gymID, id string) (dto.CustomExerciseEquipment, error) {
+func (r *CustomExerciseEquipmentRepositoryImpl) FindByID(gymID, id string) (*dto.CustomExerciseEquipment, error) {
 	schema := gymID
 	query := fmt.Sprintf("SELECT custom_exercise_id, equipment_id FROM %s.custom_exercise_equipment WHERE id = $1", schema)
 	var link dto.CustomExerciseEquipment
 	err := r.db.QueryRow(query, id).Scan(&link.CustomExerciseID, &link.EquipmentID)
 	if err != nil {
-		return dto.CustomExerciseEquipment{}, err
+		return nil, err
 	}
-	return link, nil
+	return &link, nil
 }
 
-func (r *CustomExerciseEquipmentRepositoryImpl) FindByCustomExerciseID(gymID, customExerciseID string) ([]dto.CustomExerciseEquipment, error) {
+func (r *CustomExerciseEquipmentRepositoryImpl) FindByCustomExerciseID(gymID, customExerciseID string) ([]*dto.CustomExerciseEquipment, error) {
 	schema := gymID
 	query := fmt.Sprintf("SELECT id, equipment_id FROM %s.custom_exercise_equipment WHERE custom_exercise_id = $1", schema)
 	rows, err := r.db.Query(query, customExerciseID)
@@ -74,18 +74,18 @@ func (r *CustomExerciseEquipmentRepositoryImpl) FindByCustomExerciseID(gymID, cu
 	}
 	defer rows.Close()
 
-	var links []dto.CustomExerciseEquipment
+	var links []*dto.CustomExerciseEquipment
 	for rows.Next() {
 		var link dto.CustomExerciseEquipment
 		if err := rows.Scan(&link.ID, &link.EquipmentID); err != nil {
 			return nil, err
 		}
-		links = append(links, link)
+		links = append(links, &link)
 	}
 	return links, nil
 }
 
-func (r *CustomExerciseEquipmentRepositoryImpl) FindByEquipmentID(gymID, equipmentID string) ([]dto.CustomExerciseEquipment, error) {
+func (r *CustomExerciseEquipmentRepositoryImpl) FindByEquipmentID(gymID, equipmentID string) ([]*dto.CustomExerciseEquipment, error) {
 	schema := gymID
 	query := fmt.Sprintf("SELECT id, custom_exercise_id FROM %s.custom_exercise_equipment WHERE equipment_id = $1", schema)
 	rows, err := r.db.Query(query, equipmentID)
@@ -94,13 +94,13 @@ func (r *CustomExerciseEquipmentRepositoryImpl) FindByEquipmentID(gymID, equipme
 	}
 	defer rows.Close()
 
-	var links []dto.CustomExerciseEquipment
+	var links []*dto.CustomExerciseEquipment
 	for rows.Next() {
 		var link dto.CustomExerciseEquipment
 		if err := rows.Scan(&link.ID, &link.CustomExerciseID); err != nil {
 			return nil, err
 		}
-		links = append(links, link)
+		links = append(links, &link)
 	}
 	return links, nil
 }

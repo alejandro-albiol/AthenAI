@@ -29,7 +29,7 @@ func NewCustomExerciseEquipmentService(
 	}
 }
 
-func (s *CustomExerciseEquipmentService) CreateLink(gymID string, link dto.CustomExerciseEquipment) error {
+func (s *CustomExerciseEquipmentService) CreateLink(gymID string, link *dto.CustomExerciseEquipment) (*string, error) {
 	// Validate equipment exists in either tenant or public table
 	var found bool
 	if s.customEquipmentRepo != nil {
@@ -45,13 +45,14 @@ func (s *CustomExerciseEquipmentService) CreateLink(gymID string, link dto.Custo
 		}
 	}
 	if !found {
-		return apierror.New(errorcode_enum.CodeNotFound, "Equipment not found or not allowed", nil)
+		return nil, apierror.New(errorcode_enum.CodeNotFound, "The equipment is nonexistent", nil)
 	}
-	err := s.repository.CreateLink(gymID, link)
+
+	id, err := s.repository.CreateLink(gymID, link)
 	if err != nil {
-		return apierror.New(errorcode_enum.CodeInternal, "Failed to create custom exercise equipment link", err)
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to create custom exercise equipment link", err)
 	}
-	return nil
+	return id, nil
 }
 
 func (s *CustomExerciseEquipmentService) DeleteLink(gymID, id string) error {
@@ -73,18 +74,18 @@ func (s *CustomExerciseEquipmentService) RemoveAllLinksForExercise(gymID, custom
 	return nil
 }
 
-func (s *CustomExerciseEquipmentService) FindByID(gymID, id string) (dto.CustomExerciseEquipment, error) {
+func (s *CustomExerciseEquipmentService) FindByID(gymID, id string) (*dto.CustomExerciseEquipment, error) {
 	link, err := s.repository.FindByID(gymID, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return dto.CustomExerciseEquipment{}, apierror.New(errorcode_enum.CodeNotFound, "Custom exercise equipment link not found", err)
+			return nil, apierror.New(errorcode_enum.CodeNotFound, "Custom exercise equipment link not found", err)
 		}
-		return dto.CustomExerciseEquipment{}, apierror.New(errorcode_enum.CodeInternal, "Failed to find custom exercise equipment link", err)
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to find custom exercise equipment link", err)
 	}
 	return link, nil
 }
 
-func (s *CustomExerciseEquipmentService) FindByCustomExerciseID(gymID, customExerciseID string) ([]dto.CustomExerciseEquipment, error) {
+func (s *CustomExerciseEquipmentService) FindByCustomExerciseID(gymID, customExerciseID string) ([]*dto.CustomExerciseEquipment, error) {
 	links, err := s.repository.FindByCustomExerciseID(gymID, customExerciseID)
 	if err != nil {
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to find equipment links for custom exercise", err)
@@ -92,7 +93,7 @@ func (s *CustomExerciseEquipmentService) FindByCustomExerciseID(gymID, customExe
 	return links, nil
 }
 
-func (s *CustomExerciseEquipmentService) FindByEquipmentID(gymID, equipmentID string) ([]dto.CustomExerciseEquipment, error) {
+func (s *CustomExerciseEquipmentService) FindByEquipmentID(gymID, equipmentID string) ([]*dto.CustomExerciseEquipment, error) {
 	links, err := s.repository.FindByEquipmentID(gymID, equipmentID)
 	if err != nil {
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to find custom exercise links for equipment", err)
