@@ -17,25 +17,26 @@ func NewCustomExerciseService(repo interfaces.CustomExerciseRepository) *CustomE
 	return &CustomExerciseService{Repo: repo}
 }
 
-func (s *CustomExerciseService) CreateCustomExercise(gymID string, exercise dto.CustomExerciseCreationDTO) error {
-	if err := s.Repo.CreateCustomExercise(gymID, exercise); err != nil {
-		return apierror.New(errorcode_enum.CodeInternal, "Failed to create custom exercise", err)
+func (s *CustomExerciseService) CreateCustomExercise(gymID string, exercise *dto.CustomExerciseCreationDTO) (*string, error) {
+	id, err := s.Repo.CreateCustomExercise(gymID, exercise);
+	if err != nil {
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to create custom exercise", err)
 	}
-	return nil
+	return id, nil
 }
 
-func (s *CustomExerciseService) GetCustomExerciseByID(gymID, id string) (dto.CustomExerciseResponseDTO, error) {
+func (s *CustomExerciseService) GetCustomExerciseByID(gymID, id string) (*dto.CustomExerciseResponseDTO, error) {
 	res, err := s.Repo.GetCustomExerciseByID(gymID, id)
 	if err != nil {
 		if err == sql.ErrNoRows {
-			return dto.CustomExerciseResponseDTO{}, apierror.New(errorcode_enum.CodeNotFound, "Custom exercise not found", err)
+			return nil, apierror.New(errorcode_enum.CodeNotFound, "Custom exercise not found", err)
 		}
-		return dto.CustomExerciseResponseDTO{}, apierror.New(errorcode_enum.CodeInternal, "Failed to get custom exercise", err)
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to get custom exercise", err)
 	}
 	return res, nil
 }
 
-func (s *CustomExerciseService) ListCustomExercises(gymID string) ([]dto.CustomExerciseResponseDTO, error) {
+func (s *CustomExerciseService) ListCustomExercises(gymID string) ([]*dto.CustomExerciseResponseDTO, error) {
 	res, err := s.Repo.ListCustomExercises(gymID)
 	if err != nil {
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to list custom exercises", err)
@@ -43,7 +44,7 @@ func (s *CustomExerciseService) ListCustomExercises(gymID string) ([]dto.CustomE
 	return res, nil
 }
 
-func (s *CustomExerciseService) UpdateCustomExercise(gymID, id string, update dto.CustomExerciseUpdateDTO) error {
+func (s *CustomExerciseService) UpdateCustomExercise(gymID, id string, update *dto.CustomExerciseUpdateDTO) error {
 	if err := s.Repo.UpdateCustomExercise(gymID, id, update); err != nil {
 		return apierror.New(errorcode_enum.CodeInternal, "Failed to update custom exercise", err)
 	}
