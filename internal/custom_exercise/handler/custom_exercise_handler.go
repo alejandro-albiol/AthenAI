@@ -17,7 +17,7 @@ type CustomExerciseHandler struct {
 	Service interfaces.CustomExerciseService
 }
 
-func NewCustomExerciseHandler(svc interfaces.CustomExerciseService) *CustomExerciseHandler {
+func NewCustomExerciseHandler(svc interfaces.CustomExerciseService) interfaces.CustomExerciseHandler {
 	return &CustomExerciseHandler{Service: svc}
 }
 
@@ -27,13 +27,17 @@ func (h *CustomExerciseHandler) Create(w http.ResponseWriter, r *http.Request) {
 		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Invalid request body", err))
 		return
 	}
+	if dtoReq.Name == "" || dtoReq.CreatedBy == "" || dtoReq.Instructions == "" || dtoReq.ExerciseType == "" || dtoReq.DifficultyLevel == "" || len(dtoReq.MuscularGroups) == 0 {
+		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Invalid request body", nil))
+		return
+	}
 	gymID := middleware.GetGymID(r)
-	err := h.Service.CreateCustomExercise(gymID, dtoReq)
+	id, err := h.Service.CreateCustomExercise(gymID, &dtoReq)
 	if err != nil {
 		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeInternal, "Failed to create custom exercise", err))
 		return
 	}
-	response.WriteAPISuccess(w, "Custom Exercise created successfully", nil)
+	response.WriteAPICreated(w, "Custom Exercise created successfully", id)
 }
 
 func (h *CustomExerciseHandler) GetByID(w http.ResponseWriter, r *http.Request) {
@@ -58,7 +62,7 @@ func (h *CustomExerciseHandler) List(w http.ResponseWriter, r *http.Request) {
 }
 
 func (h *CustomExerciseHandler) Update(w http.ResponseWriter, r *http.Request) {
-	var dtoReq dto.CustomExerciseUpdateDTO
+	var dtoReq *dto.CustomExerciseUpdateDTO
 	if err := json.NewDecoder(r.Body).Decode(&dtoReq); err != nil {
 		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Invalid request body", err))
 		return

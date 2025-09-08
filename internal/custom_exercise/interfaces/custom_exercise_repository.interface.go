@@ -8,9 +8,9 @@ import "github.com/alejandro-albiol/athenai/internal/custom_exercise/dto"
 //go:generate mockery --name=CustomExerciseRepository
 
 type CustomExerciseRepository interface {
-	CreateCustomExercise(gymID string, exercise dto.CustomExerciseCreationDTO) error
-	UpdateCustomExercise(gymID, id string, update dto.CustomExerciseUpdateDTO) error
-	GetCustomExerciseByID(gymID, id string) (dto.CustomExerciseResponseDTO, error)
-	ListCustomExercises(gymID string) ([]dto.CustomExerciseResponseDTO, error)
+	CreateCustomExercise(gymID string, exercise *dto.CustomExerciseCreationDTO) (*string, error)
+	UpdateCustomExercise(gymID, id string, update *dto.CustomExerciseUpdateDTO) error
+	GetCustomExerciseByID(gymID, id string) (*dto.CustomExerciseResponseDTO, error)
+	ListCustomExercises(gymID string) ([]*dto.CustomExerciseResponseDTO, error)
 	DeleteCustomExercise(gymID, id string) error // soft delete
 }

@@ -52,6 +52,10 @@ func WriteAPIError(w http.ResponseWriter, apiErr *apierror.APIError) {
 		status = http.StatusUnauthorized
 	case errorcode_enum.CodeForbidden:
 		status = http.StatusForbidden
+	case errorcode_enum.CodeBadRequest:
+		status = http.StatusBadRequest
+	default:
+		status = http.StatusBadRequest
 	}
 	w.WriteHeader(status)
 

@@ -3,11 +3,11 @@ package router
 import (
 	"net/http"
 
-	"github.com/alejandro-albiol/athenai/internal/custom_exercise/handler"
+	"github.com/alejandro-albiol/athenai/internal/custom_exercise/interfaces"
 	"github.com/go-chi/chi/v5"
 )
 
-func NewCustomExerciseRouter(h *handler.CustomExerciseHandler) http.Handler {
+func NewCustomExerciseRouter(h interfaces.CustomExerciseHandler) http.Handler {
 	r := chi.NewRouter()
 
 	r.Post("/custom-exercise", h.Create)
