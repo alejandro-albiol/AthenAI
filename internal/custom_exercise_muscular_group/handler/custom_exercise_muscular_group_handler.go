@@ -17,23 +17,27 @@ type CustomExerciseMuscularGroupHandler struct {
 	service interfaces.CustomExerciseMuscularGroupService
 }
 
-func NewCustomExerciseMuscularGroupHandler(svc interfaces.CustomExerciseMuscularGroupService) *CustomExerciseMuscularGroupHandler {
+func NewCustomExerciseMuscularGroupHandler(svc interfaces.CustomExerciseMuscularGroupService) interfaces.CustomExerciseMuscularGroupHandler {
 	return &CustomExerciseMuscularGroupHandler{service: svc}
 }
 
 func (h *CustomExerciseMuscularGroupHandler) CreateLink(w http.ResponseWriter, r *http.Request) {
 	gymID := middleware.GetGymID(r)
-	var link dto.CustomExerciseMuscularGroup
-	if err := json.NewDecoder(r.Body).Decode(&link); err != nil {
+	var req dto.CustomExerciseMuscularGroupCreationDTO
+	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
 		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Invalid request body", err))
 		return
 	}
-	err := h.service.CreateLink(gymID, link)
+	if req.CustomExerciseID == "" || req.MuscularGroupID == "" {
+		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Missing required fields", nil))
+		return
+	}
+	id, err := h.service.CreateLink(gymID, &req)
 	if apiErr, ok := err.(*apierror.APIError); err != nil && ok {
 		response.WriteAPIError(w, apiErr)
 		return
 	}
-	response.WriteAPISuccess(w, "Custom exercise muscular group link created", nil)
+	response.WriteAPICreated(w, "Custom exercise muscular group link created", id)
 }
 
 func (h *CustomExerciseMuscularGroupHandler) DeleteLink(w http.ResponseWriter, r *http.Request) {
@@ -56,7 +60,7 @@ func (h *CustomExerciseMuscularGroupHandler) RemoveAllLinksForExercise(w http.Re
 	response.WriteAPISuccess(w, "All muscular group links for custom exercise removed", nil)
 }
 
-func (h *CustomExerciseMuscularGroupHandler) FindByID(w http.ResponseWriter, r *http.Request) {
+func (h *CustomExerciseMuscularGroupHandler) GetLinkByID(w http.ResponseWriter, r *http.Request) {
 	gymID := middleware.GetGymID(r)
 	id := chi.URLParam(r, "id")
 	link, err := h.service.GetLinkByID(gymID, id)
@@ -67,7 +71,7 @@ func (h *CustomExerciseMuscularGroupHandler) FindByID(w http.ResponseWriter, r *
 	response.WriteAPISuccess(w, "Custom exercise muscular group link found", link)
 }
 
-func (h *CustomExerciseMuscularGroupHandler) FindByCustomExerciseID(w http.ResponseWriter, r *http.Request) {
+func (h *CustomExerciseMuscularGroupHandler) GetLinksByExerciseID(w http.ResponseWriter, r *http.Request) {
 	gymID := middleware.GetGymID(r)
 	customExerciseID := chi.URLParam(r, "customExerciseID")
 	links, err := h.service.GetLinksByCustomExerciseID(gymID, customExerciseID)
@@ -78,7 +82,7 @@ func (h *CustomExerciseMuscularGroupHandler) FindByCustomExerciseID(w http.Respo
 	response.WriteAPISuccess(w, "Custom exercise muscular group links for exercise", links)
 }
 
-func (h *CustomExerciseMuscularGroupHandler) FindByMuscularGroupID(w http.ResponseWriter, r *http.Request) {
+func (h *CustomExerciseMuscularGroupHandler) GetLinksByMuscularGroupID(w http.ResponseWriter, r *http.Request) {
 	gymID := middleware.GetGymID(r)
 	muscularGroupID := chi.URLParam(r, "muscularGroupID")
 	links, err := h.service.GetLinksByMuscularGroupID(gymID, muscularGroupID)

@@ -20,8 +20,8 @@ func NewCustomExerciseMuscularGroupService(repository interfaces.CustomExerciseM
 	}
 }
 
-func (s *CustomExerciseMuscularGroupService) CreateLink(gymID string, link dto.CustomExerciseMuscularGroup) error {
-	// Validate muscular group exists in public table and is active
+func (s *CustomExerciseMuscularGroupService) CreateLink(gymID string, link *dto.CustomExerciseMuscularGroupCreationDTO) (*string, error) {
+
 	var found bool
 	if s.publicMuscularGroupRepo != nil {
 		mg, err := s.publicMuscularGroupRepo.GetMuscularGroupByID(link.MuscularGroupID)
@@ -30,13 +30,13 @@ func (s *CustomExerciseMuscularGroupService) CreateLink(gymID string, link dto.C
 		}
 	}
 	if !found {
-		return apierror.New(errorcode_enum.CodeNotFound, "Muscular group not found or not allowed", nil)
+		return nil, apierror.New(errorcode_enum.CodeNotFound, "Muscular group not found or not allowed", nil)
 	}
-	err := s.repository.CreateLink(gymID, link)
+	id, err := s.repository.CreateLink(gymID, link)
 	if err != nil {
-		return apierror.New(errorcode_enum.CodeInternal, "Failed to create custom_exercise-muscular group link", err)
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to create custom_exercise-muscular group link", err)
 	}
-	return nil
+	return id, nil
 }
 
 func (s *CustomExerciseMuscularGroupService) DeleteLink(gymID, id string) error {
@@ -47,23 +47,23 @@ func (s *CustomExerciseMuscularGroupService) DeleteLink(gymID, id string) error 
 	return nil
 }
 
-func (s *CustomExerciseMuscularGroupService) RemoveAllLinksForExercise(gymID, id string) error {
-	err := s.repository.DeleteLink(gymID, id)
+func (s *CustomExerciseMuscularGroupService) RemoveAllLinksForExercise(gymID, customExerciseID string) error {
+	err := s.repository.RemoveAllLinksForExercise(gymID, customExerciseID)
 	if err != nil {
 		return apierror.New(errorcode_enum.CodeInternal, "Failed to remove all links for exercise", err)
 	}
 	return nil
 }
 
-func (s *CustomExerciseMuscularGroupService) GetLinkByID(gymID, id string) (dto.CustomExerciseMuscularGroup, error) {
+func (s *CustomExerciseMuscularGroupService) GetLinkByID(gymID, id string) (*dto.CustomExerciseMuscularGroup, error) {
 	link, err := s.repository.FindByID(gymID, id)
 	if err != nil {
-		return dto.CustomExerciseMuscularGroup{}, apierror.New(errorcode_enum.CodeNotFound, "Link not found", err)
+		return nil, apierror.New(errorcode_enum.CodeNotFound, "Link not found", err)
 	}
 	return link, nil
 }
 
-func (s *CustomExerciseMuscularGroupService) GetLinksByCustomExerciseID(gymID, customExerciseID string) ([]dto.CustomExerciseMuscularGroup, error) {
+func (s *CustomExerciseMuscularGroupService) GetLinksByCustomExerciseID(gymID, customExerciseID string) ([]*dto.CustomExerciseMuscularGroup, error) {
 	links, err := s.repository.FindByCustomExerciseID(gymID, customExerciseID)
 	if err != nil {
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to get links by custom exercise ID", err)
@@ -71,7 +71,7 @@ func (s *CustomExerciseMuscularGroupService) GetLinksByCustomExerciseID(gymID, c
 	return links, nil
 }
 
-func (s *CustomExerciseMuscularGroupService) GetLinksByMuscularGroupID(gymID, muscularGroupID string) ([]dto.CustomExerciseMuscularGroup, error) {
+func (s *CustomExerciseMuscularGroupService) GetLinksByMuscularGroupID(gymID, muscularGroupID string) ([]*dto.CustomExerciseMuscularGroup, error) {
 	links, err := s.repository.FindByMuscularGroupID(gymID, muscularGroupID)
 	if err != nil {
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to get links by muscular group ID", err)

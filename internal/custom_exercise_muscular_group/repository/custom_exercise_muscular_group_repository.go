@@ -16,15 +16,15 @@ func NewCustomExerciseMuscularGroupRepository(db *sql.DB) interfaces.CustomExerc
 	return &CustomExerciseMuscularGroupRepository{db: db}
 }
 
-func (r *CustomExerciseMuscularGroupRepository) CreateLink(gymID string, link dto.CustomExerciseMuscularGroup) error {
+func (r *CustomExerciseMuscularGroupRepository) CreateLink(gymID string, link *dto.CustomExerciseMuscularGroupCreationDTO) (*string, error) {
 	schema := gymID
 	query := fmt.Sprintf("INSERT INTO %s.custom_exercise_muscular_group (custom_exercise_id, muscular_group_id) VALUES ($1, $2) RETURNING id", schema)
 	var id string
 	err := r.db.QueryRow(query, link.CustomExerciseID, link.MuscularGroupID).Scan(&id)
 	if err != nil {
-		return err
+		return nil, err
 	}
-	return nil
+	return &id, nil
 }
 
 func (r *CustomExerciseMuscularGroupRepository) DeleteLink(gymID, id string) error {
@@ -54,53 +54,53 @@ func (r *CustomExerciseMuscularGroupRepository) RemoveAllLinksForExercise(gymID,
 	return nil
 }
 
-func (r *CustomExerciseMuscularGroupRepository) FindByID(gymID, id string) (dto.CustomExerciseMuscularGroup, error) {
+func (r *CustomExerciseMuscularGroupRepository) FindByID(gymID, id string) (*dto.CustomExerciseMuscularGroup, error) {
 	schema := gymID
-	query := fmt.Sprintf("SELECT custom_exercise_id, muscular_group_id FROM %s.custom_exercise_muscular_group WHERE id = $1", schema)
+	query := fmt.Sprintf("SELECT id, custom_exercise_id, muscular_group_id FROM %s.custom_exercise_muscular_group WHERE id = $1", schema)
 	var link dto.CustomExerciseMuscularGroup
-	err := r.db.QueryRow(query, id).Scan(&link.CustomExerciseID, &link.MuscularGroupID)
+	err := r.db.QueryRow(query, id).Scan(&link.ID, &link.CustomExerciseID, &link.MuscularGroupID)
 	if err != nil {
-		return dto.CustomExerciseMuscularGroup{}, err
+		return nil, err
 	}
-	return link, nil
+	return &link, nil
 }
 
-func (r *CustomExerciseMuscularGroupRepository) FindByCustomExerciseID(gymID, customExerciseID string) ([]dto.CustomExerciseMuscularGroup, error) {
+func (r *CustomExerciseMuscularGroupRepository) FindByCustomExerciseID(gymID, customExerciseID string) ([]*dto.CustomExerciseMuscularGroup, error) {
 	schema := gymID
-	query := fmt.Sprintf("SELECT id, muscular_group_id FROM %s.custom_exercise_muscular_group WHERE custom_exercise_id = $1", schema)
+	query := fmt.Sprintf("SELECT id, custom_exercise_id, muscular_group_id FROM %s.custom_exercise_muscular_group WHERE custom_exercise_id = $1", schema)
 	rows, err := r.db.Query(query, customExerciseID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var links []dto.CustomExerciseMuscularGroup
+	var links []*dto.CustomExerciseMuscularGroup
 	for rows.Next() {
 		var link dto.CustomExerciseMuscularGroup
-		if err := rows.Scan(&link.ID, &link.MuscularGroupID); err != nil {
+		if err := rows.Scan(&link.ID, &link.CustomExerciseID, &link.MuscularGroupID); err != nil {
 			return nil, err
 		}
-		links = append(links, link)
+		links = append(links, &link)
 	}
 	return links, nil
 }
 
-func (r *CustomExerciseMuscularGroupRepository) FindByMuscularGroupID(gymID, muscularGroupID string) ([]dto.CustomExerciseMuscularGroup, error) {
+func (r *CustomExerciseMuscularGroupRepository) FindByMuscularGroupID(gymID, muscularGroupID string) ([]*dto.CustomExerciseMuscularGroup, error) {
 	schema := gymID
-	query := fmt.Sprintf("SELECT id, custom_exercise_id FROM %s.custom_exercise_muscular_group WHERE muscular_group_id = $1", schema)
+	query := fmt.Sprintf("SELECT id, custom_exercise_id, muscular_group_id FROM %s.custom_exercise_muscular_group WHERE muscular_group_id = $1", schema)
 	rows, err := r.db.Query(query, muscularGroupID)
 	if err != nil {
 		return nil, err
 	}
 	defer rows.Close()
 
-	var links []dto.CustomExerciseMuscularGroup
+	var links []*dto.CustomExerciseMuscularGroup
 	for rows.Next() {
 		var link dto.CustomExerciseMuscularGroup
-		if err := rows.Scan(&link.ID, &link.CustomExerciseID); err != nil {
+		if err := rows.Scan(&link.ID, &link.CustomExerciseID, &link.MuscularGroupID); err != nil {
 			return nil, err
 		}
-		links = append(links, link)
+		links = append(links, &link)
 	}
 	return links, nil
 }
