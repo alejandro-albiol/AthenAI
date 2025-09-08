@@ -5,18 +5,17 @@ import (
 	"fmt"
 
 	"github.com/alejandro-albiol/athenai/internal/custom_exercise_equipment/dto"
-	"github.com/alejandro-albiol/athenai/internal/custom_exercise_equipment/interfaces"
 )
 
-type CustomExerciseEquipmentRepositoryImpl struct {
+type CustomExerciseEquipmentRepository struct {
 	db *sql.DB
 }
 
-func NewCustomExerciseEquipmentRepository(db *sql.DB) interfaces.CustomExerciseEquipmentRepository {
-	return &CustomExerciseEquipmentRepositoryImpl{db: db}
+func NewCustomExerciseEquipmentRepository(db *sql.DB) *CustomExerciseEquipmentRepository {
+	return &CustomExerciseEquipmentRepository{db: db}
 }
 
-func (r *CustomExerciseEquipmentRepositoryImpl) CreateLink(gymID string, link *dto.CustomExerciseEquipment) (*string, error) {
+func (r *CustomExerciseEquipmentRepository) CreateLink(gymID string, link *dto.CustomExerciseEquipment) (*string, error) {
 	schema := gymID
 	query := fmt.Sprintf("INSERT INTO %s.custom_exercise_equipment (custom_exercise_id, equipment_id) VALUES ($1, $2) RETURNING id", schema)
 	var id string
@@ -27,7 +26,7 @@ func (r *CustomExerciseEquipmentRepositoryImpl) CreateLink(gymID string, link *d
 	return &id, nil
 }
 
-func (r *CustomExerciseEquipmentRepositoryImpl) DeleteLink(gymID, id string) error {
+func (r *CustomExerciseEquipmentRepository) DeleteLink(gymID, id string) error {
 	schema := gymID
 	query := fmt.Sprintf("DELETE FROM %s.custom_exercise_equipment WHERE id = $1", schema)
 	result, err := r.db.Exec(query, id)
@@ -44,7 +43,7 @@ func (r *CustomExerciseEquipmentRepositoryImpl) DeleteLink(gymID, id string) err
 	return nil
 }
 
-func (r *CustomExerciseEquipmentRepositoryImpl) RemoveAllLinksForExercise(gymID, customExerciseID string) error {
+func (r *CustomExerciseEquipmentRepository) RemoveAllLinksForExercise(gymID, customExerciseID string) error {
 	schema := gymID
 	query := fmt.Sprintf("DELETE FROM %s.custom_exercise_equipment WHERE custom_exercise_id = $1", schema)
 	_, err := r.db.Exec(query, customExerciseID)
@@ -54,7 +53,7 @@ func (r *CustomExerciseEquipmentRepositoryImpl) RemoveAllLinksForExercise(gymID,
 	return nil
 }
 
-func (r *CustomExerciseEquipmentRepositoryImpl) FindByID(gymID, id string) (*dto.CustomExerciseEquipment, error) {
+func (r *CustomExerciseEquipmentRepository) FindByID(gymID, id string) (*dto.CustomExerciseEquipment, error) {
 	schema := gymID
 	query := fmt.Sprintf("SELECT custom_exercise_id, equipment_id FROM %s.custom_exercise_equipment WHERE id = $1", schema)
 	var link dto.CustomExerciseEquipment
@@ -65,7 +64,7 @@ func (r *CustomExerciseEquipmentRepositoryImpl) FindByID(gymID, id string) (*dto
 	return &link, nil
 }
 
-func (r *CustomExerciseEquipmentRepositoryImpl) FindByCustomExerciseID(gymID, customExerciseID string) ([]*dto.CustomExerciseEquipment, error) {
+func (r *CustomExerciseEquipmentRepository) FindByCustomExerciseID(gymID, customExerciseID string) ([]*dto.CustomExerciseEquipment, error) {
 	schema := gymID
 	query := fmt.Sprintf("SELECT id, equipment_id FROM %s.custom_exercise_equipment WHERE custom_exercise_id = $1", schema)
 	rows, err := r.db.Query(query, customExerciseID)
@@ -85,7 +84,7 @@ func (r *CustomExerciseEquipmentRepositoryImpl) FindByCustomExerciseID(gymID, cu
 	return links, nil
 }
 
-func (r *CustomExerciseEquipmentRepositoryImpl) FindByEquipmentID(gymID, equipmentID string) ([]*dto.CustomExerciseEquipment, error) {
+func (r *CustomExerciseEquipmentRepository) FindByEquipmentID(gymID, equipmentID string) ([]*dto.CustomExerciseEquipment, error) {
 	schema := gymID
 	query := fmt.Sprintf("SELECT id, custom_exercise_id FROM %s.custom_exercise_equipment WHERE equipment_id = $1", schema)
 	rows, err := r.db.Query(query, equipmentID)

@@ -17,7 +17,7 @@ type CustomExerciseHandler struct {
 	Service interfaces.CustomExerciseService
 }
 
-func NewCustomExerciseHandler(svc interfaces.CustomExerciseService) interfaces.CustomExerciseHandler {
+func NewCustomExerciseHandler(svc interfaces.CustomExerciseService) *CustomExerciseHandler {
 	return &CustomExerciseHandler{Service: svc}
 }
 

@@ -17,7 +17,7 @@ type CustomExerciseMuscularGroupHandler struct {
 	service interfaces.CustomExerciseMuscularGroupService
 }
 
-func NewCustomExerciseMuscularGroupHandler(svc interfaces.CustomExerciseMuscularGroupService) interfaces.CustomExerciseMuscularGroupHandler {
+func NewCustomExerciseMuscularGroupHandler(svc interfaces.CustomExerciseMuscularGroupService) *CustomExerciseMuscularGroupHandler {
 	return &CustomExerciseMuscularGroupHandler{service: svc}
 }
 

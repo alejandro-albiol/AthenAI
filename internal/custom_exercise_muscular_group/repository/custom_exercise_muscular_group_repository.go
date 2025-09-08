@@ -5,14 +5,13 @@ import (
 	"fmt"
 
 	"github.com/alejandro-albiol/athenai/internal/custom_exercise_muscular_group/dto"
-	"github.com/alejandro-albiol/athenai/internal/custom_exercise_muscular_group/interfaces"
 )
 
 type CustomExerciseMuscularGroupRepository struct {
 	db *sql.DB
 }
 
-func NewCustomExerciseMuscularGroupRepository(db *sql.DB) interfaces.CustomExerciseMuscularGroupRepository {
+func NewCustomExerciseMuscularGroupRepository(db *sql.DB) *CustomExerciseMuscularGroupRepository {
 	return &CustomExerciseMuscularGroupRepository{db: db}
 }
 

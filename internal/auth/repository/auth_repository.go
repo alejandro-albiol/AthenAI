@@ -5,7 +5,6 @@ import (
 	"errors"
 
 	"github.com/alejandro-albiol/athenai/internal/auth/dto"
-	"github.com/alejandro-albiol/athenai/internal/auth/interfaces"
 	"github.com/lib/pq"
 	"golang.org/x/crypto/bcrypt"
 )
@@ -14,7 +13,7 @@ type AuthRepository struct {
 	db *sql.DB
 }
 
-func NewAuthRepository(db *sql.DB) interfaces.AuthRepositoryInterface {
+func NewAuthRepository(db *sql.DB) *AuthRepository {
 	return &AuthRepository{db: db}
 }
 

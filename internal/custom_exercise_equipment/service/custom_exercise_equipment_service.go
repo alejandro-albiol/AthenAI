@@ -21,7 +21,7 @@ func NewCustomExerciseEquipmentService(
 	repo interfaces.CustomExerciseEquipmentRepository,
 	customEquipmentRepo customEquipmentInterfaces.CustomEquipmentRepository,
 	publicEquipmentRepo publicEquipmentInterfaces.EquipmentRepository,
-) interfaces.CustomExerciseEquipmentService {
+) *CustomExerciseEquipmentService {
 	return &CustomExerciseEquipmentService{
 		repository:          repo,
 		customEquipmentRepo: customEquipmentRepo,

@@ -10,12 +10,12 @@ import (
 	"github.com/alejandro-albiol/athenai/internal/exercise_muscular_group/dto"
 )
 
-func setupMockDB(t *testing.T) (*sql.DB, sqlmock.Sqlmock, *ExerciseMuscularGroupRepositoryImpl) {
+func setupMockDB(t *testing.T) (*sql.DB, sqlmock.Sqlmock, *ExerciseMuscularGroupRepository) {
 	db, mock, err := sqlmock.New()
 	if err != nil {
 		t.Fatalf("failed to open sqlmock database: %s", err)
 	}
-	repo := &ExerciseMuscularGroupRepositoryImpl{db: db}
+	repo := &ExerciseMuscularGroupRepository{db: db}
 	return db, mock, repo
 }
 

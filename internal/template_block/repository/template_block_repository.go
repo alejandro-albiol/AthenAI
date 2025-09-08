@@ -4,7 +4,6 @@ import (
 	"database/sql"
 
 	"github.com/alejandro-albiol/athenai/internal/template_block/dto"
-	"github.com/alejandro-albiol/athenai/internal/template_block/interfaces"
 )
 
 // TemplateBlockRepository provides database operations for template blocks.
@@ -13,7 +12,7 @@ type TemplateBlockRepository struct {
 }
 
 // NewTemplateBlockRepository creates a new TemplateBlockRepository.
-func NewTemplateBlockRepository(db *sql.DB) interfaces.TemplateBlockRepository {
+func NewTemplateBlockRepository(db *sql.DB) *TemplateBlockRepository {
 	return &TemplateBlockRepository{db: db}
 }
 

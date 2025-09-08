@@ -6,23 +6,22 @@ import (
 
 	gyminterfaces "github.com/alejandro-albiol/athenai/internal/gym/interfaces"
 	"github.com/alejandro-albiol/athenai/internal/user/dto"
-	"github.com/alejandro-albiol/athenai/internal/user/interfaces"
 	"github.com/lib/pq"
 )
 
-type usersRepository struct {
+type UserRepository struct {
 	db      *sql.DB
 	gymRepo gyminterfaces.GymRepository
 }
 
-func NewUsersRepository(db *sql.DB, gymRepo gyminterfaces.GymRepository) interfaces.UserRepository {
-	return &usersRepository{
+func NewUsersRepository(db *sql.DB, gymRepo gyminterfaces.GymRepository) *UserRepository {
+	return &UserRepository{
 		db:      db,
 		gymRepo: gymRepo,
 	}
 }
 
-func (r *usersRepository) CreateUser(gymID string, dto *dto.UserCreationDTO) (*string, error) {
+func (r *UserRepository) CreateUser(gymID string, dto *dto.UserCreationDTO) (*string, error) {
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)
 	if err != nil {
@@ -51,7 +50,7 @@ func (r *usersRepository) CreateUser(gymID string, dto *dto.UserCreationDTO) (*s
 	return &userID, nil
 }
 
-func (r *usersRepository) GetUserByID(gymID, id string) (*dto.UserResponseDTO, error) {
+func (r *UserRepository) GetUserByID(gymID, id string) (*dto.UserResponseDTO, error) {
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)
 	if err != nil {
@@ -86,7 +85,7 @@ func (r *usersRepository) GetUserByID(gymID, id string) (*dto.UserResponseDTO, e
 	return user, nil
 }
 
-func (r *usersRepository) GetUserByUsername(gymID, username string) (*dto.UserResponseDTO, error) {
+func (r *UserRepository) GetUserByUsername(gymID, username string) (*dto.UserResponseDTO, error) {
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)
 	if err != nil {
@@ -117,7 +116,7 @@ func (r *usersRepository) GetUserByUsername(gymID, username string) (*dto.UserRe
 	return user, nil
 }
 
-func (r *usersRepository) GetUserByEmail(gymID, email string) (*dto.UserResponseDTO, error) {
+func (r *UserRepository) GetUserByEmail(gymID, email string) (*dto.UserResponseDTO, error) {
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)
 	if err != nil {
@@ -143,7 +142,7 @@ func (r *usersRepository) GetUserByEmail(gymID, email string) (*dto.UserResponse
 	return user, nil
 }
 
-func (r *usersRepository) GetAllUsers(gymID string) ([]*dto.UserResponseDTO, error) {
+func (r *UserRepository) GetAllUsers(gymID string) ([]*dto.UserResponseDTO, error) {
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)
 	if err != nil {
@@ -181,7 +180,7 @@ func (r *usersRepository) GetAllUsers(gymID string) ([]*dto.UserResponseDTO, err
 	return users, nil
 }
 
-func (r *usersRepository) GetPasswordHashByUsername(gymID, username string) (string, error) {
+func (r *UserRepository) GetPasswordHashByUsername(gymID, username string) (string, error) {
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)
 	if err != nil {
@@ -201,7 +200,7 @@ func (r *usersRepository) GetPasswordHashByUsername(gymID, username string) (str
 	return passwordHash, nil
 }
 
-func (r *usersRepository) UpdateUser(gymID string, id string, user *dto.UserUpdateDTO) error {
+func (r *UserRepository) UpdateUser(gymID string, id string, user *dto.UserUpdateDTO) error {
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)
 	if err != nil {
@@ -251,7 +250,7 @@ func (r *usersRepository) UpdateUser(gymID string, id string, user *dto.UserUpda
 	return err
 }
 
-func (r *usersRepository) UpdatePassword(gymID, userID string, newPasswordHash string) error {
+func (r *UserRepository) UpdatePassword(gymID, userID string, newPasswordHash string) error {
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)
 	if err != nil {
@@ -266,7 +265,7 @@ func (r *usersRepository) UpdatePassword(gymID, userID string, newPasswordHash s
 	return err
 }
 
-func (r *usersRepository) DeleteUser(gymID, id string) error {
+func (r *UserRepository) DeleteUser(gymID, id string) error {
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)
 	if err != nil {
@@ -282,7 +281,7 @@ func (r *usersRepository) DeleteUser(gymID, id string) error {
 	return err
 }
 
-func (r *usersRepository) VerifyUser(gymID, userID string) error {
+func (r *UserRepository) VerifyUser(gymID, userID string) error {
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)
 	if err != nil {
@@ -307,7 +306,7 @@ func (r *usersRepository) VerifyUser(gymID, userID string) error {
 	return nil
 }
 
-func (r *usersRepository) SetUserActive(gymID, userID string, active bool) error {
+func (r *UserRepository) SetUserActive(gymID, userID string, active bool) error {
 	// Get gym domain to construct the correct schema table name
 	gym, err := r.gymRepo.GetGymByID(gymID)
 	if err != nil {

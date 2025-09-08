@@ -18,7 +18,7 @@ type CustomEquipmentHandler struct {
 	Service interfaces.CustomEquipmentService
 }
 
-func NewCustomEquipmentHandler(service interfaces.CustomEquipmentService) interfaces.CustomEquipmentHandler {
+func NewCustomEquipmentHandler(service interfaces.CustomEquipmentService) *CustomEquipmentHandler {
 	return &CustomEquipmentHandler{Service: service}
 }
 

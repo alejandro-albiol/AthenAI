@@ -14,7 +14,7 @@ func setupMockDB(t *testing.T) (*sql.DB, sqlmock.Sqlmock, *CustomEquipmentReposi
 	db, mock, err := sqlmock.New()
 	assert.NoError(t, err)
 	repo := NewCustomEquipmentRepository(db)
-	return db, mock, repo.(*CustomEquipmentRepository)
+	return db, mock, repo
 }
 
 func TestCreateCustomEquipment(t *testing.T) {

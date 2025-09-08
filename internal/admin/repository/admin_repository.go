@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/alejandro-albiol/athenai/internal/admin/dto"
-	"github.com/alejandro-albiol/athenai/internal/admin/interfaces"
 	"github.com/lib/pq"
 )
 
@@ -13,7 +12,7 @@ type AdminRepository struct {
 	sql *sql.DB
 }
 
-func NewAdminRepository(db *sql.DB) interfaces.AdminRepository {
+func NewAdminRepository(db *sql.DB) *AdminRepository {
 	return &AdminRepository{sql: db}
 }
 

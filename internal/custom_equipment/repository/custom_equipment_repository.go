@@ -5,7 +5,6 @@ import (
 	"fmt"
 
 	"github.com/alejandro-albiol/athenai/internal/custom_equipment/dto"
-	"github.com/alejandro-albiol/athenai/internal/custom_equipment/interfaces"
 )
 
 // CustomEquipmentRepositoryImpl implements interfaces.CustomEquipmentRepository
@@ -14,7 +13,7 @@ type CustomEquipmentRepository struct {
 	DB *sql.DB
 }
 
-func NewCustomEquipmentRepository(db *sql.DB) interfaces.CustomEquipmentRepository {
+func NewCustomEquipmentRepository(db *sql.DB) *CustomEquipmentRepository {
 	return &CustomEquipmentRepository{DB: db}
 }
 

@@ -5,14 +5,13 @@ import (
 	"fmt"
 
 	"github.com/alejandro-albiol/athenai/internal/custom_exercise/dto"
-	"github.com/alejandro-albiol/athenai/internal/custom_exercise/interfaces"
 )
 
 type CustomExerciseRepository struct {
 	DB *sql.DB
 }
 
-func NewCustomExerciseRepository(db *sql.DB) interfaces.CustomExerciseRepository {
+func NewCustomExerciseRepository(db *sql.DB) *CustomExerciseRepository {
 	return &CustomExerciseRepository{DB: db}
 }
 
