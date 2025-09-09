@@ -4,7 +4,7 @@ import "github.com/alejandro-albiol/athenai/internal/exercise/dto"
 
 type ExerciseRepository interface {
 	// Exercise management
-	CreateExercise(exercise *dto.ExerciseCreationDTO) (string, error)
+	CreateExercise(exercise *dto.ExerciseCreationDTO) (*string, error)
 	GetExerciseByID(id string) (*dto.ExerciseResponseDTO, error)
 	GetExerciseByName(name string) (*dto.ExerciseResponseDTO, error)
 	GetExercisesByMuscularGroup(muscularGroups []string) ([]*dto.ExerciseResponseDTO, error)

@@ -53,7 +53,8 @@ func TestCreateExercise(t *testing.T) {
 
 	id, err := repo.CreateExercise(ex)
 	assert.NoError(t, err)
-	assert.Equal(t, "exercise-uuid", id)
+	expectedID := "exercise-uuid"
+	assert.Equal(t, &expectedID, id)
 	assert.NoError(t, mock.ExpectationsWereMet())
 }
 

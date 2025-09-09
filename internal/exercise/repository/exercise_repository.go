@@ -15,7 +15,7 @@ func NewExerciseRepository(db *sql.DB) *ExerciseRepository {
 	return &ExerciseRepository{db: db}
 }
 
-func (r *ExerciseRepository) CreateExercise(exercise *dto.ExerciseCreationDTO) (string, error) {
+func (r *ExerciseRepository) CreateExercise(exercise *dto.ExerciseCreationDTO) (*string, error) {
 	query := `
 	       INSERT INTO public.exercise (
 		       name, synonyms, difficulty_level, exercise_type, instructions, video_url, image_url, created_by, is_active
@@ -34,9 +34,9 @@ func (r *ExerciseRepository) CreateExercise(exercise *dto.ExerciseCreationDTO) (
 		exercise.CreatedBy,
 	).Scan(&id)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return id, nil
+	return &id, nil
 }
 
 func (r *ExerciseRepository) GetExerciseByID(id string) (*dto.ExerciseResponseDTO, error) {

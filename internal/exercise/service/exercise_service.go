@@ -64,7 +64,7 @@ func (s *ExerciseService) CreateExercise(exercise *dto.ExerciseCreationDTO) (*st
 	if s.exerciseEquipmentService != nil && len(exercise.Equipment) > 0 {
 		for _, eqID := range exercise.Equipment {
 			link := &exerciseEquipmentDTO.ExerciseEquipment{
-				ExerciseID:  id,
+				ExerciseID:  *id,
 				EquipmentID: eqID,
 			}
 			_, err := s.exerciseEquipmentService.CreateLink(link)
@@ -76,7 +76,7 @@ func (s *ExerciseService) CreateExercise(exercise *dto.ExerciseCreationDTO) (*st
 	if s.exerciseMuscularGroupService != nil && len(exercise.MuscularGroups) > 0 {
 		for _, mgID := range exercise.MuscularGroups {
 			link := &exerciseMuscularGroupDTO.ExerciseMuscularGroup{
-				ExerciseID:      id,
+				ExerciseID:      *id,
 				MuscularGroupID: mgID,
 			}
 			_, err := s.exerciseMuscularGroupService.CreateLink(link)
@@ -85,7 +85,7 @@ func (s *ExerciseService) CreateExercise(exercise *dto.ExerciseCreationDTO) (*st
 			}
 		}
 	}
-	return &id, nil
+	return id, nil
 }
 
 func (s *ExerciseService) GetExerciseByID(id string) (*dto.ExerciseResponseDTO, error) {
