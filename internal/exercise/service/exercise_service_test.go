@@ -12,7 +12,7 @@ import (
 )
 
 type mockRepository struct {
-	CreateExerciseFunc              func(ex *dto.ExerciseCreationDTO) (string, error)
+	CreateExerciseFunc              func(ex *dto.ExerciseCreationDTO) (*string, error)
 	GetExerciseByNameFunc           func(name string) (*dto.ExerciseResponseDTO, error)
 	DeleteExerciseFunc              func(id string) error
 	GetExerciseByIDFunc             func(id string) (*dto.ExerciseResponseDTO, error)
@@ -22,7 +22,7 @@ type mockRepository struct {
 	UpdateExerciseFunc              func(id string, exercise *dto.ExerciseUpdateDTO) (*dto.ExerciseResponseDTO, error)
 }
 
-func (m *mockRepository) CreateExercise(ex *dto.ExerciseCreationDTO) (string, error) {
+func (m *mockRepository) CreateExercise(ex *dto.ExerciseCreationDTO) (*string, error) {
 	return m.CreateExerciseFunc(ex)
 }
 func (m *mockRepository) GetExerciseByName(name string) (*dto.ExerciseResponseDTO, error) {
@@ -155,8 +155,9 @@ func (m *mockMuscularGroupService) GetLinksByMuscularGroupID(muscularGroupID str
 
 func TestExerciseService_CreateExercise(t *testing.T) {
 	repo := &mockRepository{
-		CreateExerciseFunc: func(ex *dto.ExerciseCreationDTO) (string, error) {
-			return "id1", nil
+		CreateExerciseFunc: func(ex *dto.ExerciseCreationDTO) (*string, error) {
+			id := "id1"
+			return &id, nil
 		},
 		GetExerciseByNameFunc: func(name string) (*dto.ExerciseResponseDTO, error) {
 			return &dto.ExerciseResponseDTO{}, errors.New("not found")

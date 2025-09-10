@@ -20,8 +20,8 @@ func NewTemplateBlockRepository(db *sql.DB) *TemplateBlockRepository {
 func (r *TemplateBlockRepository) CreateTemplateBlock(block *dto.CreateTemplateBlockDTO) (*string, error) {
 	query := `
 		INSERT INTO public.template_block 
-			(template_id, block_name, block_type, block_order, exercise_count, estimated_duration_minutes, instructions)
-		VALUES ($1, $2, $3, $4, $5, $6, $7)
+			(template_id, block_name, block_type, block_order, exercise_count, estimated_duration_minutes, instructions, reps, series, rest_time_seconds, created_by)
+		VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)
 		RETURNING id`
 	var id string
 	err := r.db.QueryRow(
@@ -33,6 +33,10 @@ func (r *TemplateBlockRepository) CreateTemplateBlock(block *dto.CreateTemplateB
 		block.ExerciseCount,
 		block.EstimatedDurationMinutes,
 		block.Instructions,
+		block.Reps,
+		block.Series,
+		block.RestTimeSeconds,
+		block.CreatedBy,
 	).Scan(&id)
 	if err != nil {
 		return nil, err
@@ -43,7 +47,7 @@ func (r *TemplateBlockRepository) CreateTemplateBlock(block *dto.CreateTemplateB
 // GetTemplateBlockByID retrieves a template block by its ID.
 func (r *TemplateBlockRepository) GetTemplateBlockByID(id string) (*dto.TemplateBlockDTO, error) {
 	query := `
-		SELECT id, template_id, block_name, block_type, block_order, exercise_count, estimated_duration_minutes, instructions, created_at
+		SELECT id, template_id, block_name, block_type, block_order, exercise_count, estimated_duration_minutes, instructions, reps, series, rest_time_seconds, created_at, created_by
 		FROM public.template_block WHERE id = $1`
 	var block dto.TemplateBlockDTO
 	err := r.db.QueryRow(query, id).Scan(
@@ -55,7 +59,11 @@ func (r *TemplateBlockRepository) GetTemplateBlockByID(id string) (*dto.Template
 		&block.ExerciseCount,
 		&block.EstimatedDurationMinutes,
 		&block.Instructions,
+		&block.Reps,
+		&block.Series,
+		&block.RestTimeSeconds,
 		&block.CreatedAt,
+		&block.CreatedBy,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -69,7 +77,7 @@ func (r *TemplateBlockRepository) GetTemplateBlockByID(id string) (*dto.Template
 // GetTemplateBlocksByTemplateID retrieves all template blocks for a given template ID.
 func (r *TemplateBlockRepository) GetTemplateBlocksByTemplateID(templateID string) ([]*dto.TemplateBlockDTO, error) {
 	query := `
-		SELECT id, template_id, block_name, block_type, block_order, exercise_count, estimated_duration_minutes, instructions, created_at
+		SELECT id, template_id, block_name, block_type, block_order, exercise_count, estimated_duration_minutes, instructions, reps, series, rest_time_seconds, created_at, created_by
 		FROM public.template_block WHERE template_id = $1 ORDER BY block_order`
 	rows, err := r.db.Query(query, templateID)
 	if err != nil {
@@ -89,7 +97,11 @@ func (r *TemplateBlockRepository) GetTemplateBlocksByTemplateID(templateID strin
 			&block.ExerciseCount,
 			&block.EstimatedDurationMinutes,
 			&block.Instructions,
+			&block.Reps,
+			&block.Series,
+			&block.RestTimeSeconds,
 			&block.CreatedAt,
+			&block.CreatedBy,
 		)
 		if err != nil {
 			return nil, err
@@ -102,7 +114,7 @@ func (r *TemplateBlockRepository) GetTemplateBlocksByTemplateID(templateID strin
 // GetTemplateBlockByTemplateIDAndName retrieves a template block by template ID and name.
 func (r *TemplateBlockRepository) GetTemplateBlockByTemplateIDAndName(templateID string, blockName string) (*dto.TemplateBlockDTO, error) {
 	block := &dto.TemplateBlockDTO{}
-	query := `SELECT id, template_id, block_name, block_type, block_order, exercise_count, estimated_duration_minutes, instructions, created_at FROM public.template_block WHERE template_id = $1 AND block_name = $2`
+	query := `SELECT id, template_id, block_name, block_type, block_order, exercise_count, estimated_duration_minutes, instructions, reps, series, rest_time_seconds, created_at, created_by FROM public.template_block WHERE template_id = $1 AND block_name = $2`
 	err := r.db.QueryRow(query, templateID, blockName).Scan(
 		&block.ID,
 		&block.TemplateID,
@@ -112,7 +124,11 @@ func (r *TemplateBlockRepository) GetTemplateBlockByTemplateIDAndName(templateID
 		&block.ExerciseCount,
 		&block.EstimatedDurationMinutes,
 		&block.Instructions,
+		&block.Reps,
+		&block.Series,
+		&block.RestTimeSeconds,
 		&block.CreatedAt,
+		&block.CreatedBy,
 	)
 	if err != nil {
 		if err == sql.ErrNoRows {
@@ -127,9 +143,9 @@ func (r *TemplateBlockRepository) GetTemplateBlockByTemplateIDAndName(templateID
 func (r *TemplateBlockRepository) UpdateTemplateBlock(id string, block *dto.UpdateTemplateBlockDTO) (*dto.TemplateBlockDTO, error) {
 	query := `
 		UPDATE public.template_block
-		SET block_name = $1, block_type = $2, block_order = $3, exercise_count = $4, estimated_duration_minutes = $5, instructions = $6
-		WHERE id = $7
-		RETURNING id, template_id, block_name, block_type, block_order, exercise_count, estimated_duration_minutes, instructions, created_at`
+		SET block_name = $1, block_type = $2, block_order = $3, exercise_count = $4, estimated_duration_minutes = $5, instructions = $6, reps = $7, series = $8, rest_time_seconds = $9
+		WHERE id = $10
+		RETURNING id, template_id, block_name, block_type, block_order, exercise_count, estimated_duration_minutes, instructions, reps, series, rest_time_seconds, created_at, created_by`
 	updatedBlock := &dto.TemplateBlockDTO{}
 	err := r.db.QueryRow(
 		query,
@@ -139,6 +155,9 @@ func (r *TemplateBlockRepository) UpdateTemplateBlock(id string, block *dto.Upda
 		block.ExerciseCount,
 		block.EstimatedDurationMinutes,
 		block.Instructions,
+		block.Reps,
+		block.Series,
+		block.RestTimeSeconds,
 		id,
 	).Scan(
 		&updatedBlock.ID,
@@ -149,7 +168,11 @@ func (r *TemplateBlockRepository) UpdateTemplateBlock(id string, block *dto.Upda
 		&updatedBlock.ExerciseCount,
 		&updatedBlock.EstimatedDurationMinutes,
 		&updatedBlock.Instructions,
+		&updatedBlock.Reps,
+		&updatedBlock.Series,
+		&updatedBlock.RestTimeSeconds,
 		&updatedBlock.CreatedAt,
+		&updatedBlock.CreatedBy,
 	)
 	if err != nil {
 		return nil, err

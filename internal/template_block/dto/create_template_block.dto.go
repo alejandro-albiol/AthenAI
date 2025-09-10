@@ -9,4 +9,8 @@ type CreateTemplateBlockDTO struct {
 	ExerciseCount            int     `json:"exercise_count" validate:"required"`
 	EstimatedDurationMinutes *int    `json:"estimated_duration_minutes,omitempty"`
 	Instructions             *string `json:"instructions,omitempty"`
+	Reps                     *int    `json:"reps,omitempty"`
+	Series                   *int    `json:"series,omitempty"`
+	RestTimeSeconds          *int    `json:"rest_time_seconds,omitempty"`
+	CreatedBy                string  `json:"created_by"`
 }

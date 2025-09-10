@@ -27,8 +27,8 @@ func (h *TemplateBlockHandler) CreateTemplateBlock(w http.ResponseWriter, r *htt
 		return
 	}
 	// Validate required fields
-	if block.TemplateID == "" || block.BlockName == "" || block.BlockType == "" || block.BlockOrder == 0 || block.ExerciseCount == 0 {
-		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Missing or invalid required fields: template_id, block_name, block_type, block_order, exercise_count", nil))
+	if block.TemplateID == "" || block.BlockName == "" || block.BlockType == "" || block.BlockOrder == 0 || block.ExerciseCount == 0 || block.CreatedBy == "" {
+		response.WriteAPIError(w, apierror.New(errorcode_enum.CodeBadRequest, "Missing or invalid required fields: template_id, block_name, block_type, block_order, exercise_count, created_by", nil))
 		return
 	}
 	blockID, err := h.service.CreateTemplateBlock(&block)

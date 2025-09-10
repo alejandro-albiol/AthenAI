@@ -1,6 +1,7 @@
 package service_test
 
 import (
+	"database/sql"
 	"errors"
 	"testing"
 
@@ -46,7 +47,7 @@ func (m *mockRepository) GetTemplateBlockByID(id string) (*dto.TemplateBlockDTO,
 	}
 	b, ok := m.blocks[id]
 	if !ok {
-		return nil, errors.New("not found")
+		return nil, sql.ErrNoRows
 	}
 	return b, nil
 }

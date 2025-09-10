@@ -63,13 +63,13 @@ func TestCreateTemplateBlockRoute(t *testing.T) {
 
 	input := dto.CreateTemplateBlockDTO{
 		TemplateID:    "template123",
-		BlockName:          "Warm-up",
-		BlockType:          "warmup",
-		BlockOrder:         1,
+		BlockName:     "Warm-up",
+		BlockType:     "warmup",
+		BlockOrder:    1,
 		ExerciseCount: 3,
 	}
 	body, _ := json.Marshal(input)
-	req := httptest.NewRequest(http.MethodPost, "/template-blocks", bytes.NewBuffer(body))
+	req := httptest.NewRequest(http.MethodPost, "/", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
 
 	r.ServeHTTP(w, req)
@@ -89,9 +89,9 @@ func TestGetTemplateBlockByIDRoute(t *testing.T) {
 		block := dto.TemplateBlockDTO{
 			ID:            "block123",
 			TemplateID:    "template123",
-			BlockName:          "Warm-up",
-			BlockType:          "warmup",
-			BlockOrder:         1,
+			BlockName:     "Warm-up",
+			BlockType:     "warmup",
+			BlockOrder:    1,
 			ExerciseCount: 3,
 		}
 		response.WriteAPISuccess(w, "Template block retrieved successfully", block)
@@ -99,7 +99,7 @@ func TestGetTemplateBlockByIDRoute(t *testing.T) {
 
 	r := router.NewTemplateBlockRouter(mockHandler)
 
-	req := httptest.NewRequest(http.MethodGet, "/template-blocks/block123", nil)
+	req := httptest.NewRequest(http.MethodGet, "/block123", nil)
 	w := httptest.NewRecorder()
 
 	r.ServeHTTP(w, req)
@@ -120,17 +120,17 @@ func TestListTemplateBlocksByTemplateIDRoute(t *testing.T) {
 			{
 				ID:            "block1",
 				TemplateID:    "template123",
-				BlockName:          "Warm-up",
-				BlockType:          "warmup",
-				BlockOrder:         1,
+				BlockName:     "Warm-up",
+				BlockType:     "warmup",
+				BlockOrder:    1,
 				ExerciseCount: 3,
 			},
 			{
 				ID:            "block2",
 				TemplateID:    "template123",
-				BlockName:          "Main Set",
-				BlockType:          "main",
-				BlockOrder:         2,
+				BlockName:     "Main Set",
+				BlockType:     "main",
+				BlockOrder:    2,
 				ExerciseCount: 5,
 			},
 		}
@@ -139,7 +139,7 @@ func TestListTemplateBlocksByTemplateIDRoute(t *testing.T) {
 
 	r := router.NewTemplateBlockRouter(mockHandler)
 
-	req := httptest.NewRequest(http.MethodGet, "/templates/template123/blocks", nil)
+	req := httptest.NewRequest(http.MethodGet, "/template/template123/block", nil)
 	w := httptest.NewRecorder()
 
 	r.ServeHTTP(w, req)
@@ -159,9 +159,9 @@ func TestUpdateTemplateBlockRoute(t *testing.T) {
 		updatedBlock := dto.TemplateBlockDTO{
 			ID:            "block123",
 			TemplateID:    "template123",
-			BlockName:          "Updated Warm-up",
-			BlockType:          "warmup",
-			BlockOrder:         1,
+			BlockName:     "Updated Warm-up",
+			BlockType:     "warmup",
+			BlockOrder:    1,
 			ExerciseCount: 5,
 		}
 		response.WriteAPISuccess(w, "Template block updated successfully", updatedBlock)
@@ -170,11 +170,11 @@ func TestUpdateTemplateBlockRoute(t *testing.T) {
 	r := router.NewTemplateBlockRouter(mockHandler)
 
 	update := dto.UpdateTemplateBlockDTO{
-		BlockName:          stringPtr("Updated Warm-up"),
+		BlockName:     stringPtr("Updated Warm-up"),
 		ExerciseCount: intPtr(5),
 	}
 	body, _ := json.Marshal(update)
-	req := httptest.NewRequest(http.MethodPut, "/template-blocks/block123", bytes.NewBuffer(body))
+	req := httptest.NewRequest(http.MethodPut, "/block123", bytes.NewBuffer(body))
 	w := httptest.NewRecorder()
 
 	r.ServeHTTP(w, req)
@@ -196,7 +196,7 @@ func TestDeleteTemplateBlockRoute(t *testing.T) {
 
 	r := router.NewTemplateBlockRouter(mockHandler)
 
-	req := httptest.NewRequest(http.MethodDelete, "/template-blocks/block123", nil)
+	req := httptest.NewRequest(http.MethodDelete, "/block123", nil)
 	w := httptest.NewRecorder()
 
 	r.ServeHTTP(w, req)
@@ -219,7 +219,7 @@ func TestRouterErrorHandling(t *testing.T) {
 
 	r := router.NewTemplateBlockRouter(mockHandler)
 
-	req := httptest.NewRequest(http.MethodGet, "/template-blocks/nonexistent", nil)
+	req := httptest.NewRequest(http.MethodGet, "/nonexistent", nil)
 	w := httptest.NewRecorder()
 
 	r.ServeHTTP(w, req)
