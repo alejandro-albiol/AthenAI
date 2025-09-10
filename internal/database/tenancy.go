@@ -129,11 +129,29 @@ func CreateTenantSchema(db *sql.DB, schemaName *string) error {
 			block_order INTEGER NOT NULL,
 			exercise_count INTEGER NOT NULL,
 			estimated_duration_minutes INTEGER,
-			instructions TEXT
+			instructions TEXT,
+			reps INTEGER,
+			series INTEGER,
+			rest_time_seconds INTEGER,
+			created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+			deleted_at TIMESTAMP,
+			is_active BOOLEAN NOT NULL DEFAULT TRUE
 		)
 	`, schema, schema))
 	if err != nil {
 		return fmt.Errorf("failed to create custom_template_block table: %w", err)
+	}
+
+	// Add new fields to existing custom_template_block table if they don't exist
+	_, err = db.Exec(fmt.Sprintf(`
+		ALTER TABLE %s.custom_template_block 
+		ADD COLUMN IF NOT EXISTS reps INTEGER,
+		ADD COLUMN IF NOT EXISTS series INTEGER,
+		ADD COLUMN IF NOT EXISTS rest_time_seconds INTEGER
+	`, schema))
+	if err != nil {
+		return fmt.Errorf("failed to add new columns to custom_template_block table: %w", err)
 	}
 
 	// Create custom_workout_instance table for actual workouts created from templates

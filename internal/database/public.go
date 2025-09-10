@@ -150,7 +150,11 @@ func CreatePublicTables(db *sql.DB) error {
 		   exercise_count INTEGER NOT NULL, -- Number of exercises for this block (e.g., 3 warmup exercises, 5 main exercises)
 		   estimated_duration_minutes INTEGER, -- Optional estimated time for this block
 		   instructions TEXT, -- Special instructions for this block type
+		   reps INTEGER, -- Number of repetitions per exercise in this block
+		   series INTEGER, -- Number of sets per exercise in this block
+		   rest_time_seconds INTEGER, -- Rest time between sets in seconds
 		   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+		   created_by UUID REFERENCES public.admin(id)
        
 		   -- Ensure unique order per template
 		   UNIQUE(template_id, block_order)
@@ -159,6 +163,18 @@ func CreatePublicTables(db *sql.DB) error {
 		return fmt.Errorf("failed to create template_block table: %w", err)
 	}
 	fmt.Println("Template block table created successfully")
+
+	// Add new fields to existing template_block table if they don't exist
+	_, err = db.Exec(`
+		ALTER TABLE public.template_block 
+		ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES public.admin(id),
+		ADD COLUMN IF NOT EXISTS reps INTEGER,
+		ADD COLUMN IF NOT EXISTS series INTEGER,
+		ADD COLUMN IF NOT EXISTS rest_time_seconds INTEGER
+	`)
+	if err != nil {
+		return fmt.Errorf("failed to add new columns to template_block table: %w", err)
+	}
 
 	// 10. Refresh tokens table for JWT refresh token management
 	_, err = db.Exec(`
