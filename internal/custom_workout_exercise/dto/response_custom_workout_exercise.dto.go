@@ -2,6 +2,7 @@ package dto
 
 type ResponseCustomWorkoutExerciseDTO struct {
 	ID                string   `json:"id"`
+	CreatedBy         string   `json:"created_by"`
 	WorkoutInstanceID string   `json:"workout_instance_id"`
 	ExerciseSource    string   `json:"exercise_source"`
 	PublicExerciseID  *string  `json:"public_exercise_id,omitempty"`

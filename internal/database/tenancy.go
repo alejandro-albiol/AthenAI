@@ -190,6 +190,8 @@ func CreateTenantSchema(db *sql.DB, schemaName *string) error {
 			duration_seconds INTEGER,
 			rest_seconds INTEGER,
 			notes TEXT,
+			created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
 			CHECK (
 				(exercise_source = 'public' AND public_exercise_id IS NOT NULL AND gym_exercise_id IS NULL) OR
 				(exercise_source = 'gym' AND gym_exercise_id IS NOT NULL AND public_exercise_id IS NULL)
@@ -199,6 +201,16 @@ func CreateTenantSchema(db *sql.DB, schemaName *string) error {
 	`, schema, schema))
 	if err != nil {
 		return fmt.Errorf("failed to create custom_workout_exercise table: %w", err)
+	}
+
+	// Add timestamp columns to existing custom_workout_exercise table if they don't exist
+	_, err = db.Exec(fmt.Sprintf(`
+		ALTER TABLE %s.custom_workout_exercise 
+		ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+		ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT NOW()
+	`, schema))
+	if err != nil {
+		return fmt.Errorf("failed to add timestamp columns to custom_workout_exercise table: %w", err)
 	}
 
 	// Create custom_member_workout table for member workout sessions
