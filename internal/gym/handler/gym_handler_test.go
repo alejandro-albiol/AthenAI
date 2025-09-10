@@ -25,10 +25,11 @@ type MockGymService struct {
 
 func (m *MockGymService) CreateGym(gym *dto.GymCreationDTO) (*string, error) {
 	args := m.Called(gym)
-	if len(args) > 0 {
-		return args.Get(0).(*string), args.Error(1)
+	result := args.Get(0)
+	if result == nil {
+		return nil, args.Error(1)
 	}
-	return nil, args.Error(0)
+	return result.(*string), args.Error(1)
 }
 
 func (m *MockGymService) GetGymByID(id string) (*dto.GymResponseDTO, error) {
@@ -78,7 +79,8 @@ func TestCreateGym(t *testing.T) {
 				Phone:   "+1234567890",
 			},
 			setupMock: func(mockService *MockGymService) {
-				mockService.On("CreateGym", mock.AnythingOfType("*dto.GymCreationDTO")).Return("gym-uuid-123", nil)
+				gymID := "gym-uuid-123"
+				mockService.On("CreateGym", mock.AnythingOfType("*dto.GymCreationDTO")).Return(&gymID, nil)
 			},
 			wantStatus:  http.StatusCreated,
 			gymIDHeader: "gym-uuid-123",
@@ -89,7 +91,7 @@ func TestCreateGym(t *testing.T) {
 				Name: "", // missing required field
 			},
 			setupMock: func(mockService *MockGymService) {
-				mockService.On("CreateGym", mock.AnythingOfType("*dto.GymCreationDTO")).Return("", apierror.New(errorcode_enum.CodeBadRequest, "Invalid input", nil))
+				mockService.On("CreateGym", mock.AnythingOfType("*dto.GymCreationDTO")).Return(nil, apierror.New(errorcode_enum.CodeBadRequest, "Invalid input", nil))
 			},
 			wantStatus:  http.StatusBadRequest,
 			gymIDHeader: "gym-uuid-123",

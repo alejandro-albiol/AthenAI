@@ -19,8 +19,12 @@ type MockGymRepository struct {
 
 func (m *MockGymRepository) CreateGym(gym *dto.GymCreationDTO) (*string, error) {
 	args := m.Called(gym)
-	str := args.String(0)
-	return &str, args.Error(1)
+	result := args.Get(0)
+	if result == nil {
+		return nil, args.Error(1)
+	}
+	str := result.(*string)
+	return str, args.Error(1)
 }
 
 func (m *MockGymRepository) GetGymByID(id string) (*dto.GymResponseDTO, error) {
@@ -84,11 +88,13 @@ func TestCreateGym(t *testing.T) {
 		svc := service.NewGymService(mockRepo)
 
 		mockRepo.On("GetGymByName", gymDTO.Name).Return(nil, sql.ErrNoRows)
-		mockRepo.On("CreateGym", gymDTO).Return("gym123", nil)
+		gymID := "gym123"
+		mockRepo.On("CreateGym", gymDTO).Return(&gymID, nil)
 
 		id, err := svc.CreateGym(gymDTO)
 		assert.NoError(t, err)
-		assert.Equal(t, "gym123", id)
+		assert.NotNil(t, id)
+		assert.Equal(t, "gym123", *id)
 	})
 
 	t.Run("domain already exists", func(t *testing.T) {
