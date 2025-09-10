@@ -1,11 +1,13 @@
 package router
 
 import (
-	"github.com/alejandro-albiol/athenai/internal/custom_template_block/handler"
+	"net/http"
+
 	"github.com/go-chi/chi/v5"
+	"github.com/alejandro-albiol/athenai/internal/custom_template_block/interfaces"
 )
 
-func NewCustomTemplateBlockRouter(h *handler.CustomTemplateBlockHandler) chi.Router {
+func NewCustomTemplateBlockRouter(h interfaces.CustomTemplateBlockHandler) http.Handler {
 	r := chi.NewRouter()
 	r.Post("/custom-template-block", h.Create)
 	r.Get("/custom-template-block/{id}", h.GetByID)
