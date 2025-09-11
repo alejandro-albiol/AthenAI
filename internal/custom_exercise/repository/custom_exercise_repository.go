@@ -5,6 +5,7 @@ import (
 	"fmt"
 
 	"github.com/alejandro-albiol/athenai/internal/custom_exercise/dto"
+	"github.com/lib/pq"
 )
 
 type CustomExerciseRepository struct {
@@ -22,7 +23,7 @@ func (r *CustomExerciseRepository) CreateCustomExercise(gymID string, exercise *
 		fmt.Sprintf(query, schema),
 		exercise.CreatedBy,
 		exercise.Name,
-		exercise.Synonyms,
+		pq.Array(exercise.Synonyms),
 		exercise.DifficultyLevel,
 		exercise.ExerciseType,
 		exercise.Instructions,
@@ -42,7 +43,7 @@ func (r *CustomExerciseRepository) UpdateCustomExercise(gymID, id string, update
 	_, err := r.DB.Exec(
 		fmt.Sprintf(query, schema),
 		update.Name,
-		update.Synonyms,
+		pq.Array(update.Synonyms),
 		update.DifficultyLevel,
 		update.ExerciseType,
 		update.Instructions,
@@ -59,7 +60,7 @@ func (r *CustomExerciseRepository) GetCustomExerciseByID(gymID, id string) (*dto
 	schema := gymID
 	row := r.DB.QueryRow(fmt.Sprintf(query, schema), id)
 	var res dto.CustomExerciseResponseDTO
-	err := row.Scan(&res.ID, &res.CreatedBy, &res.Name, &res.Synonyms, &res.DifficultyLevel, &res.ExerciseType, &res.Instructions, &res.VideoURL, &res.ImageURL, &res.IsActive)
+	err := row.Scan(&res.ID, &res.CreatedBy, &res.Name, pq.Array(&res.Synonyms), &res.DifficultyLevel, &res.ExerciseType, &res.Instructions, &res.VideoURL, &res.ImageURL, &res.IsActive)
 	return &res, err
 }
 
@@ -74,7 +75,7 @@ func (r *CustomExerciseRepository) ListCustomExercises(gymID string) ([]*dto.Cus
 	var result []*dto.CustomExerciseResponseDTO
 	for rows.Next() {
 		var res dto.CustomExerciseResponseDTO
-		if err := rows.Scan(&res.ID, &res.CreatedBy, &res.Name, &res.Synonyms, &res.DifficultyLevel, &res.ExerciseType, &res.Instructions, &res.VideoURL, &res.ImageURL, &res.IsActive); err != nil {
+		if err := rows.Scan(&res.ID, &res.CreatedBy, &res.Name, pq.Array(&res.Synonyms), &res.DifficultyLevel, &res.ExerciseType, &res.Instructions, &res.VideoURL, &res.ImageURL, &res.IsActive); err != nil {
 			return nil, err
 		}
 		result = append(result, &res)

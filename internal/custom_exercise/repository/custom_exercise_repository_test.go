@@ -33,7 +33,14 @@ func TestCreateCustomExercise(t *testing.T) {
 func TestGetCustomExerciseByID(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	repo := NewCustomExerciseRepository(db)
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT`)).WillReturnRows(sqlmock.NewRows([]string{"id", "name", "description", "created_by"}).AddRow("ex-1", "Push Up", "A bodyweight exercise", "user1"))
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT`)).WillReturnRows(
+		sqlmock.NewRows([]string{
+			"id", "created_by", "name", "synonyms", "difficulty_level",
+			"exercise_type", "instructions", "video_url", "image_url", "is_active",
+		}).AddRow(
+			"ex-1", "user1", "Push Up", `{Pushup}`, "easy",
+			"bodyweight", "Do a push up", "http://example.com/video", "http://example.com/image", true,
+		))
 	result, err := repo.GetCustomExerciseByID("tenant1", "ex-1")
 	assert.NoError(t, err)
 	assert.Equal(t, "ex-1", result.ID)
@@ -42,7 +49,14 @@ func TestGetCustomExerciseByID(t *testing.T) {
 func TestListCustomExercises(t *testing.T) {
 	db, mock, _ := sqlmock.New()
 	repo := NewCustomExerciseRepository(db)
-	mock.ExpectQuery(regexp.QuoteMeta(`SELECT`)).WillReturnRows(sqlmock.NewRows([]string{"id", "name", "description", "created_by"}).AddRow("ex-1", "Push Up", "A bodyweight exercise", "user1"))
+	mock.ExpectQuery(regexp.QuoteMeta(`SELECT`)).WillReturnRows(
+		sqlmock.NewRows([]string{
+			"id", "created_by", "name", "synonyms", "difficulty_level",
+			"exercise_type", "instructions", "video_url", "image_url", "is_active",
+		}).AddRow(
+			"ex-1", "user1", "Push Up", `{Pushup}`, "easy",
+			"bodyweight", "Do a push up", "http://example.com/video", "http://example.com/image", true,
+		))
 	results, err := repo.ListCustomExercises("tenant1")
 	assert.NoError(t, err)
 	assert.Len(t, results, 1)
