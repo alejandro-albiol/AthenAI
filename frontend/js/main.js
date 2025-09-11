@@ -161,11 +161,11 @@ async function handleLogin(event) {
       closeLoginModal();
 
       // Store auth token (implement proper token management)
-      localStorage.setItem("authToken", result.token);
+      localStorage.setItem("auth_token", result.data.access_token);
 
       // Redirect to dashboard
       setTimeout(() => {
-        window.location.href = "/dashboard";
+        window.location.href = "/pages/dashboard/";
       }, 1000);
     } else {
       const error = await response.json();
@@ -406,7 +406,7 @@ class ApiClient {
     };
 
     // Add auth token if available
-    const token = localStorage.getItem("authToken");
+    const token = localStorage.getItem("auth_token");
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }

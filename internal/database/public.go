@@ -154,7 +154,7 @@ func CreatePublicTables(db *sql.DB) error {
 		   series INTEGER, -- Number of sets per exercise in this block
 		   rest_time_seconds INTEGER, -- Rest time between sets in seconds
 		   created_at TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
-		   created_by UUID REFERENCES public.admin(id)
+		   created_by UUID REFERENCES public.admin(id),
        
 		   -- Ensure unique order per template
 		   UNIQUE(template_id, block_order)

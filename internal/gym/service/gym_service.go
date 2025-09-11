@@ -81,10 +81,6 @@ func (s *GymService) GetAllGyms() ([]*dto.GymResponseDTO, error) {
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to get gyms", err)
 	}
 
-	if len(gyms) == 0 {
-		return nil, apierror.New(errorcode_enum.CodeNotFound, "No gyms found", nil)
-	}
-
 	return gyms, nil
 }
 
