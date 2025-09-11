@@ -55,7 +55,10 @@ func CreateTenantSchema(db *sql.DB, schemaName *string) error {
 					   instructions TEXT NOT NULL,
 					   video_url TEXT,
 					   image_url TEXT,
-					   is_active BOOLEAN NOT NULL DEFAULT TRUE
+					   is_active BOOLEAN NOT NULL DEFAULT TRUE,
+					   created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+					   updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+					   deleted_at TIMESTAMP
 			   )
 	   `, schema))
 	if err != nil {
@@ -94,7 +97,9 @@ func CreateTenantSchema(db *sql.DB, schemaName *string) error {
 			name TEXT NOT NULL,
 			description TEXT,
 			category TEXT NOT NULL CHECK (category IN ('free_weights', 'machines', 'cardio', 'accessories', 'bodyweight', 'custom')),
-			is_active BOOLEAN NOT NULL DEFAULT TRUE
+			is_active BOOLEAN NOT NULL DEFAULT TRUE,
+			created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 		)
 	`, schema))
 	if err != nil {
@@ -111,7 +116,9 @@ func CreateTenantSchema(db *sql.DB, schemaName *string) error {
 			difficulty_level TEXT NOT NULL CHECK (difficulty_level IN ('beginner', 'intermediate', 'advanced')),
 			estimated_duration_minutes INTEGER,
 			target_audience TEXT NOT NULL CHECK (target_audience IN ('weight_loss', 'muscle_building', 'endurance', 'strength', 'flexibility', 'general_fitness', 'rehabilitation')),
-			is_active BOOLEAN NOT NULL DEFAULT TRUE
+			is_active BOOLEAN NOT NULL DEFAULT TRUE,
+			created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 		)
 	`, schema))
 	if err != nil {
@@ -140,17 +147,6 @@ func CreateTenantSchema(db *sql.DB, schemaName *string) error {
 		)
 	`, schema, schema))
 	if err != nil {
-		return fmt.Errorf("failed to create custom_template_block table: %w", err)
-	}
-
-	// Add new fields to existing custom_template_block table if they don't exist
-	_, err = db.Exec(fmt.Sprintf(`
-		ALTER TABLE %s.custom_template_block 
-		ADD COLUMN IF NOT EXISTS reps INTEGER,
-		ADD COLUMN IF NOT EXISTS series INTEGER,
-		ADD COLUMN IF NOT EXISTS rest_time_seconds INTEGER
-	`, schema))
-	if err != nil {
 		return fmt.Errorf("failed to add new columns to custom_template_block table: %w", err)
 	}
 
@@ -164,8 +160,12 @@ func CreateTenantSchema(db *sql.DB, schemaName *string) error {
 			template_source TEXT NOT NULL CHECK (template_source IN ('public', 'gym')),
 			public_template_id UUID,
 			gym_template_id UUID,
-			difficulty_level TEXT NOT NULL CHECK (difficulty_level IN ('beginner', 'intermediate', 'advanced')),
-			estimated_duration_minutes INTEGER
+			created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMP NOT NULL DEFAULT NOW(),
+			CHECK (
+				(template_source = 'public' AND public_template_id IS NOT NULL AND gym_template_id IS NULL) OR
+				(template_source = 'gym' AND gym_template_id IS NOT NULL AND public_template_id IS NULL)
+			)
 		)
 	`, schema))
 	if err != nil {
@@ -203,16 +203,6 @@ func CreateTenantSchema(db *sql.DB, schemaName *string) error {
 		return fmt.Errorf("failed to create custom_workout_exercise table: %w", err)
 	}
 
-	// Add timestamp columns to existing custom_workout_exercise table if they don't exist
-	_, err = db.Exec(fmt.Sprintf(`
-		ALTER TABLE %s.custom_workout_exercise 
-		ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT NOW(),
-		ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT NOW()
-	`, schema))
-	if err != nil {
-		return fmt.Errorf("failed to add timestamp columns to custom_workout_exercise table: %w", err)
-	}
-
 	// Create custom_member_workout table for member workout sessions
 	_, err = db.Exec(fmt.Sprintf(`
 		CREATE TABLE IF NOT EXISTS %s.custom_member_workout (
@@ -227,7 +217,9 @@ func CreateTenantSchema(db *sql.DB, schemaName *string) error {
 			status TEXT NOT NULL CHECK (status IN ('scheduled', 'in_progress', 'completed', 'skipped', 'cancelled')),
             
 			notes TEXT,
-			rating INTEGER CHECK (rating >= 1 AND rating <= 5)
+			rating INTEGER CHECK (rating >= 1 AND rating <= 5),
+			created_at TIMESTAMP NOT NULL DEFAULT NOW(),
+			updated_at TIMESTAMP NOT NULL DEFAULT NOW()
 		)
 	`, schema, schema))
 	if err != nil {
@@ -246,6 +238,11 @@ func CreateTenantSchema(db *sql.DB, schemaName *string) error {
 		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(difficulty_level);", quoteIdx("idx_"+*schemaName+"_custom_workout_template_difficulty"), qt("custom_workout_template")),
 		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(template_id);", quoteIdx("idx_"+*schemaName+"_custom_template_block_template"), qt("custom_template_block")),
 		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(template_id, block_order);", quoteIdx("idx_"+*schemaName+"_custom_template_block_order"), qt("custom_template_block")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(created_by);", quoteIdx("idx_"+*schemaName+"_custom_workout_instance_creator"), qt("custom_workout_instance")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(template_source);", quoteIdx("idx_"+*schemaName+"_custom_workout_instance_source"), qt("custom_workout_instance")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(public_template_id);", quoteIdx("idx_"+*schemaName+"_custom_workout_instance_public"), qt("custom_workout_instance")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(gym_template_id);", quoteIdx("idx_"+*schemaName+"_custom_workout_instance_gym"), qt("custom_workout_instance")),
+		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(created_at);", quoteIdx("idx_"+*schemaName+"_custom_workout_instance_created"), qt("custom_workout_instance")),
 		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(workout_instance_id);", quoteIdx("idx_"+*schemaName+"_custom_workout_exercise_instance"), qt("custom_workout_exercise")),
 		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(public_exercise_id);", quoteIdx("idx_"+*schemaName+"_custom_workout_exercise_public"), qt("custom_workout_exercise")),
 		fmt.Sprintf("CREATE INDEX IF NOT EXISTS %s ON %s(gym_exercise_id);", quoteIdx("idx_"+*schemaName+"_custom_workout_exercise_gym"), qt("custom_workout_exercise")),
