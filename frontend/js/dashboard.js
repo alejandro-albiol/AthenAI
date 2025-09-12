@@ -16,9 +16,6 @@ class DashboardManager {
     // Initialize navigation
     this.initNavigation();
 
-    // Load initial view
-    await this.loadView("overview");
-
     console.log("Dashboard initialized");
   }
 
@@ -79,19 +76,19 @@ class DashboardManager {
 
   setupNavigation() {
     const platformAdminNav = document.querySelector(".platform-admin-nav");
-    const tenantNav = document.querySelector(".tenant-nav");
     const gymSelector = document.getElementById("gym-selector");
 
     if (this.currentUser.user_type === "platform_admin") {
       platformAdminNav.style.display = "block";
-      tenantNav.style.display = "none";
-      gymSelector.style.display = "block";
-      this.loadGyms();
-    } else {
-      platformAdminNav.style.display = "none";
-      tenantNav.style.display = "block";
       gymSelector.style.display = "none";
-      this.currentGym = this.currentUser.gym_id;
+      // Load platform overview by default for platform admins
+      this.loadView("platform-overview");
+    } else {
+      // Regular gym members and admins should not access this dashboard
+      // Redirect them to their gym-specific page
+      console.log("Redirecting non-platform user to gym page");
+      window.location.href = `/gym/${this.currentUser.gym_id}`;
+      return;
     }
   }
 
@@ -116,7 +113,17 @@ class DashboardManager {
         gyms.forEach((gym) => {
           const option = document.createElement("option");
           option.value = gym.id;
-          option.textContent = gym.name;
+
+          // Show deleted gyms with special styling and label
+          if (gym.deleted_at) {
+            option.textContent = `${gym.name} (Deleted)`;
+            option.style.color = "#999";
+            option.style.fontStyle = "italic";
+            option.disabled = true;
+          } else {
+            option.textContent = gym.name;
+          }
+
           select.appendChild(option);
         });
       }
@@ -148,8 +155,70 @@ class DashboardManager {
         // Load view
         const view = item.dataset.view;
         this.loadView(view);
+
+        // Close mobile sidebar on navigation (mobile)
+        this.closeMobileSidebar();
       });
     });
+
+    // Initialize mobile sidebar toggle
+    this.initMobileSidebar();
+  }
+
+  initMobileSidebar() {
+    const sidebar = document.querySelector(".sidebar");
+    const sidebarToggle = document.getElementById("sidebar-toggle");
+    const mobileSidebarToggle = document.getElementById(
+      "mobile-sidebar-toggle"
+    );
+
+    // Mobile sidebar toggle functionality
+    const toggleSidebar = () => {
+      sidebar.classList.toggle("sidebar-open");
+      document.body.classList.toggle("sidebar-open");
+    };
+
+    const closeSidebar = () => {
+      sidebar.classList.remove("sidebar-open");
+      document.body.classList.remove("sidebar-open");
+    };
+
+    // Add event listeners
+    if (sidebarToggle) {
+      sidebarToggle.addEventListener("click", toggleSidebar);
+    }
+
+    if (mobileSidebarToggle) {
+      mobileSidebarToggle.addEventListener("click", toggleSidebar);
+    }
+
+    // Close sidebar when clicking outside on mobile
+    document.addEventListener("click", (e) => {
+      if (
+        window.innerWidth <= 768 &&
+        sidebar.classList.contains("sidebar-open") &&
+        !sidebar.contains(e.target) &&
+        !sidebarToggle?.contains(e.target) &&
+        !mobileSidebarToggle?.contains(e.target)
+      ) {
+        closeSidebar();
+      }
+    });
+
+    // Close sidebar on window resize if switching to desktop
+    window.addEventListener("resize", () => {
+      if (window.innerWidth > 768) {
+        closeSidebar();
+      }
+    });
+  }
+
+  closeMobileSidebar() {
+    if (window.innerWidth <= 768) {
+      const sidebar = document.querySelector(".sidebar");
+      sidebar.classList.remove("sidebar-open");
+      document.body.classList.remove("sidebar-open");
+    }
   }
 
   async loadView(viewName) {
@@ -163,26 +232,8 @@ class DashboardManager {
 
     try {
       switch (viewName) {
-        case "overview":
-          await this.loadOverview();
-          break;
-        case "members":
-          await this.loadMembers();
-          break;
-        case "exercises":
-          await this.loadCustomExercises();
-          break;
-        case "equipment":
-          await this.loadCustomEquipment();
-          break;
-        case "workouts":
-          await this.loadWorkoutTemplates();
-          break;
-        case "workout-instances":
-          await this.loadWorkoutInstances();
-          break;
-        case "analytics":
-          await this.loadAnalytics();
+        case "platform-overview":
+          await this.loadPlatformOverview();
           break;
         case "gyms":
           await this.loadGymsManagement();
@@ -233,6 +284,11 @@ class DashboardManager {
         subtitle: "View insights and performance metrics.",
         action: "Export Data",
       },
+      "platform-overview": {
+        title: "Platform Overview",
+        subtitle: "Monitor platform-wide statistics and activity.",
+        action: "Add Gym",
+      },
       gyms: {
         title: "Gyms Management",
         subtitle: "Manage all gyms in the platform.",
@@ -247,110 +303,16 @@ class DashboardManager {
     document.getElementById("action-text").textContent = config.action;
   }
 
-  async loadOverview() {
-    if (!this.currentGym && this.currentUser.role !== "platform_admin") {
-      this.showError("No gym selected");
-      return;
-    }
-
-    const html = `
-            <div class="dashboard-grid">
-                <div class="dashboard-card stat-card">
-                    <div class="card-icon">
-                        <i class="fas fa-users"></i>
-                    </div>
-                    <span class="stat-number" id="total-members">-</span>
-                    <span class="stat-label">Total Members</span>
-                </div>
-                <div class="dashboard-card stat-card">
-                    <div class="card-icon">
-                        <i class="fas fa-dumbbell"></i>
-                    </div>
-                    <span class="stat-number" id="total-workouts">-</span>
-                    <span class="stat-label">Workout Templates</span>
-                </div>
-                <div class="dashboard-card stat-card">
-                    <div class="card-icon">
-                        <i class="fas fa-running"></i>
-                    </div>
-                    <span class="stat-number" id="total-exercises">-</span>
-                    <span class="stat-label">Custom Exercises</span>
-                </div>
-                <div class="dashboard-card stat-card">
-                    <div class="card-icon">
-                        <i class="fas fa-tools"></i>
-                    </div>
-                    <span class="stat-number" id="total-equipment">-</span>
-                    <span class="stat-label">Equipment Items</span>
-                </div>
-            </div>
-            
-            <div class="dashboard-card">
-                <div class="card-header">
-                    <h2 class="card-title">Recent Workout Instances</h2>
-                </div>
-                <div id="recent-instances">Loading...</div>
-            </div>
-        `;
-
-    this.setContent(html);
-    await this.loadDashboardStats();
-  }
-
-  async loadDashboardStats() {
-    try {
-      // Load stats in parallel
-      const [members, workouts, exercises, equipment, instances] =
-        await Promise.all([
-          this.apiCall(`/user`),
-          this.apiCall(`/custom-workout-template`),
-          this.apiCall(`/custom-exercise`),
-          this.apiCall(`/custom-equipment`),
-          this.apiCall(`/custom-workout-instance`),
-        ]);
-
-      const [
-        membersData,
-        workoutsData,
-        exercisesData,
-        equipmentData,
-        instancesData,
-      ] = await Promise.all([
-        members.json(),
-        workouts.json(),
-        exercises.json(),
-        equipment.json(),
-        instances.json(),
-      ]);
-
-      // Update stats
-      document.getElementById("total-members").textContent =
-        membersData.length || 0;
-      document.getElementById("total-workouts").textContent =
-        workoutsData.length || 0;
-      document.getElementById("total-exercises").textContent =
-        exercisesData.length || 0;
-      document.getElementById("total-equipment").textContent =
-        equipmentData.length || 0;
-
-      // Update recent instances
-      this.renderRecentInstances(instancesData);
-    } catch (error) {
-      console.error("Failed to load dashboard stats:", error);
-    }
-  }
-
   async loadCustomExercises() {
-    if (!this.currentGym) {
+    if (!this.currentGym && this.currentUser.user_type !== "platform_admin") {
       this.showError("No gym selected");
       return;
     }
 
     try {
-      const response = await this.apiCall(
-        `/gyms/${this.currentGym}/custom-exercises`
-      );
-      const exercises = await response.json();
+      const response = await this.apiCall("/custom-exercise");
+      const exercisesData = await response.json();
+      const exercises = exercisesData.data || [];
 
       const html = `
                 <div class="data-table">
@@ -421,29 +383,435 @@ class DashboardManager {
     }
   }
 
-  // Placeholder methods for other views
-  async loadMembers() {
-    this.showComingSoon("Members management");
+  async loadPlatformOverview() {
+    try {
+      // Load platform-wide statistics
+      const [gymsResponse] = await Promise.all([this.apiCall("/gym")]);
+
+      const gymsData = await gymsResponse.json();
+      const gyms = gymsData.data || [];
+
+      // Calculate platform metrics
+      const activeGyms = gyms.filter((gym) => !gym.deleted_at);
+      const deletedGyms = gyms.filter((gym) => gym.deleted_at);
+      const recentGyms = gyms.filter((gym) => {
+        const created = new Date(gym.created_at);
+        const thirtyDaysAgo = new Date();
+        thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+        return created > thirtyDaysAgo && !gym.deleted_at;
+      });
+
+      const content = `
+        <div class="platform-overview">
+          <!-- Platform Metrics Cards -->
+          <div class="dashboard-grid">
+            <div class="dashboard-card stat-card primary">
+              <div class="card-icon">
+                <i class="fas fa-building"></i>
+              </div>
+              <span class="stat-number">${activeGyms.length}</span>
+              <span class="stat-label">Active Gyms</span>
+              <span class="stat-change positive">+${
+                recentGyms.length
+              } this month</span>
+            </div>
+            
+            <div class="dashboard-card stat-card">
+              <div class="card-icon">
+                <i class="fas fa-chart-line"></i>
+              </div>
+              <span class="stat-number">${(
+                (activeGyms.length / (activeGyms.length + deletedGyms.length)) *
+                100
+              ).toFixed(1)}%</span>
+              <span class="stat-label">Platform Health</span>
+              <span class="stat-change neutral">Active gym ratio</span>
+            </div>
+            
+            <div class="dashboard-card stat-card">
+              <div class="card-icon">
+                <i class="fas fa-calendar-plus"></i>
+              </div>
+              <span class="stat-number">${recentGyms.length}</span>
+              <span class="stat-label">New This Month</span>
+              <span class="stat-change neutral">Last 30 days</span>
+            </div>
+            
+            <div class="dashboard-card stat-card warning">
+              <div class="card-icon">
+                <i class="fas fa-exclamation-triangle"></i>
+              </div>
+              <span class="stat-number">${deletedGyms.length}</span>
+              <span class="stat-label">Deleted Gyms</span>
+              <span class="stat-change negative">Require attention</span>
+            </div>
+          </div>
+
+          <!-- Recent Activity -->
+          <div class="dashboard-section">
+            <div class="section-header">
+              <h3><i class="fas fa-clock"></i> Recent Activity</h3>
+              <a href="#" onclick="dashboard.loadView('gyms')" class="view-all-link">View All Gyms</a>
+            </div>
+            
+            <div class="activity-cards">
+              ${gyms
+                .slice(0, 5)
+                .map(
+                  (gym) => `
+                <div class="activity-card ${gym.deleted_at ? "deleted" : ""}">
+                  <div class="activity-icon">
+                    <i class="fas fa-${
+                      gym.deleted_at ? "trash" : "building"
+                    }"></i>
+                  </div>
+                  <div class="activity-content">
+                    <div class="activity-title">${gym.name}</div>
+                    <div class="activity-meta">
+                      ${gym.deleted_at ? "Deleted" : "Created"} ${new Date(
+                    gym.deleted_at || gym.created_at
+                  ).toLocaleDateString()}
+                    </div>
+                    <div class="activity-location">${
+                      gym.address || "No address provided"
+                    }</div>
+                  </div>
+                  <div class="activity-actions">
+                    ${
+                      !gym.deleted_at
+                        ? `
+                      <button class="btn btn-sm btn-primary" onclick="dashboard.manageGym('${gym.id}')">
+                        <i class="fas fa-cog"></i> Manage
+                      </button>
+                    `
+                        : `
+                      <button class="btn btn-sm btn-secondary" onclick="dashboard.restoreGym('${gym.id}')">
+                        <i class="fas fa-undo"></i> Restore
+                      </button>
+                    `
+                    }
+                  </div>
+                </div>
+              `
+                )
+                .join("")}
+            </div>
+          </div>
+
+          <!-- Platform Statistics -->
+          <div class="dashboard-section">
+            <div class="section-header">
+              <h3><i class="fas fa-chart-bar"></i> Platform Statistics</h3>
+            </div>
+            
+            <div class="stats-grid">
+              <div class="stat-item">
+                <div class="stat-chart">
+                  <div class="chart-bar">
+                    <div class="bar-fill" style="width: ${
+                      (activeGyms.length / Math.max(gyms.length, 1)) * 100
+                    }%"></div>
+                  </div>
+                </div>
+                <div class="stat-info">
+                  <span class="stat-title">Gym Retention Rate</span>
+                  <span class="stat-value">${(
+                    (activeGyms.length / Math.max(gyms.length, 1)) *
+                    100
+                  ).toFixed(1)}%</span>
+                </div>
+              </div>
+              
+              <div class="stat-item">
+                <div class="stat-chart">
+                  <div class="chart-bar">
+                    <div class="bar-fill" style="width: ${
+                      (recentGyms.length / Math.max(activeGyms.length, 1)) * 100
+                    }%"></div>
+                  </div>
+                </div>
+                <div class="stat-info">
+                  <span class="stat-title">Growth Rate (30d)</span>
+                  <span class="stat-value">${(
+                    (recentGyms.length / Math.max(activeGyms.length, 1)) *
+                    100
+                  ).toFixed(1)}%</span>
+                </div>
+              </div>
+              
+              <div class="stat-item">
+                <div class="stat-chart">
+                  <div class="chart-bar">
+                    <div class="bar-fill" style="width: ${Math.min(
+                      (activeGyms.length / 10) * 100,
+                      100
+                    )}%"></div>
+                  </div>
+                </div>
+                <div class="stat-info">
+                  <span class="stat-title">Platform Capacity</span>
+                  <span class="stat-value">${activeGyms.length}/∞</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Quick Actions -->
+          <div class="dashboard-section">
+            <div class="section-header">
+              <h3><i class="fas fa-bolt"></i> Quick Actions</h3>
+            </div>
+            
+            <div class="quick-actions">
+              <button class="action-button primary" onclick="dashboard.showCreateGymModal()">
+                <div class="action-icon">
+                  <i class="fas fa-plus"></i>
+                </div>
+                <div class="action-content">
+                  <span class="action-title">Add New Gym</span>
+                  <span class="action-subtitle">Onboard a new fitness center</span>
+                </div>
+              </button>
+              
+              <button class="action-button" onclick="dashboard.loadView('gyms')">
+                <div class="action-icon">
+                  <i class="fas fa-building"></i>
+                </div>
+                <div class="action-content">
+                  <span class="action-title">Manage Gyms</span>
+                  <span class="action-subtitle">View and manage all gyms</span>
+                </div>
+              </button>
+              
+              <button class="action-button" onclick="dashboard.generatePlatformReport()">
+                <div class="action-icon">
+                  <i class="fas fa-chart-line"></i>
+                </div>
+                <div class="action-content">
+                  <span class="action-title">Platform Report</span>
+                  <span class="action-subtitle">Generate analytics report</span>
+                </div>
+              </button>
+              
+              <button class="action-button warning" onclick="dashboard.showSystemSettings()">
+                <div class="action-icon">
+                  <i class="fas fa-cogs"></i>
+                </div>
+                <div class="action-content">
+                  <span class="action-title">System Settings</span>
+                  <span class="action-subtitle">Configure platform settings</span>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      `;
+
+      this.setContent(content);
+    } catch (error) {
+      console.error("Failed to load platform overview:", error);
+      this.showError("Failed to load platform overview");
+    }
   }
 
-  async loadCustomEquipment() {
-    this.showComingSoon("Equipment management");
+  // Platform overview helper methods
+  generatePlatformReport() {
+    // TODO: Implement platform report generation
+    console.log("Generate platform report");
   }
 
-  async loadWorkoutTemplates() {
-    this.showComingSoon("Workout templates");
-  }
-
-  async loadWorkoutInstances() {
-    this.showComingSoon("Workout instances");
-  }
-
-  async loadAnalytics() {
-    this.showComingSoon("Analytics dashboard");
+  showSystemSettings() {
+    // TODO: Implement system settings modal
+    console.log("Show system settings");
   }
 
   async loadGymsManagement() {
-    this.showComingSoon("Gyms management");
+    try {
+      const response = await this.apiCall("/gym");
+      const gymsData = await response.json();
+      const gyms = gymsData.data || [];
+
+      const content = `
+        <div class="management-view">
+          <div class="view-header">
+            <div class="search-filters">
+              <input type="text" id="gym-search" placeholder="Search gyms..." class="search-input">
+              <select id="gym-status-filter" class="filter-select">
+                <option value="">All Status</option>
+                <option value="active">Active Only</option>
+                <option value="deleted">Deleted Only</option>
+              </select>
+            </div>
+            <button class="btn btn-primary" onclick="dashboard.showCreateGymModal()">
+              <i class="fas fa-plus"></i> Add Gym
+            </button>
+          </div>
+          
+          <div class="table-container">
+            <table class="data-table">
+              <thead>
+                <tr>
+                  <th>Gym Name</th>
+                  <th>Contact</th>
+                  <th>Address</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody id="gyms-table-body">
+                ${gyms
+                  .map(
+                    (gym) => `
+                  <tr class="${
+                    gym.deleted_at ? "deleted-row" : ""
+                  }" data-gym-id="${gym.id}">
+                    <td>
+                      <strong>${gym.name}</strong>
+                      ${
+                        gym.deleted_at
+                          ? '<span class="deleted-badge">Deleted</span>'
+                          : ""
+                      }
+                    </td>
+                    <td>
+                      <div class="contact-info">
+                        ${
+                          gym.email
+                            ? `<div><i class="fas fa-envelope"></i> ${gym.email}</div>`
+                            : ""
+                        }
+                        ${
+                          gym.phone
+                            ? `<div><i class="fas fa-phone"></i> ${gym.phone}</div>`
+                            : ""
+                        }
+                      </div>
+                    </td>
+                    <td>${gym.address || "-"}</td>
+                    <td>
+                      <span class="status-badge ${
+                        gym.deleted_at
+                          ? "status-deleted"
+                          : gym.is_active
+                          ? "status-active"
+                          : "status-inactive"
+                      }">
+                        ${
+                          gym.deleted_at
+                            ? "Deleted"
+                            : gym.is_active
+                            ? "Active"
+                            : "Inactive"
+                        }
+                      </span>
+                    </td>
+                    <td>${new Date(gym.created_at).toLocaleDateString()}</td>
+                    <td>
+                      <div class="action-buttons">
+                        ${
+                          !gym.deleted_at
+                            ? `
+                          <button class="btn btn-sm btn-outline" onclick="dashboard.viewGymDetails('${gym.id}')">
+                            <i class="fas fa-eye"></i> View
+                          </button>
+                          <button class="btn btn-sm btn-primary" onclick="dashboard.manageGym('${gym.id}')">
+                            <i class="fas fa-cog"></i> Manage
+                          </button>
+                        `
+                            : `
+                          <button class="btn btn-sm btn-secondary" onclick="dashboard.restoreGym('${gym.id}')">
+                            <i class="fas fa-undo"></i> Restore
+                          </button>
+                        `
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                `
+                  )
+                  .join("")}
+              </tbody>
+            </table>
+            
+            ${
+              gyms.length === 0
+                ? `
+              <div class="empty-state">
+                <i class="fas fa-building"></i>
+                <h3>No Gyms Found</h3>
+                <p>Get started by creating your first gym.</p>
+                <button class="btn btn-primary" onclick="dashboard.showCreateGymModal()">
+                  <i class="fas fa-plus"></i> Create First Gym
+                </button>
+              </div>
+            `
+                : ""
+            }
+          </div>
+        </div>
+      `;
+
+      this.setContent(content);
+      this.setupGymManagementListeners();
+    } catch (error) {
+      console.error("Failed to load gyms:", error);
+      this.showError("Failed to load gyms management");
+    }
+  }
+
+  setupGymManagementListeners() {
+    // Search functionality
+    const searchInput = document.getElementById("gym-search");
+    const statusFilter = document.getElementById("gym-status-filter");
+
+    if (searchInput && statusFilter) {
+      const filterGyms = () => {
+        const searchTerm = searchInput.value.toLowerCase();
+        const statusValue = statusFilter.value;
+        const rows = document.querySelectorAll("#gyms-table-body tr");
+
+        rows.forEach((row) => {
+          const gymName = row
+            .querySelector("td strong")
+            .textContent.toLowerCase();
+          const isDeleted = row.classList.contains("deleted-row");
+
+          const matchesSearch = gymName.includes(searchTerm);
+          const matchesStatus =
+            !statusValue ||
+            (statusValue === "active" && !isDeleted) ||
+            (statusValue === "deleted" && isDeleted);
+
+          row.style.display = matchesSearch && matchesStatus ? "" : "none";
+        });
+      };
+
+      searchInput.addEventListener("input", filterGyms);
+      statusFilter.addEventListener("change", filterGyms);
+    }
+  }
+
+  // Gym management actions
+  viewGymDetails(gymId) {
+    // TODO: Implement gym details modal/view
+    console.log("View gym details:", gymId);
+  }
+
+  manageGym(gymId) {
+    // Switch to gym-specific management context
+    this.currentGym = gymId;
+    this.loadView("members"); // Load the tenant view for this specific gym
+  }
+
+  restoreGym(gymId) {
+    // TODO: Implement gym restoration
+    console.log("Restore gym:", gymId);
+  }
+
+  showCreateGymModal() {
+    // TODO: Implement gym creation modal
+    console.log("Show create gym modal");
   }
 
   // Utility methods
@@ -468,26 +836,56 @@ class DashboardManager {
   }
 
   setContent(html) {
+    // Hide loading state overlay
+    const loadingState = document.getElementById("loading-state");
+    if (loadingState) {
+      loadingState.style.display = "none";
+    }
+
+    // Hide error state
+    const errorState = document.getElementById("error-state");
+    if (errorState) {
+      errorState.style.display = "none";
+    }
+
+    // Update content
     document.getElementById("content-body").innerHTML = html;
   }
 
   showLoading() {
-    this.setContent(`
-            <div class="loading-state">
-                <i class="fas fa-spinner fa-spin"></i>
-                <span>Loading...</span>
-            </div>
-        `);
+    // Show loading state overlay
+    const loadingState = document.getElementById("loading-state");
+    if (loadingState) {
+      loadingState.style.display = "flex";
+    }
+
+    // Hide error state
+    const errorState = document.getElementById("error-state");
+    if (errorState) {
+      errorState.style.display = "none";
+    }
+
+    // Clear content body
+    document.getElementById("content-body").innerHTML = "";
   }
 
   showError(message) {
-    this.setContent(`
-            <div class="empty-state">
-                <i class="fas fa-exclamation-triangle"></i>
-                <h3>Error</h3>
-                <p>${message}</p>
-            </div>
-        `);
+    // Hide loading state
+    const loadingState = document.getElementById("loading-state");
+    if (loadingState) {
+      loadingState.style.display = "none";
+    }
+
+    // Show error state overlay
+    const errorState = document.getElementById("error-state");
+    const errorMessage = document.getElementById("error-message");
+    if (errorState && errorMessage) {
+      errorMessage.textContent = message;
+      errorState.style.display = "flex";
+    }
+
+    // Clear content body
+    document.getElementById("content-body").innerHTML = "";
   }
 
   showEmptyState(type, title, description) {

@@ -46,7 +46,6 @@
               <a href="#gyms" class="nav-item" data-view="gyms">
                 <i class="fas fa-building"></i>
                 <span>Gyms Management</span>
-                <span class="nav-badge" id="gyms-count">0</span>
               </a>
               <a
                 href="#analytics"
@@ -59,7 +58,6 @@
               <a href="#users" class="nav-item" data-view="all-users">
                 <i class="fas fa-users"></i>
                 <span>All Users</span>
-                <span class="nav-badge" id="users-count">0</span>
               </a>
               <a
                 href="#settings"
@@ -69,115 +67,6 @@
                 <i class="fas fa-cog"></i>
                 <span>Platform Settings</span>
               </a>
-            </div>
-
-            <!-- Tenant User Navigation -->
-            <div class="nav-section tenant-nav" style="display: none">
-              <h3 class="nav-section-title">
-                <i class="fas fa-dumbbell"></i>
-                Gym Management
-              </h3>
-              <a href="#dashboard" class="nav-item active" data-view="overview">
-                <i class="fas fa-tachometer-alt"></i>
-                <span>Overview</span>
-              </a>
-
-              <!-- Members Section -->
-              <div class="nav-group">
-                <h4 class="nav-group-title">
-                  <i class="fas fa-users"></i>
-                  Members
-                </h4>
-                <a href="#members" class="nav-item" data-view="members">
-                  <i class="fas fa-user-friends"></i>
-                  <span>All Members</span>
-                  <span class="nav-badge" id="members-count">0</span>
-                </a>
-                <a
-                  href="#member-workouts"
-                  class="nav-item"
-                  data-view="member-workouts"
-                >
-                  <i class="fas fa-clipboard-list"></i>
-                  <span>Member Workouts</span>
-                </a>
-              </div>
-
-              <!-- Workout Management Section -->
-              <div class="nav-group">
-                <h4 class="nav-group-title">
-                  <i class="fas fa-dumbbell"></i>
-                  Workouts
-                </h4>
-                <a
-                  href="#workout-templates"
-                  class="nav-item"
-                  data-view="workout-templates"
-                >
-                  <i class="fas fa-file-alt"></i>
-                  <span>Templates</span>
-                  <span class="nav-badge" id="templates-count">0</span>
-                </a>
-                <a
-                  href="#workout-instances"
-                  class="nav-item"
-                  data-view="workout-instances"
-                >
-                  <i class="fas fa-play"></i>
-                  <span>Active Workouts</span>
-                  <span class="nav-badge" id="instances-count">0</span>
-                </a>
-                <a
-                  href="#template-blocks"
-                  class="nav-item"
-                  data-view="template-blocks"
-                >
-                  <i class="fas fa-cubes"></i>
-                  <span>Template Blocks</span>
-                </a>
-              </div>
-
-              <!-- Exercise & Equipment Section -->
-              <div class="nav-group">
-                <h4 class="nav-group-title">
-                  <i class="fas fa-tools"></i>
-                  Resources
-                </h4>
-                <a href="#exercises" class="nav-item" data-view="exercises">
-                  <i class="fas fa-running"></i>
-                  <span>Custom Exercises</span>
-                  <span class="nav-badge" id="exercises-count">0</span>
-                </a>
-                <a href="#equipment" class="nav-item" data-view="equipment">
-                  <i class="fas fa-tools"></i>
-                  <span>Equipment</span>
-                  <span class="nav-badge" id="equipment-count">0</span>
-                </a>
-                <a
-                  href="#public-exercises"
-                  class="nav-item"
-                  data-view="public-exercises"
-                >
-                  <i class="fas fa-globe"></i>
-                  <span>Public Exercises</span>
-                </a>
-              </div>
-
-              <!-- Analytics Section -->
-              <div class="nav-group">
-                <h4 class="nav-group-title">
-                  <i class="fas fa-chart-bar"></i>
-                  Analytics
-                </h4>
-                <a href="#analytics" class="nav-item" data-view="analytics">
-                  <i class="fas fa-chart-line"></i>
-                  <span>Gym Analytics</span>
-                </a>
-                <a href="#reports" class="nav-item" data-view="reports">
-                  <i class="fas fa-file-chart-line"></i>
-                  <span>Reports</span>
-                </a>
-              </div>
             </div>
           </div>
         </nav>
@@ -277,60 +166,65 @@
           </nav>
         </div>
 
-        <!-- Content Loading States -->
-        <div class="content-states">
-          <!-- Loading State -->
-          <div class="content-state loading-state" id="loading-state">
-            <div class="loading-spinner">
-              <i class="fas fa-spinner fa-spin"></i>
-              <span>Loading...</span>
+        <!-- Main Content Container -->
+        <div class="main-content-container">
+          <!-- Content Loading States -->
+          <div class="content-states">
+            <!-- Loading State -->
+            <div class="content-state loading-state" id="loading-state">
+              <div class="loading-spinner">
+                <i class="fas fa-spinner fa-spin"></i>
+                <span>Loading...</span>
+              </div>
+            </div>
+
+            <!-- Error State -->
+            <div
+              class="content-state error-state"
+              id="error-state"
+              style="display: none"
+            >
+              <div class="error-content">
+                <i class="fas fa-exclamation-triangle"></i>
+                <h3>Something went wrong</h3>
+                <p id="error-message">
+                  An unexpected error occurred. Please try again.
+                </p>
+                <button class="btn btn-primary" onclick="retryLoad()">
+                  <i class="fas fa-redo"></i>
+                  Try Again
+                </button>
+              </div>
+            </div>
+
+            <!-- Empty State -->
+            <div
+              class="content-state empty-state"
+              id="empty-state"
+              style="display: none"
+            >
+              <div class="empty-content">
+                <i class="fas fa-inbox" id="empty-icon"></i>
+                <h3 id="empty-title">No items found</h3>
+                <p id="empty-message">
+                  Get started by creating your first item.
+                </p>
+                <button
+                  class="btn btn-primary"
+                  id="empty-action"
+                  onclick="openCreateModal()"
+                >
+                  <i class="fas fa-plus"></i>
+                  <span id="empty-action-text">Create New</span>
+                </button>
+              </div>
             </div>
           </div>
 
-          <!-- Error State -->
-          <div
-            class="content-state error-state"
-            id="error-state"
-            style="display: none"
-          >
-            <div class="error-content">
-              <i class="fas fa-exclamation-triangle"></i>
-              <h3>Something went wrong</h3>
-              <p id="error-message">
-                An unexpected error occurred. Please try again.
-              </p>
-              <button class="btn btn-primary" onclick="retryLoad()">
-                <i class="fas fa-redo"></i>
-                Try Again
-              </button>
-            </div>
+          <!-- Dynamic Content Area -->
+          <div class="content-body" id="content-body">
+            <!-- Content will be loaded dynamically -->
           </div>
-
-          <!-- Empty State -->
-          <div
-            class="content-state empty-state"
-            id="empty-state"
-            style="display: none"
-          >
-            <div class="empty-content">
-              <i class="fas fa-inbox" id="empty-icon"></i>
-              <h3 id="empty-title">No items found</h3>
-              <p id="empty-message">Get started by creating your first item.</p>
-              <button
-                class="btn btn-primary"
-                id="empty-action"
-                onclick="openCreateModal()"
-              >
-                <i class="fas fa-plus"></i>
-                <span id="empty-action-text">Create New</span>
-              </button>
-            </div>
-          </div>
-        </div>
-
-        <!-- Dynamic Content Area -->
-        <div class="content-body" id="content-body">
-          <!-- Content will be loaded dynamically -->
         </div>
       </main>
     </div>
