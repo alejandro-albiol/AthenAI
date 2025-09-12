@@ -93,10 +93,11 @@ func (r *GymRepository) GetGymByName(name string) (*dto.GymResponseDTO, error) {
 
 func (r *GymRepository) GetAllGyms() ([]*dto.GymResponseDTO, error) {
 	query := `
-		SELECT id, name, email, address, phone, is_active, created_at, updated_at
+		SELECT id, name, email, address, phone, is_active, created_at, updated_at, deleted_at
 		FROM gym 
-		WHERE deleted_at IS NULL
-		ORDER BY created_at DESC`
+		ORDER BY 
+			CASE WHEN deleted_at IS NULL THEN 0 ELSE 1 END,
+			created_at DESC`
 
 	rows, err := r.db.Query(query)
 	if err != nil {
@@ -117,6 +118,7 @@ func (r *GymRepository) GetAllGyms() ([]*dto.GymResponseDTO, error) {
 			&gym.IsActive,
 			&gym.CreatedAt,
 			&gym.UpdatedAt,
+			&gym.DeletedAt,
 		)
 		if err != nil {
 			return nil, err
