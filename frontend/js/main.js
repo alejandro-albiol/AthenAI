@@ -1,3 +1,23 @@
+// AthenAI Configuration
+const ATHENAI_CONFIG = {
+  // Email Configuration
+  CONTACT_EMAIL: "contact@athenai.com",
+  SUPPORT_EMAIL: "support@athenai.com",
+  DEMO_EMAIL: "demo@athenai.com",
+
+  // API Configuration
+  API_BASE_URL: "/api/v1",
+
+  // UI Configuration
+  MODAL_ANIMATION_DURATION: 300,
+  SUCCESS_MESSAGE_DURATION: 5000,
+  REDIRECT_DELAY: 1500,
+
+  // Company Information
+  COMPANY_NAME: "AthenAI",
+  SUPPORT_RESPONSE_TIME: "24 hours",
+};
+
 // DOM Content Loaded
 document.addEventListener("DOMContentLoaded", function () {
   // Initialize the application
@@ -90,46 +110,114 @@ async function handleGymRegistration(event) {
   event.preventDefault();
 
   const formData = new FormData(event.target);
-  const gymData = {
-    name: formData.get("gymName"),
+  const accessRequestData = {
+    gym_name: formData.get("gymName"),
     owner_name: formData.get("ownerName"),
     email: formData.get("email"),
     phone: formData.get("phone"),
+    member_count: formData.get("memberCount"),
+    current_system: formData.get("currentSystem"),
+    timeline: formData.get("timeline"),
     address: formData.get("address"),
-    domain: formData.get("domain"),
+    request_type: "access_request",
+    source: "landing_page",
   };
 
   try {
-    showLoading("Creating your gym account...");
+    showLoading("Submitting your access request...");
 
-    const response = await fetch("/api/v1/gym", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(gymData),
-    });
+    // Try to send to backend first
+    let response;
+    try {
+      response = await fetch("/api/v1/access-requests", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(accessRequestData),
+      });
+    } catch (backendError) {
+      // If backend is not available, send via contact form method
+      console.log("Backend not available, using email fallback");
+      await sendAccessRequestEmail(accessRequestData);
+      hideLoading();
+      showModalSuccess(
+        "Thank you! Your demo request has been submitted. We'll contact you within 24 hours to schedule your personalized demo."
+      );
+
+      setTimeout(() => {
+        closeRegisterModal();
+      }, 3000);
+      return;
+    }
 
     hideLoading();
 
-    if (response.ok) {
+    if (response && response.ok) {
       const result = await response.json();
-      showSuccess("Gym registered successfully! Welcome to AthenAI!");
-      closeRegisterModal();
+      showModalSuccess(
+        "Thank you! Your demo request has been submitted. We'll contact you within 24 hours to schedule your personalized demo."
+      );
 
-      // Redirect to gym dashboard (you can implement this later)
       setTimeout(() => {
-        window.location.href = `/gym/${result.id}/dashboard`;
-      }, 2000);
+        closeRegisterModal();
+      }, 3000);
     } else {
-      const error = await response.json();
-      showError(error.message || "Failed to register gym. Please try again.");
+      const error = response ? await response.json() : {};
+      showModalError(
+        error.message ||
+          "Failed to submit demo request. Please try contacting us directly."
+      );
     }
   } catch (error) {
     hideLoading();
-    showError("Network error. Please check your connection and try again.");
-    console.error("Registration error:", error);
+    showModalError(
+      `Network error. Please check your connection and try again, or contact us directly at ${ATHENAI_CONFIG.CONTACT_EMAIL}`
+    );
+    console.error("Access request error:", error);
   }
+}
+
+async function sendAccessRequestEmail(accessRequestData) {
+  // Create email body with all the access request information
+  const subject = encodeURIComponent(
+    `AthenAI Access Request - ${accessRequestData.gym_name}`
+  );
+  const body = encodeURIComponent(`
+NEW ACCESS REQUEST FOR ATHENAI
+
+Gym Information:
+- Gym Name: ${accessRequestData.gym_name}
+- Owner: ${accessRequestData.owner_name}
+- Email: ${accessRequestData.email}
+- Phone: ${accessRequestData.phone}
+- Address: ${accessRequestData.address || "Not provided"}
+
+Business Details:
+- Current Members: ${accessRequestData.member_count || "Not specified"}
+- Current System: ${accessRequestData.current_system || "Not specified"}
+- Timeline: ${accessRequestData.timeline || "Not specified"}
+
+Request Details:
+- Source: Landing Page
+- Date: ${new Date().toLocaleDateString()}
+- Time: ${new Date().toLocaleTimeString()}
+
+Next Steps:
+1. Schedule demo call
+2. Discuss pricing and features
+3. Setup onboarding process
+
+---
+This is an automated message from the AthenAI landing page.
+  `);
+
+  // Open email client with pre-filled information
+  window.open(
+    `mailto:${ATHENAI_CONFIG.DEMO_EMAIL}?subject=${subject}&body=${body}`
+  );
+
+  return { success: true };
 }
 
 // Handle login
@@ -157,32 +245,47 @@ async function handleLogin(event) {
 
     if (response.ok) {
       const result = await response.json();
-      showSuccess("Welcome back!");
-      closeLoginModal();
+
+      // Show success message in modal instead of top-right notification
+      showModalSuccess("Welcome back! Redirecting to dashboard...");
 
       // Store auth token (implement proper token management)
       localStorage.setItem("auth_token", result.data.access_token);
 
-      // Redirect to dashboard
+      // Redirect to dashboard after a short delay
       setTimeout(() => {
+        closeLoginModal();
         window.location.href = "/pages/dashboard/";
-      }, 1000);
+      }, 1500);
     } else {
+      // Show red error banner for wrong credentials
       const error = await response.json();
-      showError(error.message || "Invalid credentials. Please try again.");
+      showModalError(
+        error.message || "Invalid email or password. Please try again."
+      );
     }
   } catch (error) {
     hideLoading();
-    showError("Network error. Please check your connection and try again.");
+    // Show error for network issues
+    showModalError(
+      "Network error. Please check your connection and try again."
+    );
     console.error("Login error:", error);
   }
 }
 
 // Schedule demo functionality
 function scheduleDemo() {
-  showInfo(
-    "Demo scheduling feature coming soon! Please contact us at demo@athenai.com"
-  );
+  // Open the access request modal for demo scheduling
+  openRegisterModal();
+
+  // Pre-fill the form to indicate this is a demo request
+  setTimeout(() => {
+    const timelineSelect = document.getElementById("timeline");
+    if (timelineSelect && !timelineSelect.value) {
+      timelineSelect.value = "immediately";
+    }
+  }, 100);
 }
 
 // Notification System
@@ -196,6 +299,78 @@ function showError(message) {
 
 function showInfo(message) {
   showNotification(message, "info");
+}
+
+// Modal-specific notification functions
+function showModalSuccess(message) {
+  showModalMessage(message, "success");
+}
+
+function showModalError(message) {
+  showModalMessage(message, "error");
+}
+
+function showModalMessage(message, type) {
+  // Find the active modal
+  const activeModal = document.querySelector('.modal[style*="block"]');
+  if (!activeModal) {
+    // Fallback to regular notification if no modal is open
+    showNotification(message, type);
+    return;
+  }
+
+  // Remove existing modal message
+  const existingMessage = activeModal.querySelector(".modal-message");
+  if (existingMessage) {
+    existingMessage.remove();
+  }
+
+  // Create modal message element
+  const modalMessage = document.createElement("div");
+  modalMessage.className = `modal-message modal-message-${type}`;
+  modalMessage.innerHTML = `
+    <i class="fas fa-${getIconForType(type)}"></i>
+    <span>${message}</span>
+  `;
+
+  // Add styles
+  modalMessage.style.cssText = `
+    padding: 12px 16px;
+    margin: 20px 0;
+    border-radius: 6px;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 500;
+    animation: fadeIn 0.3s ease-out;
+    background: ${getColorForType(type)}15;
+    color: ${getColorForType(type)};
+    border: 1px solid ${getColorForType(type)}30;
+  `;
+
+  // Insert the message before form actions or at the end of modal body
+  const modalBody = activeModal.querySelector(".modal-body");
+  const formActions = modalBody.querySelector(".form-actions");
+
+  if (formActions) {
+    modalBody.insertBefore(modalMessage, formActions);
+  } else {
+    modalBody.appendChild(modalMessage);
+  }
+
+  // Auto remove success messages after 3 seconds
+  if (type === "success") {
+    setTimeout(() => {
+      if (modalMessage.parentElement) {
+        modalMessage.style.animation = "fadeOut 0.3s ease-in";
+        setTimeout(() => {
+          if (modalMessage.parentElement) {
+            modalMessage.remove();
+          }
+        }, 300);
+      }
+    }, 3000);
+  }
 }
 
 function showNotification(message, type) {
@@ -440,3 +615,297 @@ class ApiClient {
 
 // Create global API client instance
 window.apiClient = new ApiClient();
+
+// Pricing Section Functions
+function togglePricing() {
+  const toggle = document.getElementById("billingToggle");
+  const amounts = document.querySelectorAll(".amount");
+
+  amounts.forEach((amount) => {
+    const monthly = amount.getAttribute("data-monthly");
+    const annual = amount.getAttribute("data-annual");
+
+    if (toggle.checked) {
+      // Annual pricing
+      amount.textContent = annual;
+    } else {
+      // Monthly pricing
+      amount.textContent = monthly;
+    }
+  });
+}
+
+function selectPlan(planType) {
+  const toggle = document.getElementById("billingToggle");
+  const isAnnual = toggle.checked;
+
+  // Store plan selection for pre-filling the access request form
+  const planData = {
+    type: planType,
+    billing: isAnnual ? "annual" : "monthly",
+  };
+
+  localStorage.setItem("selectedPlan", JSON.stringify(planData));
+
+  if (planType === "enterprise") {
+    // For enterprise, redirect to contact form
+    openContactSales();
+  } else {
+    // For other plans, open access request modal
+    openRegisterModal();
+
+    // Pre-fill some context based on the selected plan
+    console.log(
+      `Selected plan: ${planType} (${isAnnual ? "annual" : "monthly"})`
+    );
+
+    // Pre-select member count range based on the plan
+    setTimeout(() => {
+      const memberCountSelect = document.getElementById("memberCount");
+      if (memberCountSelect && planType === "starter") {
+        memberCountSelect.value = "1-100";
+      } else if (memberCountSelect && planType === "professional") {
+        memberCountSelect.value = "101-500";
+      }
+    }, 100);
+  }
+}
+
+function openContactSales() {
+  // For enterprise plans, scroll to contact form with pre-filled subject
+  const contactSection = document.getElementById("contact");
+  if (contactSection) {
+    contactSection.scrollIntoView({ behavior: "smooth" });
+
+    // Pre-fill contact form for enterprise inquiry
+    setTimeout(() => {
+      const subjectSelect = document.getElementById("contactSubject");
+      if (subjectSelect) {
+        subjectSelect.value = "partnership";
+      }
+
+      const messageTextarea = document.getElementById("contactMessage");
+      if (messageTextarea && !messageTextarea.value) {
+        messageTextarea.value =
+          "Hi! I'm interested in the Enterprise plan for my gym. Please contact me to discuss pricing and features for large-scale implementation.";
+      }
+    }, 500);
+  }
+}
+
+// Add smooth scrolling enhancement for pricing link
+function enhanceSmoothScrolling() {
+  document.querySelectorAll('a[href^="#"]').forEach((anchor) => {
+    anchor.addEventListener("click", function (e) {
+      e.preventDefault();
+      const target = document.querySelector(this.getAttribute("href"));
+      if (target) {
+        target.scrollIntoView({
+          behavior: "smooth",
+          block: "start",
+        });
+      }
+    });
+  });
+}
+
+// Update the initialization to include pricing functions
+const originalInitializeApp = initializeApp;
+function initializeApp() {
+  originalInitializeApp();
+  enhanceSmoothScrolling();
+  setupContactForm();
+}
+
+// Contact Form Functions
+function setupContactForm() {
+  const form = document.getElementById("contactForm");
+  if (form) {
+    form.addEventListener("submit", handleContactSubmit);
+  }
+}
+
+function validateContactForm() {
+  const name = document.getElementById("contactName").value.trim();
+  const email = document.getElementById("contactEmail").value.trim();
+  const message = document.getElementById("contactMessage").value.trim();
+
+  let isValid = true;
+
+  // Clear previous errors
+  document.getElementById("nameError").textContent = "";
+  document.getElementById("emailError").textContent = "";
+  document.getElementById("messageError").textContent = "";
+  document.getElementById("recaptchaError").textContent = "";
+
+  // Validate name
+  if (name.length < 2) {
+    document.getElementById("nameError").textContent =
+      "Name must be at least 2 characters long";
+    isValid = false;
+  }
+
+  // Validate email
+  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  if (!emailRegex.test(email)) {
+    document.getElementById("emailError").textContent =
+      "Please enter a valid email address";
+    isValid = false;
+  }
+
+  // Validate message
+  if (message.length < 10) {
+    document.getElementById("messageError").textContent =
+      "Message must be at least 10 characters long";
+    isValid = false;
+  }
+
+  // Validate reCAPTCHA (when implemented)
+  if (typeof grecaptcha !== "undefined") {
+    const recaptchaResponse = grecaptcha.getResponse();
+    if (!recaptchaResponse) {
+      document.getElementById("recaptchaError").textContent =
+        "Please complete the reCAPTCHA verification";
+      isValid = false;
+    }
+  }
+
+  return isValid;
+}
+
+async function handleContactSubmit(e) {
+  e.preventDefault();
+
+  if (!validateContactForm()) {
+    return;
+  }
+
+  const submitBtn = document.getElementById("contactSubmit");
+  const btnText = submitBtn.querySelector(".btn-text");
+  const btnLoading = submitBtn.querySelector(".btn-loading");
+  const statusDiv = document.getElementById("contactStatus");
+
+  // Show loading state
+  btnText.style.display = "none";
+  btnLoading.style.display = "inline";
+  submitBtn.disabled = true;
+  statusDiv.style.display = "none";
+
+  // Collect form data
+  const formData = {
+    name: document.getElementById("contactName").value.trim(),
+    email: document.getElementById("contactEmail").value.trim(),
+    subject:
+      document.getElementById("contactSubject").value || "General Inquiry",
+    message: document.getElementById("contactMessage").value.trim(),
+    recaptcha:
+      typeof grecaptcha !== "undefined" ? grecaptcha.getResponse() : null,
+    timestamp: new Date().toISOString(),
+    source: "AthenAI Landing Page",
+  };
+
+  try {
+    // For now, we'll use a simple email service or backend endpoint
+    // You can replace this with your preferred email service
+    const response = await sendContactEmail(formData);
+
+    if (response.success) {
+      showStatus(
+        "success",
+        "Thank you! Your message has been sent successfully. We'll get back to you within 24 hours."
+      );
+      document.getElementById("contactForm").reset();
+      if (typeof grecaptcha !== "undefined") {
+        grecaptcha.reset();
+      }
+    } else {
+      throw new Error(response.message || "Failed to send message");
+    }
+  } catch (error) {
+    console.error("Contact form error:", error);
+    showStatus(
+      "error",
+      `Sorry, there was an error sending your message. Please try again or email us directly at ${ATHENAI_CONFIG.CONTACT_EMAIL}`
+    );
+  } finally {
+    // Reset button state
+    btnText.style.display = "inline";
+    btnLoading.style.display = "none";
+    submitBtn.disabled = false;
+  }
+}
+
+function showStatus(type, message) {
+  const statusDiv = document.getElementById("contactStatus");
+  statusDiv.className = `form-status ${type}`;
+  statusDiv.textContent = message;
+  statusDiv.style.display = "block";
+
+  // Auto-hide success messages after 5 seconds
+  if (type === "success") {
+    setTimeout(() => {
+      statusDiv.style.display = "none";
+    }, 5000);
+  }
+}
+
+async function sendContactEmail(formData) {
+  // Option 1: Use a backend endpoint (recommended)
+  try {
+    const response = await fetch("/api/contact", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(formData),
+    });
+
+    if (response.ok) {
+      return { success: true };
+    } else {
+      throw new Error("Server error");
+    }
+  } catch (error) {
+    console.log("Backend not available, using alternative method");
+
+    // Option 2: Use EmailJS or similar service
+    // You'll need to set up EmailJS account and get your service ID
+    /*
+    try {
+      const result = await emailjs.send(
+        'your_service_id',
+        'your_template_id',
+        {
+          to_email: ATHENAI_CONFIG.CONTACT_EMAIL,
+          from_name: formData.name,
+          from_email: formData.email,
+          subject: `AthenAI Contact: ${formData.subject}`,
+          message: formData.message,
+        }
+      );
+      return { success: true };
+    } catch (emailError) {
+      return { success: false, message: emailError.text };
+    }
+    */
+
+    // Option 3: Fallback - open email client (for development)
+    const subject = encodeURIComponent(`AthenAI Contact: ${formData.subject}`);
+    const body = encodeURIComponent(`
+Name: ${formData.name}
+Email: ${formData.email}
+Subject: ${formData.subject}
+
+Message:
+${formData.message}
+
+---
+Sent from AthenAI Landing Page at ${formData.timestamp}
+    `);
+
+    window.open(
+      `mailto:${ATHENAI_CONFIG.CONTACT_EMAIL}?subject=${subject}&body=${body}`
+    );
+    return { success: true };
+  }
+}

@@ -9,6 +9,8 @@
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
       rel="stylesheet"
     />
+    <!-- reCAPTCHA -->
+    <script src="https://www.google.com/recaptcha/api.js" async defer></script>
   </head>
   <body>
     <!-- Navigation -->
@@ -46,13 +48,13 @@
               class="btn btn-primary btn-large"
               onclick="openRegisterModal()"
             >
-              <i class="fas fa-rocket"></i> Start Free Trial
+              <i class="fas fa-calendar"></i> Schedule Free Demo
             </button>
             <button
               class="btn btn-secondary btn-large"
-              onclick="scheduleDemo()"
+              onclick="document.getElementById('contact').scrollIntoView({behavior: 'smooth'})"
             >
-              <i class="fas fa-calendar"></i> Schedule Demo
+              <i class="fas fa-envelope"></i> Contact Sales
             </button>
           </div>
           <div class="hero-stats">
@@ -127,6 +129,295 @@
       </div>
     </section>
 
+    <!-- Pricing Section -->
+    <section id="pricing" class="pricing">
+      <div class="container">
+        <h2 class="section-title">Simple, Transparent Pricing</h2>
+        <p class="section-subtitle">
+          Choose the perfect plan for your gym's needs. Upgrade or downgrade
+          anytime.
+        </p>
+
+        <!-- Billing Toggle -->
+        <div class="billing-toggle">
+          <span class="billing-option">Monthly</span>
+          <label class="toggle-switch">
+            <input
+              type="checkbox"
+              id="billingToggle"
+              onchange="togglePricing()"
+            />
+            <span class="slider"></span>
+          </label>
+          <span class="billing-option"
+            >Annual <span class="discount-badge">Save 20%</span></span
+          >
+        </div>
+
+        <div class="pricing-grid">
+          <!-- Starter Plan -->
+          <div class="pricing-card">
+            <div class="plan-header">
+              <h3>Starter</h3>
+              <p class="plan-description">
+                Perfect for small gyms getting started
+              </p>
+            </div>
+            <div class="plan-price">
+              <span class="currency">$</span>
+              <span class="amount" data-monthly="49" data-annual="39">49</span>
+              <span class="period">/month</span>
+            </div>
+            <div class="plan-features">
+              <ul>
+                <li><i class="fas fa-check"></i> Up to 100 members</li>
+                <li><i class="fas fa-check"></i> Basic member management</li>
+                <li><i class="fas fa-check"></i> Workout tracking</li>
+                <li><i class="fas fa-check"></i> Basic reporting</li>
+                <li><i class="fas fa-check"></i> Email support</li>
+                <li><i class="fas fa-check"></i> Mobile access</li>
+              </ul>
+            </div>
+            <button
+              class="btn btn-outline btn-plan"
+              onclick="selectPlan('starter')"
+            >
+              Request Access
+            </button>
+          </div>
+
+          <!-- Professional Plan -->
+          <div class="pricing-card featured">
+            <div class="popular-badge">Most Popular</div>
+            <div class="plan-header">
+              <h3>Professional</h3>
+              <p class="plan-description">
+                Ideal for growing fitness businesses
+              </p>
+            </div>
+            <div class="plan-price">
+              <span class="currency">$</span>
+              <span class="amount" data-monthly="89" data-annual="71">89</span>
+              <span class="period">/month</span>
+            </div>
+            <div class="plan-features">
+              <ul>
+                <li><i class="fas fa-check"></i> Up to 500 members</li>
+                <li><i class="fas fa-check"></i> Advanced analytics</li>
+                <li><i class="fas fa-check"></i> Custom workout templates</li>
+                <li><i class="fas fa-check"></i> AI-powered insights</li>
+                <li><i class="fas fa-check"></i> Priority support</li>
+                <li><i class="fas fa-check"></i> Custom branding</li>
+                <li><i class="fas fa-check"></i> Member app access</li>
+              </ul>
+            </div>
+            <button
+              class="btn btn-primary btn-plan"
+              onclick="selectPlan('professional')"
+            >
+              Request Demo
+            </button>
+          </div>
+
+          <!-- Enterprise Plan -->
+          <div class="pricing-card">
+            <div class="plan-header">
+              <h3>Enterprise</h3>
+              <p class="plan-description">For large gyms and chains</p>
+            </div>
+            <div class="plan-price">
+              <span class="currency">$</span>
+              <span class="amount" data-monthly="149" data-annual="119"
+                >149</span
+              >
+              <span class="period">/month</span>
+            </div>
+            <div class="plan-features">
+              <ul>
+                <li><i class="fas fa-check"></i> Unlimited members</li>
+                <li><i class="fas fa-check"></i> Multi-location support</li>
+                <li><i class="fas fa-check"></i> Advanced integrations</li>
+                <li><i class="fas fa-check"></i> Custom reporting</li>
+                <li><i class="fas fa-check"></i> Dedicated support</li>
+                <li><i class="fas fa-check"></i> API access</li>
+                <li><i class="fas fa-check"></i> White-label solution</li>
+              </ul>
+            </div>
+            <button
+              class="btn btn-outline btn-plan"
+              onclick="selectPlan('enterprise')"
+            >
+              Contact Sales
+            </button>
+          </div>
+        </div>
+
+        <!-- Features Comparison -->
+        <div class="pricing-faq">
+          <h3>Frequently Asked Questions</h3>
+          <div class="faq-grid">
+            <div class="faq-item">
+              <h4>Can I change plans anytime?</h4>
+              <p>
+                Yes, you can upgrade or downgrade your plan at any time. Changes
+                take effect at your next billing cycle.
+              </p>
+            </div>
+            <div class="faq-item">
+              <h4>Is there a setup fee?</h4>
+              <p>
+                No setup fees. We'll help you migrate your data and get started
+                for free.
+              </p>
+            </div>
+            <div class="faq-item">
+              <h4>What payment methods do you accept?</h4>
+              <p>
+                We accept all major credit cards, PayPal, and bank transfers for
+                annual plans.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Contact Section -->
+    <section id="contact" class="contact">
+      <div class="container">
+        <div class="contact-container">
+          <div class="contact-info">
+            <h2>Get in Touch</h2>
+            <p class="contact-subtitle">
+              Ready to transform your gym? Have questions about our platform?
+              We'd love to hear from you!
+            </p>
+
+            <div class="contact-details">
+              <div class="contact-item">
+                <div class="contact-icon">
+                  <i class="fas fa-envelope"></i>
+                </div>
+                <div class="contact-text">
+                  <h4>Email Us</h4>
+                  <p>contact@athenai.com</p>
+                </div>
+              </div>
+
+              <div class="contact-item">
+                <div class="contact-icon">
+                  <i class="fas fa-clock"></i>
+                </div>
+                <div class="contact-text">
+                  <h4>Response Time</h4>
+                  <p>Within 24 hours</p>
+                </div>
+              </div>
+
+              <div class="contact-item">
+                <div class="contact-icon">
+                  <i class="fas fa-calendar"></i>
+                </div>
+                <div class="contact-text">
+                  <h4>Free Demo</h4>
+                  <p>Schedule a personalized demo</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div class="contact-form-container">
+            <form id="contactForm" class="contact-form">
+              <h3>Send us a Message</h3>
+
+              <div class="form-row">
+                <div class="form-group">
+                  <label for="contactName">Full Name *</label>
+                  <input
+                    type="text"
+                    id="contactName"
+                    name="name"
+                    required
+                    placeholder="Your full name"
+                  />
+                  <span class="error-message" id="nameError"></span>
+                </div>
+
+                <div class="form-group">
+                  <label for="contactEmail">Email Address *</label>
+                  <input
+                    type="email"
+                    id="contactEmail"
+                    name="email"
+                    required
+                    placeholder="your@email.com"
+                  />
+                  <span class="error-message" id="emailError"></span>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label for="contactSubject">Subject</label>
+                <select id="contactSubject" name="subject">
+                  <option value="">Select a topic</option>
+                  <option value="demo">Schedule a Demo</option>
+                  <option value="pricing">Pricing Information</option>
+                  <option value="features">Feature Questions</option>
+                  <option value="support">Technical Support</option>
+                  <option value="partnership">Partnership Inquiry</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div class="form-group">
+                <label for="contactMessage">Message *</label>
+                <textarea
+                  id="contactMessage"
+                  name="message"
+                  required
+                  rows="6"
+                  placeholder="Tell us about your gym, your needs, or any questions you have..."
+                ></textarea>
+                <span class="error-message" id="messageError"></span>
+              </div>
+
+              <!-- reCAPTCHA placeholder -->
+              <div class="form-group">
+                <div class="recaptcha-container">
+                  <div
+                    id="recaptcha-element"
+                    class="g-recaptcha"
+                    data-sitekey="your-site-key-here"
+                  ></div>
+                  <span class="error-message" id="recaptchaError"></span>
+                </div>
+              </div>
+
+              <div class="form-actions">
+                <button
+                  type="submit"
+                  class="btn btn-primary btn-large"
+                  id="contactSubmit"
+                >
+                  <i class="fas fa-paper-plane"></i>
+                  <span class="btn-text">Send Message</span>
+                  <span class="btn-loading" style="display: none">
+                    <i class="fas fa-spinner fa-spin"></i> Sending...
+                  </span>
+                </button>
+              </div>
+
+              <div
+                class="form-status"
+                id="contactStatus"
+                style="display: none"
+              ></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </section>
+
     <!-- Call to Action -->
     <section class="cta">
       <div class="container">
@@ -140,53 +431,116 @@
             class="btn btn-primary btn-large"
             onclick="openRegisterModal()"
           >
-            <i class="fas fa-play"></i> Get Started Today
+            <i class="fas fa-calendar"></i> Schedule Free Demo
           </button>
         </div>
       </div>
     </section>
 
-    <!-- Registration Modal -->
+    <!-- Schedule Demo Modal -->
     <div id="registerModal" class="modal">
       <div class="modal-content">
         <div class="modal-header">
-          <h3><i class="fas fa-dumbbell"></i> Register Your Gym</h3>
+          <h3><i class="fas fa-calendar"></i> Schedule Your Free Demo</h3>
           <span class="close" onclick="closeRegisterModal()">&times;</span>
         </div>
         <div class="modal-body">
+          <div class="access-intro">
+            <p>
+              Ready to see AthenAI in action? Schedule your personalized demo
+              and discover how we can transform your gym management.
+            </p>
+            <p><strong>What's included in your demo:</strong></p>
+            <ul>
+              <li>✓ Complete platform walkthrough</li>
+              <li>✓ Customized to your gym's needs</li>
+              <li>✓ Pricing discussion and setup options</li>
+              <li>✓ Q&A with our gym management experts</li>
+              <li>✓ No-pressure consultation</li>
+            </ul>
+          </div>
+
           <form id="registerForm">
             <div class="form-group">
               <label for="gymName">Gym Name *</label>
-              <input type="text" id="gymName" name="gymName" required />
+              <input
+                type="text"
+                id="gymName"
+                name="gymName"
+                required
+                placeholder="Your gym's name"
+              />
             </div>
             <div class="form-group">
-              <label for="ownerName">Owner Name *</label>
-              <input type="text" id="ownerName" name="ownerName" required />
+              <label for="ownerName">Your Name *</label>
+              <input
+                type="text"
+                id="ownerName"
+                name="ownerName"
+                required
+                placeholder="Your full name"
+              />
             </div>
             <div class="form-group">
-              <label for="email">Email *</label>
-              <input type="email" id="email" name="email" required />
+              <label for="email">Email Address *</label>
+              <input
+                type="email"
+                id="email"
+                name="email"
+                required
+                placeholder="your@email.com"
+              />
             </div>
             <div class="form-group">
-              <label for="phone">Phone Number</label>
-              <input type="tel" id="phone" name="phone" />
+              <label for="phone">Phone Number *</label>
+              <input
+                type="tel"
+                id="phone"
+                name="phone"
+                required
+                placeholder="+1 (555) 123-4567"
+              />
+            </div>
+            <div class="form-group">
+              <label for="memberCount">Number of Active Members</label>
+              <select id="memberCount" name="memberCount">
+                <option value="">Select range</option>
+                <option value="1-50">1-50 members</option>
+                <option value="51-100">51-100 members</option>
+                <option value="101-300">101-300 members</option>
+                <option value="301-500">301-500 members</option>
+                <option value="500+">500+ members</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label for="currentSystem"
+                >Current Management System (if any)</label
+              >
+              <input
+                type="text"
+                id="currentSystem"
+                name="currentSystem"
+                placeholder="e.g., Mindbody, Excel, Paper-based, etc."
+              />
+            </div>
+            <div class="form-group">
+              <label for="timeline">When would you like to start?</label>
+              <select id="timeline" name="timeline">
+                <option value="">Select timeline</option>
+                <option value="immediately">Immediately</option>
+                <option value="within-month">Within 1 month</option>
+                <option value="within-quarter">Within 3 months</option>
+                <option value="just-exploring">Just exploring options</option>
+              </select>
             </div>
             <div class="form-group">
               <label for="address">Gym Address</label>
-              <textarea id="address" name="address" rows="3"></textarea>
-            </div>
-            <div class="form-group">
-              <label for="domain">Custom Domain (optional)</label>
-              <input
-                type="text"
-                id="domain"
-                name="domain"
-                placeholder="your-gym-name"
-              />
-              <small
-                >This will be your gym's unique URL:
-                your-gym-name.athenai.com</small
-              >
+              <textarea
+                id="address"
+                name="address"
+                rows="2"
+                placeholder="Street address, City, State, ZIP"
+              ></textarea>
             </div>
             <div class="form-actions">
               <button
@@ -197,7 +551,7 @@
                 Cancel
               </button>
               <button type="submit" class="btn btn-primary">
-                <i class="fas fa-check"></i> Create Account
+                <i class="fas fa-calendar"></i> Schedule Demo
               </button>
             </div>
           </form>
@@ -262,7 +616,7 @@
           </div>
           <div class="footer-section">
             <h4>Support</h4>
-            <a href="mailto:support@athenai.com">Contact Support</a>
+            <a href="mailto:albiolsafontalejandro@gmail.com">Contact Support</a>
             <a href="#" onclick="scheduleDemo()">Schedule Demo</a>
           </div>
         </div>
