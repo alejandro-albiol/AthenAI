@@ -45,17 +45,51 @@
                 <i class="fas fa-building"></i>
                 <span>Gyms Management</span>
               </a>
+            </div>
+
+            <div class="nav-section platform-admin-nav" style="display: none">
+              <h3 class="nav-section-title">
+                <i class="fas fa-database"></i>
+                Global Data
+              </h3>
+              <a href="#exercises" class="nav-item" data-view="exercises">
+                <i class="fas fa-dumbbell"></i>
+                <span>Exercises</span>
+              </a>
+              <a href="#equipment" class="nav-item" data-view="equipment">
+                <i class="fas fa-tools"></i>
+                <span>Equipment</span>
+              </a>
+              <a
+                href="#muscular-groups"
+                class="nav-item"
+                data-view="muscular-groups"
+              >
+                <i class="fas fa-muscle"></i>
+                <span>Muscular Groups</span>
+              </a>
+              <a
+                href="#workout-templates"
+                class="nav-item"
+                data-view="workout-templates"
+              >
+                <i class="fas fa-clipboard-list"></i>
+                <span>Workout Templates</span>
+              </a>
+            </div>
+
+            <div class="nav-section platform-admin-nav" style="display: none">
+              <h3 class="nav-section-title">
+                <i class="fas fa-chart-line"></i>
+                Analytics & Settings
+              </h3>
               <a
                 href="#analytics"
                 class="nav-item"
                 data-view="platform-analytics"
               >
-                <i class="fas fa-chart-line"></i>
+                <i class="fas fa-chart-bar"></i>
                 <span>Platform Analytics</span>
-              </a>
-              <a href="#users" class="nav-item" data-view="all-users">
-                <i class="fas fa-users"></i>
-                <span>All Users</span>
               </a>
               <a
                 href="#settings"
@@ -113,7 +147,7 @@
           <div class="header-right">
             <!-- Gym Selector for Platform Admins -->
             <div class="gym-selector" id="gym-selector" style="display: none">
-              <label for="gym-select">Current Gym:</label>
+              <label for="gym-select">View Gym:</label>
               <select id="gym-select" class="form-control">
                 <option value="">Loading gyms...</option>
               </select>

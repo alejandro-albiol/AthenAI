@@ -62,7 +62,10 @@ class AuthManager {
     this.token = null;
     this.currentUser = null;
     api.clearToken();
-    window.location.href = "/";
+    // Only redirect if not already on landing page
+    if (window.location.pathname !== "/") {
+      window.location.href = "/";
+    }
   }
 
   // Verify current session
@@ -78,12 +81,16 @@ class AuthManager {
         this.currentUser = await response.json();
         return true;
       } else {
-        this.logout();
+        // Don't logout automatically, just return false
+        this.token = null;
+        this.currentUser = null;
         return false;
       }
     } catch (error) {
       console.error("Session verification failed:", error);
-      this.logout();
+      // Don't logout automatically, just return false
+      this.token = null;
+      this.currentUser = null;
       return false;
     }
   }
@@ -313,8 +320,11 @@ const auth = new AuthManager();
 
 // Setup form handlers when DOM is loaded
 document.addEventListener("DOMContentLoaded", function () {
-  // Check if we need to redirect based on auth status
-  auth.redirectIfNeeded();
+  // Only check auth status for protected pages (dashboard)
+  const currentPath = window.location.pathname;
+  if (currentPath.includes("/pages/dashboard/")) {
+    auth.redirectIfNeeded();
+  }
 
   // Setup login form
   const loginForm = document.getElementById("loginForm");

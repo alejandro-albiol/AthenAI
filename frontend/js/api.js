@@ -9,7 +9,9 @@ class API {
 
   // Helper method to get auth headers
   getAuthHeaders() {
-    const token = localStorage.getItem("accessToken");
+    // Check for both token storage formats for compatibility
+    const token =
+      localStorage.getItem("accessToken") || localStorage.getItem("auth_token");
     const gymId = localStorage.getItem("gymId");
 
     const headers = {
@@ -124,6 +126,28 @@ class API {
 
   async validateToken() {
     return await this.request("/auth/validate");
+  }
+
+  // Get current user information
+  async getMe() {
+    return await fetch(`${this.baseURL}/auth/validate`, {
+      method: "GET",
+      headers: this.getAuthHeaders(),
+    });
+  }
+
+  // Set authentication token
+  setToken(token) {
+    localStorage.setItem("auth_token", token);
+  }
+
+  // Clear authentication token
+  clearToken() {
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("accessToken");
+    localStorage.removeItem("refreshToken");
+    localStorage.removeItem("gymId");
+    localStorage.removeItem("userRole");
   }
 
   // Gym Management (Platform Admin only)

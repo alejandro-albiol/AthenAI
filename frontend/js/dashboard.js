@@ -2,7 +2,7 @@
 class DashboardManager {
   constructor() {
     this.currentUser = null;
-    this.currentGym = null;
+    this.selectedGym = null; // For Platform Admin gym selection
     this.currentView = "overview";
     this.apiBase = "/api/v1";
 
@@ -80,7 +80,9 @@ class DashboardManager {
 
     if (this.currentUser.user_type === "platform_admin") {
       platformAdminNav.style.display = "block";
-      gymSelector.style.display = "none";
+      gymSelector.style.display = "block"; // Show gym selector for Platform Admin
+      // Load gyms for selection
+      this.loadGyms();
       // Load platform overview by default for platform admins
       this.loadView("platform-overview");
     } else {
@@ -107,7 +109,7 @@ class DashboardManager {
           '<option value="">No gyms available - Create one first</option>';
         select.disabled = true;
       } else {
-        select.innerHTML = '<option value="">Select a gym...</option>';
+        select.innerHTML = '<option value="">All Gyms (Platform View)</option>';
         select.disabled = false;
 
         gyms.forEach((gym) => {
@@ -129,7 +131,12 @@ class DashboardManager {
       }
 
       select.addEventListener("change", (e) => {
-        this.currentGym = e.target.value;
+        this.selectedGym = e.target.value || null;
+        console.log(
+          "Platform Admin selected gym:",
+          this.selectedGym ? this.selectedGym : "All Gyms"
+        );
+        // Update current view with selected gym context
         this.loadView(this.currentView);
       });
     } catch (error) {
@@ -233,13 +240,39 @@ class DashboardManager {
     try {
       switch (viewName) {
         case "platform-overview":
-          await this.loadPlatformOverview();
+          if (this.selectedGym) {
+            await this.loadGymOverview(this.selectedGym);
+          } else {
+            await this.loadPlatformOverview();
+          }
           break;
         case "gyms":
           await this.loadGymsManagement();
           break;
+        case "equipment":
+          await this.loadEquipmentManagement();
+          break;
+        case "exercises":
+          await this.loadExercisesManagement();
+          break;
+        case "muscular-groups":
+          await this.loadMuscularGroupsManagement();
+          break;
+        case "workout-templates":
+          await this.loadWorkoutTemplatesManagement();
+          break;
+        case "platform-analytics":
+          if (this.selectedGym) {
+            await this.loadGymAnalytics(this.selectedGym);
+          } else {
+            await this.loadPlatformAnalytics();
+          }
+          break;
+        case "platform-settings":
+          await this.loadPlatformSettings();
+          break;
         default:
-          this.showError("View not found");
+          this.showComingSoon(viewName);
       }
     } catch (error) {
       console.error("Failed to load view:", error);
@@ -249,44 +282,11 @@ class DashboardManager {
 
   updatePageHeader(viewName) {
     const titles = {
-      overview: {
-        title: "Dashboard Overview",
-        subtitle: "Welcome back! Here's what's happening at your gym.",
-        action: "Add Member",
-      },
-      members: {
-        title: "Members",
-        subtitle: "Manage your gym members and their memberships.",
-        action: "Add Member",
-      },
-      exercises: {
-        title: "Custom Exercises",
-        subtitle: "Create and manage your custom exercises.",
-        action: "Add Exercise",
-      },
-      equipment: {
-        title: "Equipment",
-        subtitle: "Manage your gym equipment inventory.",
-        action: "Add Equipment",
-      },
-      workouts: {
-        title: "Workout Templates",
-        subtitle: "Create and manage workout templates.",
-        action: "Add Template",
-      },
-      "workout-instances": {
-        title: "Workout Instances",
-        subtitle: "Track member workout sessions.",
-        action: "Add Instance",
-      },
-      analytics: {
-        title: "Analytics",
-        subtitle: "View insights and performance metrics.",
-        action: "Export Data",
-      },
       "platform-overview": {
-        title: "Platform Overview",
-        subtitle: "Monitor platform-wide statistics and activity.",
+        title: this.selectedGym ? "Gym Overview" : "Platform Overview",
+        subtitle: this.selectedGym
+          ? "View detailed information for selected gym."
+          : "Monitor platform-wide statistics and activity.",
         action: "Add Gym",
       },
       gyms: {
@@ -294,92 +294,131 @@ class DashboardManager {
         subtitle: "Manage all gyms in the platform.",
         action: "Add Gym",
       },
+      equipment: {
+        title: "Equipment Management",
+        subtitle: "Manage global equipment catalog.",
+        action: "Add Equipment",
+      },
+      exercises: {
+        title: "Exercise Management",
+        subtitle: "Manage global exercise library.",
+        action: "Add Exercise",
+      },
+      "muscular-groups": {
+        title: "Muscular Groups",
+        subtitle: "Manage muscle group categories.",
+        action: "Add Group",
+      },
+      "workout-templates": {
+        title: "Workout Templates",
+        subtitle: "Manage global workout templates.",
+        action: "Add Template",
+      },
+      "platform-analytics": {
+        title: this.selectedGym ? "Gym Analytics" : "Platform Analytics",
+        subtitle: this.selectedGym
+          ? "View analytics for selected gym."
+          : "View platform-wide insights and metrics.",
+        action: "Export Data",
+      },
+      "platform-settings": {
+        title: "Platform Settings",
+        subtitle: "Configure system-wide settings.",
+        action: "Save Settings",
+      },
     };
 
-    const config = titles[viewName] || titles["overview"];
+    const config = titles[viewName] || titles["platform-overview"];
 
     document.getElementById("page-title").textContent = config.title;
     document.getElementById("page-subtitle").textContent = config.subtitle;
     document.getElementById("action-text").textContent = config.action;
   }
 
-  async loadCustomExercises() {
-    if (!this.currentGym && this.currentUser.user_type !== "platform_admin") {
-      this.showError("No gym selected");
-      return;
-    }
-
+  async loadGymOverview(gymId) {
     try {
-      const response = await this.apiCall("/custom-exercise");
-      const exercisesData = await response.json();
-      const exercises = exercisesData.data || [];
+      // Load specific gym data
+      const [gymResponse] = await Promise.all([this.apiCall(`/gym/${gymId}`)]);
 
-      const html = `
-                <div class="data-table">
-                    <table>
-                        <thead>
-                            <tr>
-                                <th>Name</th>
-                                <th>Type</th>
-                                <th>Difficulty</th>
-                                <th>Muscular Groups</th>
-                                <th>Created By</th>
-                                <th>Actions</th>
-                            </tr>
-                        </thead>
-                        <tbody>
-                            ${exercises
-                              .map(
-                                (exercise) => `
-                                <tr>
-                                    <td><strong>${exercise.name}</strong></td>
-                                    <td>${exercise.exercise_type || "-"}</td>
-                                    <td><span class="status-badge status-${
-                                      exercise.difficulty_level
-                                    }">${
-                                  exercise.difficulty_level || "-"
-                                }</span></td>
-                                    <td>${
-                                      exercise.muscular_groups
-                                        ? exercise.muscular_groups.join(", ")
-                                        : "-"
-                                    }</td>
-                                    <td>${exercise.created_by || "-"}</td>
-                                    <td>
-                                        <div class="action-buttons">
-                                            <button class="btn-icon btn-edit" onclick="dashboard.editExercise('${
-                                              exercise.id
-                                            }')" title="Edit">
-                                                <i class="fas fa-edit"></i>
-                                            </button>
-                                            <button class="btn-icon btn-delete" onclick="dashboard.deleteExercise('${
-                                              exercise.id
-                                            }')" title="Delete">
-                                                <i class="fas fa-trash"></i>
-                                            </button>
-                                        </div>
-                                    </td>
-                                </tr>
-                            `
-                              )
-                              .join("")}
-                        </tbody>
-                    </table>
-                </div>
-            `;
+      const gymData = await gymResponse.json();
+      const gym = gymData.data;
 
-      if (exercises.length === 0) {
-        this.showEmptyState(
-          "exercises",
-          "No custom exercises found",
-          "Create your first custom exercise to get started."
-        );
-      } else {
-        this.setContent(html);
+      if (!gym) {
+        this.showError("Gym not found");
+        return;
       }
+
+      const content = `
+        <div class="gym-overview">
+          <div class="gym-header">
+            <div class="gym-info">
+              <h2>${gym.name}</h2>
+              <div class="gym-meta">
+                <span class="status-badge ${
+                  gym.is_active ? "status-active" : "status-inactive"
+                }">
+                  ${gym.is_active ? "Active" : "Inactive"}
+                </span>
+                <span class="gym-created">Created: ${new Date(
+                  gym.created_at
+                ).toLocaleDateString()}</span>
+              </div>
+              <div class="gym-details">
+                <p><i class="fas fa-envelope"></i> ${gym.email}</p>
+                <p><i class="fas fa-phone"></i> ${gym.phone || "No phone"}</p>
+                <p><i class="fas fa-map-marker-alt"></i> ${
+                  gym.address || "No address"
+                }</p>
+              </div>
+            </div>
+          </div>
+
+          <div class="gym-stats-grid">
+            <div class="dashboard-card stat-card">
+              <div class="card-icon">
+                <i class="fas fa-users"></i>
+              </div>
+              <span class="stat-number">Coming Soon</span>
+              <span class="stat-label">Total Members</span>
+              <span class="stat-change neutral">Requires user endpoint</span>
+            </div>
+            
+            <div class="dashboard-card stat-card">
+              <div class="card-icon">
+                <i class="fas fa-dumbbell"></i>
+              </div>
+              <span class="stat-number">Coming Soon</span>
+              <span class="stat-label">Custom Exercises</span>
+              <span class="stat-change neutral">Requires custom exercise endpoint</span>
+            </div>
+
+            <div class="dashboard-card stat-card">
+              <div class="card-icon">
+                <i class="fas fa-calendar-check"></i>
+              </div>
+              <span class="stat-number">Coming Soon</span>
+              <span class="stat-label">Active Workouts</span>
+              <span class="stat-change neutral">Requires workout endpoint</span>
+            </div>
+          </div>
+
+          <div class="gym-actions">
+            <button class="btn btn-primary" onclick="dashboard.viewGymDetails('${
+              gym.id
+            }')">
+              <i class="fas fa-edit"></i> Edit Gym Details
+            </button>
+            <button class="btn btn-outline" onclick="dashboard.selectedGym = null; dashboard.loadView('platform-overview')">
+              <i class="fas fa-arrow-left"></i> Back to Platform View
+            </button>
+          </div>
+        </div>
+      `;
+
+      this.setContent(content);
     } catch (error) {
-      console.error("Failed to load exercises:", error);
-      this.showError("Failed to load exercises");
+      console.error("Failed to load gym overview:", error);
+      this.showError("Failed to load gym details");
     }
   }
 
@@ -799,9 +838,8 @@ class DashboardManager {
   }
 
   manageGym(gymId) {
-    // Switch to gym-specific management context
-    this.currentGym = gymId;
-    this.loadView("members"); // Load the tenant view for this specific gym
+    // Show gym management modal/details for platform admin
+    this.viewGymDetails(gymId);
   }
 
   restoreGym(gymId) {
@@ -959,6 +997,35 @@ class DashboardManager {
         `;
 
     container.innerHTML = html;
+  }
+
+  // Platform Admin CRUD Functions (Placeholders)
+  async loadEquipmentManagement() {
+    this.showComingSoon("Equipment Management");
+  }
+
+  async loadExercisesManagement() {
+    this.showComingSoon("Exercises Management");
+  }
+
+  async loadMuscularGroupsManagement() {
+    this.showComingSoon("Muscular Groups Management");
+  }
+
+  async loadWorkoutTemplatesManagement() {
+    this.showComingSoon("Workout Templates Management");
+  }
+
+  async loadPlatformAnalytics() {
+    this.showComingSoon("Platform Analytics");
+  }
+
+  async loadPlatformSettings() {
+    this.showComingSoon("Platform Settings");
+  }
+
+  async loadGymAnalytics(gymId) {
+    this.showComingSoon(`Analytics for Gym ${gymId}`);
   }
 }
 

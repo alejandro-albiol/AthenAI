@@ -26,6 +26,9 @@ document.addEventListener("DOMContentLoaded", function () {
 
 // Initialize application
 function initializeApp() {
+  // Check for invitation token in URL
+  checkInvitationToken();
+
   // Setup form handlers
   setupFormHandlers();
 
@@ -35,7 +38,71 @@ function initializeApp() {
   // Setup smooth scrolling
   setupSmoothScrolling();
 
+  // Setup contact form (if it exists)
+  setupContactForm();
+
   console.log("AthenAI Frontend initialized");
+}
+
+// Check for invitation token in URL
+function checkInvitationToken() {
+  const urlParams = new URLSearchParams(window.location.search);
+  const inviteToken = urlParams.get("invite");
+
+  if (inviteToken) {
+    // Show gym context
+    showGymContext(inviteToken);
+  } else {
+    // Platform admin login
+    updateLoginForPlatformAdmin();
+  }
+}
+
+function showGymContext(inviteToken) {
+  // Store the invitation token
+  document.getElementById("gymToken").value = inviteToken;
+
+  // Show gym info section
+  document.getElementById("gymInfo").style.display = "block";
+
+  // Try to decode gym info from token (this would need backend endpoint)
+  fetchGymInfoFromToken(inviteToken);
+
+  // Automatically open the login modal for invited users
+  setTimeout(() => {
+    openLoginModal();
+  }, 1000);
+}
+
+function updateLoginForPlatformAdmin() {
+  // Hide gym info
+  const gymInfo = document.getElementById("gymInfo");
+  if (gymInfo) {
+    gymInfo.style.display = "none";
+  }
+
+  // Clear gym token
+  const gymToken = document.getElementById("gymToken");
+  if (gymToken) {
+    gymToken.value = "";
+  }
+}
+
+async function fetchGymInfoFromToken(inviteToken) {
+  try {
+    // This would be a new endpoint that decodes the invitation token
+    const response = await fetch(`/api/v1/invitations/decode/${inviteToken}`);
+    if (response.ok) {
+      const data = await response.json();
+      document.getElementById("gymName").textContent =
+        data.gym_name || "Your Gym";
+    } else {
+      document.getElementById("gymName").textContent = "Invited Gym";
+    }
+  } catch (error) {
+    console.error("Failed to fetch gym info:", error);
+    document.getElementById("gymName").textContent = "Invited Gym";
+  }
 }
 
 // Modal Management
@@ -47,17 +114,28 @@ function openRegisterModal() {
 
 function closeRegisterModal() {
   const modal = document.getElementById("registerModal");
-  modal.style.display = "none";
-  document.body.style.overflow = "auto";
+  if (modal) {
+    modal.style.display = "none";
+    document.body.style.overflow = "auto";
 
-  // Reset form
-  document.getElementById("registerForm").reset();
+    // Reset form
+    const registerForm = document.getElementById("registerForm");
+    if (registerForm) {
+      registerForm.reset();
+    }
+  }
 }
 
 function openLoginModal() {
+  console.log("Opening login modal...");
   const modal = document.getElementById("loginModal");
-  modal.style.display = "block";
-  document.body.style.overflow = "hidden";
+  if (modal) {
+    modal.style.display = "block";
+    document.body.style.overflow = "hidden";
+    console.log("Login modal opened successfully");
+  } else {
+    console.error("Login modal not found!");
+  }
 }
 
 function closeLoginModal() {
@@ -66,7 +144,49 @@ function closeLoginModal() {
   document.body.style.overflow = "auto";
 
   // Reset form
-  document.getElementById("loginForm").reset();
+  const loginForm = document.getElementById("loginForm");
+  if (loginForm) {
+    loginForm.reset();
+  }
+}
+
+// Get Started Modal Functions
+function openGetStartedModal() {
+  console.log("Opening Get Started modal...");
+  const modal = document.getElementById("getStartedModal");
+  if (modal) {
+    modal.style.display = "block";
+    document.body.style.overflow = "hidden";
+    console.log("Get Started modal opened successfully");
+  } else {
+    console.error("Get Started modal not found!");
+  }
+}
+
+function closeGetStartedModal() {
+  console.log("Closing Get Started modal...");
+  const modal = document.getElementById("getStartedModal");
+  if (modal) {
+    modal.style.display = "none";
+    document.body.style.overflow = "auto";
+
+    // Reset form
+    const getStartedForm = document.getElementById("getStartedForm");
+    if (getStartedForm) {
+      getStartedForm.reset();
+    }
+    console.log("Get Started modal closed successfully");
+  }
+}
+
+// Platform Admin Login Function
+function openPlatformAdminLogin() {
+  console.log("Opening Platform Admin login...");
+  // Ensure we're in platform admin mode (no gym context)
+  updateLoginForPlatformAdmin();
+
+  // Open the login modal
+  openLoginModal();
 }
 
 // Setup modal event listeners
@@ -75,6 +195,7 @@ function setupModalEventListeners() {
   window.onclick = function (event) {
     const registerModal = document.getElementById("registerModal");
     const loginModal = document.getElementById("loginModal");
+    const getStartedModal = document.getElementById("getStartedModal");
 
     if (event.target === registerModal) {
       closeRegisterModal();
@@ -83,6 +204,10 @@ function setupModalEventListeners() {
     if (event.target === loginModal) {
       closeLoginModal();
     }
+
+    if (event.target === getStartedModal) {
+      closeGetStartedModal();
+    }
   };
 
   // Close modals on escape key
@@ -90,19 +215,65 @@ function setupModalEventListeners() {
     if (event.key === "Escape") {
       closeRegisterModal();
       closeLoginModal();
+      closeGetStartedModal();
     }
   });
 }
 
 // Form Handlers
 function setupFormHandlers() {
-  // Register form handler
+  console.log("Setting up form handlers...");
+
+  // Register form handler (for backward compatibility)
   const registerForm = document.getElementById("registerForm");
-  registerForm.addEventListener("submit", handleGymRegistration);
+  if (registerForm) {
+    registerForm.addEventListener("submit", handleGymRegistration);
+  }
+
+  // Get Started form handler
+  const getStartedForm = document.getElementById("getStartedForm");
+  if (getStartedForm) {
+    getStartedForm.addEventListener("submit", handleGetStartedSubmission);
+    console.log("Get Started form handler attached");
+  }
 
   // Login form handler
   const loginForm = document.getElementById("loginForm");
-  loginForm.addEventListener("submit", handleLogin);
+  if (loginForm) {
+    loginForm.addEventListener("submit", handleLogin);
+    console.log("Login form handler attached");
+  }
+
+  // Platform Admin Login button (top navigation)
+  const loginBtn = document.getElementById("loginBtn");
+  if (loginBtn) {
+    loginBtn.addEventListener("click", openPlatformAdminLogin);
+    console.log("Login button handler attached");
+  } else {
+    console.error("Login button not found!");
+  }
+
+  // Get Started button (hero section)
+  const heroLoginBtn = document.getElementById("heroLoginBtn");
+  if (heroLoginBtn) {
+    heroLoginBtn.addEventListener("click", openGetStartedModal);
+    console.log("Get Started button handler attached");
+  } else {
+    console.error("Get Started button not found!");
+  }
+
+  // Close button handlers
+  const closeButtons = document.querySelectorAll(".close");
+  closeButtons.forEach((button) => {
+    button.addEventListener("click", function () {
+      closeLoginModal();
+      closeGetStartedModal();
+      closeRegisterModal();
+    });
+  });
+  console.log(
+    `Close button handlers attached: ${closeButtons.length} buttons found`
+  );
 }
 
 // Handle gym registration
@@ -220,24 +391,144 @@ This is an automated message from the AthenAI landing page.
   return { success: true };
 }
 
+// Handle Get Started form submission
+async function handleGetStartedSubmission(event) {
+  event.preventDefault();
+
+  const formData = new FormData(event.target);
+  const gymRequestData = {
+    gym_name: formData.get("gymName"),
+    owner_name: formData.get("ownerName"),
+    email: formData.get("email"),
+    phone: formData.get("phone"),
+    member_count: formData.get("memberCount"),
+    request_type: "gym_setup_request",
+    source: "get_started_form",
+    status: "pending_review",
+  };
+
+  try {
+    showLoading("Submitting your request...");
+
+    // Try to send to backend API (this could create a record in a "gym_requests" table)
+    try {
+      const response = await fetch("/api/v1/gym-requests", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(gymRequestData),
+      });
+
+      hideLoading();
+
+      if (response.ok) {
+        showModalSuccess(
+          "Thank you! Your request has been submitted. We'll review your information and contact you within 24 hours to set up your gym on AthenAI."
+        );
+
+        setTimeout(() => {
+          closeGetStartedModal();
+        }, 3000);
+      } else {
+        const error = await response.json();
+        showModalError(
+          error.message ||
+            "Failed to submit request. Please try contacting us directly."
+        );
+      }
+    } catch (backendError) {
+      // Fallback: send email if backend is not available
+      console.log("Backend not available, using email fallback");
+      await sendGymRequestEmail(gymRequestData);
+      hideLoading();
+      showModalSuccess(
+        "Thank you! Your request has been submitted. We'll contact you within 24 hours to set up your gym on AthenAI."
+      );
+
+      setTimeout(() => {
+        closeGetStartedModal();
+      }, 3000);
+    }
+  } catch (error) {
+    hideLoading();
+    showModalError(
+      `Network error. Please check your connection and try again, or contact us directly at ${ATHENAI_CONFIG.CONTACT_EMAIL}`
+    );
+    console.error("Gym request error:", error);
+  }
+}
+
+// Send gym request via email (fallback)
+async function sendGymRequestEmail(gymRequestData) {
+  const subject = encodeURIComponent(
+    `New Gym Setup Request - ${gymRequestData.gym_name}`
+  );
+  const body = encodeURIComponent(`
+NEW GYM SETUP REQUEST FOR ATHENAI
+
+Gym Name: ${gymRequestData.gym_name}
+Owner/Manager: ${gymRequestData.owner_name}
+Email: ${gymRequestData.email}
+Phone: ${gymRequestData.phone || "Not provided"}
+Member Count: ${gymRequestData.member_count || "Not specified"}
+
+Request Type: Gym Setup Request
+Source: Get Started Form
+Status: Pending Review
+
+Please contact this gym to set up their AthenAI account.
+  `);
+
+  window.open(
+    `mailto:${ATHENAI_CONFIG.CONTACT_EMAIL}?subject=${subject}&body=${body}`
+  );
+
+  return { success: true };
+}
+
 // Handle login
 async function handleLogin(event) {
   event.preventDefault();
 
   const formData = new FormData(event.target);
+  const gymToken = formData.get("gymToken");
+
   const loginData = {
     email: formData.get("email"),
     password: formData.get("password"),
   };
+
+  // Prepare headers
+  const headers = {
+    "Content-Type": "application/json",
+  };
+
+  // Add gym context if we have an invitation token
+  if (gymToken) {
+    try {
+      // Decode the invitation token to get gym ID
+      // This would need a backend endpoint or client-side decoding
+      const response = await fetch(`/api/v1/invitations/decode/${gymToken}`);
+      if (response.ok) {
+        const data = await response.json();
+        headers["X-Gym-ID"] = data.gym_id;
+      }
+    } catch (error) {
+      console.error("Failed to decode invitation token:", error);
+      showModalError(
+        "Invalid invitation link. Please contact your gym administrator."
+      );
+      return;
+    }
+  }
 
   try {
     showLoading("Signing you in...");
 
     const response = await fetch("/api/v1/auth/login", {
       method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
+      headers: headers,
       body: JSON.stringify(loginData),
     });
 
@@ -247,7 +538,10 @@ async function handleLogin(event) {
       const result = await response.json();
 
       // Show success message in modal instead of top-right notification
-      showModalSuccess("Welcome back! Redirecting to dashboard...");
+      const welcomeMessage = gymToken
+        ? "Welcome to your gym! Redirecting to dashboard..."
+        : "Welcome back! Redirecting to platform dashboard...";
+      showModalSuccess(welcomeMessage);
 
       // Store auth token (implement proper token management)
       localStorage.setItem("auth_token", result.data.access_token);
@@ -707,14 +1001,6 @@ function enhanceSmoothScrolling() {
       }
     });
   });
-}
-
-// Update the initialization to include pricing functions
-const originalInitializeApp = initializeApp;
-function initializeApp() {
-  originalInitializeApp();
-  enhanceSmoothScrolling();
-  setupContactForm();
 }
 
 // Contact Form Functions
