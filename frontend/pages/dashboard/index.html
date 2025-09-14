@@ -53,7 +53,7 @@
                 Global Data
               </h3>
               <a href="#exercises" class="nav-item" data-view="exercises">
-                <i class="fas fa-dumbbell"></i>
+                <i class="fas fa-list-check"></i>
                 <span>Exercises</span>
               </a>
               <a href="#equipment" class="nav-item" data-view="equipment">
@@ -65,7 +65,7 @@
                 class="nav-item"
                 data-view="muscular-groups"
               >
-                <i class="fas fa-muscle"></i>
+                <i class="fas fa-user-doctor"></i>
                 <span>Muscular Groups</span>
               </a>
               <a
@@ -140,21 +140,13 @@
             <div class="header-title">
               <h1 id="page-title">Dashboard</h1>
               <p id="page-subtitle">
-                Welcome back! Here's what's happening at your gym.
+                Welcome back! Here's what's happening at your gyms.
               </p>
             </div>
           </div>
           <div class="header-right">
-            <!-- Gym Selector for Platform Admins -->
-            <div class="gym-selector" id="gym-selector" style="display: none">
-              <label for="gym-select">View Gym:</label>
-              <select id="gym-select" class="form-control">
-                <option value="">Loading gyms...</option>
-              </select>
-            </div>
-
             <!-- Quick Actions -->
-            <div class="quick-actions">
+            <div class="header-quick-actions">
               <button
                 class="btn btn-outline btn-sm"
                 id="refresh-data"
@@ -168,18 +160,6 @@
                 onclick="openHelp()"
               >
                 <i class="fas fa-question-circle"></i>
-              </button>
-            </div>
-
-            <!-- Primary Action Button -->
-            <div class="primary-actions">
-              <button
-                class="btn btn-primary"
-                id="primary-action"
-                onclick="openCreateModal()"
-              >
-                <i class="fas fa-plus"></i>
-                <span id="action-text">Add New</span>
               </button>
             </div>
           </div>
@@ -244,7 +224,7 @@
                 <button
                   class="btn btn-primary"
                   id="empty-action"
-                  onclick="openCreateModal()"
+                  style="display: none"
                 >
                   <i class="fas fa-plus"></i>
                   <span id="empty-action-text">Create New</span>
@@ -270,7 +250,6 @@
     <!-- Scripts -->
     <script src="/js/api.js"></script>
     <script src="/js/auth.js"></script>
-    <script src="/js/main.js"></script>
     <script src="/js/dashboard.js"></script>
   </body>
 </html>

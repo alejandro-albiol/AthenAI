@@ -233,6 +233,18 @@ class API {
     return await this.request(`/exercise/${id}`);
   }
 
+  async createExercise(data) {
+    return await this.request("/exercise", "POST", data);
+  }
+
+  async updateExercise(id, data) {
+    return await this.request(`/exercise/${id}`, "PUT", data);
+  }
+
+  async deleteExercise(id) {
+    return await this.request(`/exercise/${id}`, "DELETE");
+  }
+
   // Equipment Management
   async getEquipment() {
     return await this.request("/equipment");
@@ -242,9 +254,45 @@ class API {
     return await this.request(`/equipment/${id}`);
   }
 
+  async createEquipment(equipmentData) {
+    return await this.request("/equipment", {
+      method: "POST",
+      body: JSON.stringify(equipmentData),
+    });
+  }
+
+  async updateEquipment(id, equipmentData) {
+    return await this.request(`/equipment/${id}`, {
+      method: "PUT",
+      body: JSON.stringify(equipmentData),
+    });
+  }
+
+  async deleteEquipment(id) {
+    return await this.request(`/equipment/${id}`, {
+      method: "DELETE",
+    });
+  }
+
   // Muscular Groups
   async getMuscularGroups() {
     return await this.request("/muscular-group");
+  }
+
+  async getMuscularGroupById(id) {
+    return await this.request(`/muscular-group/${id}`);
+  }
+
+  async createMuscularGroup(data) {
+    return await this.request("/muscular-group", "POST", data);
+  }
+
+  async updateMuscularGroup(id, data) {
+    return await this.request(`/muscular-group/${id}`, "PUT", data);
+  }
+
+  async deleteMuscularGroup(id) {
+    return await this.request(`/muscular-group/${id}`, "DELETE");
   }
 
   // Template Blocks
