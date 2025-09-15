@@ -3,21 +3,41 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="AthenAI - AI-Powered Fitness Management Platform for Gyms and Personal Training"
+    />
     <title>AthenAI - AI-Powered Fitness Management</title>
-    <link rel="stylesheet" href="/css/styles.css" />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="shortcut icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+
+    <!-- Modular CSS System -->
+    <link rel="stylesheet" href="/assets/styles/variables.css" />
+    <link rel="stylesheet" href="/assets/styles/base.css" />
+    <link rel="stylesheet" href="/assets/styles/buttons.css" />
+    <link rel="stylesheet" href="/assets/styles/forms.css" />
+    <link rel="stylesheet" href="/assets/styles/modal.css" />
+    <link rel="stylesheet" href="/assets/styles/components.css" />
+    <link rel="stylesheet" href="/assets/styles/notifications.css" />
+    <link rel="stylesheet" href="/assets/styles/landing.css" />
+
+    <!-- FontAwesome Icons -->
     <link
       href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
       rel="stylesheet"
     />
   </head>
-  <body>
+  <body class="landing-page">
     <!-- Navigation -->
-    <nav class="navbar">
+    <nav class="landing-navbar">
       <div class="nav-container">
-        <div class="nav-logo">
-          <i class="fas fa-dumbbell"></i>
+        <a href="#" class="nav-logo">
+          <i class="fas fa-dumbbell" aria-hidden="true"></i>
           <span>AthenAI</span>
-        </div>
+        </a>
         <div class="nav-menu">
           <a href="#features" class="nav-link">Features</a>
           <a href="#about" class="nav-link">About</a>
@@ -33,24 +53,16 @@
     <section class="hero">
       <div class="hero-container">
         <div class="hero-content">
-          <h1>
-            The Future of <span class="highlight">Fitness Management</span>
-          </h1>
+          <h1><span class="highlight">AthenAI</span> Fitness Management</h1>
           <p class="hero-subtitle">
-            AthenAI combines artificial intelligence with comprehensive gym
-            management to create personalized workout experiences and streamline
-            fitness operations.
+            A modern platform for gym management and personalized workout
+            planning.
           </p>
           <div class="hero-buttons">
-            <button id="heroLoginBtn" class="btn btn-primary btn-large">
-              <i class="fas fa-rocket"></i>
-              Get Started
+            <button id="heroLoginBtn" class="btn btn-primary btn-lg">
+              <i class="fas fa-sign-in-alt"></i>
+              Login
             </button>
-          </div>
-        </div>
-        <div class="hero-image">
-          <div class="hero-illustration">
-            <i class="fas fa-brain"></i>
           </div>
         </div>
       </div>
@@ -58,41 +70,54 @@
 
     <!-- Features Section -->
     <section id="features" class="features">
-      <div class="container">
-        <div class="section-header">
-          <h2>What is AthenAI?</h2>
-          <p>AI-powered platform that revolutionizes fitness management</p>
+      <div class="features-container">
+        <div class="features-header">
+          <h2>Core Features</h2>
+          <p class="features-subtitle">
+            Essential tools for gym management and member engagement.
+          </p>
         </div>
+
         <div class="features-grid">
-          <div class="feature-card">
-            <div class="feature-icon">
-              <i class="fas fa-brain"></i>
-            </div>
-            <h3>AI Workout Generation</h3>
-            <p>
-              Intelligent algorithms create personalized workout plans based on
-              individual goals and preferences.
-            </p>
-          </div>
           <div class="feature-card">
             <div class="feature-icon">
               <i class="fas fa-users"></i>
             </div>
             <h3>Member Management</h3>
             <p>
-              Comprehensive tools for managing gym members, tracking progress,
-              and building community.
+              Organize member information, track progress, and manage
+              memberships efficiently.
             </p>
           </div>
+
           <div class="feature-card">
             <div class="feature-icon">
-              <i class="fas fa-chart-line"></i>
+              <i class="fas fa-dumbbell"></i>
             </div>
-            <h3>Analytics & Insights</h3>
+            <h3>Equipment Tracking</h3>
             <p>
-              Data-driven insights to optimize gym operations and member
-              satisfaction.
+              Keep track of gym equipment, maintenance schedules, and
+              availability.
             </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-list-check"></i>
+            </div>
+            <h3>Exercise Library</h3>
+            <p>
+              Comprehensive database of exercises with instructions and
+              equipment requirements.
+            </p>
+          </div>
+
+          <div class="feature-card">
+            <div class="feature-icon">
+              <i class="fas fa-calendar-alt"></i>
+            </div>
+            <h3>Workout Planning</h3>
+            <p>Create and manage personalized workout plans for gym members.</p>
           </div>
         </div>
       </div>
@@ -100,192 +125,92 @@
 
     <!-- About Section -->
     <section id="about" class="about">
-      <div class="container">
+      <div class="about-container">
         <div class="about-content">
-          <h2>Built for the Modern Fitness Industry</h2>
-          <p>
-            AthenAI is designed to meet the evolving needs of fitness
-            professionals and gym owners. Our platform combines cutting-edge AI
-            technology with intuitive design to deliver powerful tools that
-            enhance both member experience and business operations.
-          </p>
+          <div class="about-text">
+            <h2>Simple Gym Management</h2>
+            <p>
+              AthenAI provides essential tools for gym owners and fitness
+              professionals to manage their facilities, equipment, and member
+              workouts efficiently.
+            </p>
+            <p>
+              Built with modern web technologies, our platform focuses on core
+              functionality without unnecessary complexity.
+            </p>
+          </div>
         </div>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta">
+      <div class="cta-container">
+        <h2>Ready to Get Started?</h2>
+        <p>Login to access the gym management platform.</p>
+        <button class="btn btn-white btn-lg login-trigger">
+          <i class="fas fa-sign-in-alt"></i>
+          Login to Platform
+        </button>
       </div>
     </section>
 
     <!-- Footer -->
     <footer class="footer">
-      <div class="container">
+      <div class="footer-container">
         <div class="footer-content">
           <div class="footer-section">
-            <div class="footer-logo">
-              <i class="fas fa-dumbbell"></i>
-              <span>AthenAI</span>
-            </div>
-            <p>AI-powered fitness management platform for the modern gym.</p>
+            <h3>AthenAI</h3>
+            <p>Modern gym management platform.</p>
           </div>
+
           <div class="footer-section">
-            <h4>Resources</h4>
-            <a href="/docs/openapi/openapi.yaml" target="_blank"
-              >API Documentation</a
-            >
-            <a href="#features">Features</a>
-            <a href="#about">About</a>
+            <h3>Platform</h3>
+            <ul>
+              <li><a href="#features">Features</a></li>
+              <li><a href="#about">About</a></li>
+            </ul>
           </div>
+
           <div class="footer-section">
-            <h4>Legal</h4>
-            <p>&copy; 2025 AthenAI. All rights reserved.</p>
-            <p>Built for fitness professionals.</p>
+            <h3>Access</h3>
+            <ul>
+              <li><a href="#" class="login-trigger">Platform Login</a></li>
+              <li>
+                <a href="#" onclick="landingPage.showForgotPassword()"
+                  >Support</a
+                >
+              </li>
+            </ul>
           </div>
+        </div>
+
+        <div class="footer-bottom">
+          <p>&copy; 2025 AthenAI. All rights reserved.</p>
         </div>
       </div>
     </footer>
 
-    <!-- Login Modal -->
-    <div id="loginModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Welcome to AthenAI</h2>
-          <span class="close">&times;</span>
-        </div>
-        <div class="modal-body">
-          <div id="gymInfo" style="display: none">
-            <div class="gym-context">
-              <i class="fas fa-building"></i>
-              <span
-                >Logging into: <strong id="gymName">Loading...</strong></span
-              >
-            </div>
-          </div>
+    <!-- Notification Container -->
+    <div id="notification-container" class="notification-container"></div>
 
-          <form id="loginForm" class="login-form">
-            <div class="form-group">
-              <label for="email">Email:</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                class="form-control"
-                required
-                placeholder="Enter your email"
-              />
-            </div>
+    <!-- 
+      VANILLA JS COMPONENT LOADING
+      Load components in dependency order - no ES6 imports
+    -->
 
-            <div class="form-group">
-              <label for="password">Password:</label>
-              <input
-                type="password"
-                id="password"
-                name="password"
-                class="form-control"
-                required
-                placeholder="Enter your password"
-              />
-            </div>
+    <!-- Utility Scripts (no dependencies) -->
+    <script src="/assets/utils/dom.js"></script>
+    <script src="/assets/utils/state.js"></script>
+    <script src="/assets/utils/api.js"></script>
+    <script src="/assets/utils/notifications.js"></script>
+    <script src="/assets/utils/forms.js"></script>
 
-            <button type="submit" class="btn btn-primary btn-large btn-block">
-              <i class="fas fa-sign-in-alt"></i>
-              Sign In
-            </button>
+    <!-- UI Components (depend on utilities) -->
+    <script src="/assets/components/BaseComponent.js"></script>
+    <script src="/assets/components/Modal.js"></script>
 
-            <!-- Hidden field for gym context -->
-            <input type="hidden" id="gymToken" name="gymToken" value="" />
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <!-- Get Started Modal -->
-    <div id="getStartedModal" class="modal">
-      <div class="modal-content">
-        <div class="modal-header">
-          <h2>Get Started with AthenAI</h2>
-          <span class="close">&times;</span>
-        </div>
-        <div class="modal-body">
-          <p>Tell us about your gym and we'll get you set up with AthenAI.</p>
-
-          <form id="getStartedForm" class="contact-form">
-            <div class="form-group">
-              <label for="gymName">Gym Name *</label>
-              <input
-                type="text"
-                id="gymName"
-                name="gymName"
-                class="form-control"
-                required
-                placeholder="Enter your gym name"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="ownerName">Owner/Manager Name *</label>
-              <input
-                type="text"
-                id="ownerName"
-                name="ownerName"
-                class="form-control"
-                required
-                placeholder="Enter your full name"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="email">Email Address *</label>
-              <input
-                type="email"
-                id="email"
-                name="email"
-                class="form-control"
-                required
-                placeholder="Enter your email"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="phone">Phone Number</label>
-              <input
-                type="tel"
-                id="phone"
-                name="phone"
-                class="form-control"
-                placeholder="Enter your phone number"
-              />
-            </div>
-
-            <div class="form-group">
-              <label for="memberCount">Approximate Member Count</label>
-              <select id="memberCount" name="memberCount" class="form-control">
-                <option value="">Select range</option>
-                <option value="1-50">1-50 members</option>
-                <option value="51-100">51-100 members</option>
-                <option value="101-250">101-250 members</option>
-                <option value="251-500">251-500 members</option>
-                <option value="500+">500+ members</option>
-              </select>
-            </div>
-
-            <div class="form-actions">
-              <button
-                type="button"
-                class="btn btn-secondary"
-                onclick="closeGetStartedModal()"
-              >
-                Cancel
-              </button>
-              <button type="submit" class="btn btn-primary">
-                <i class="fas fa-paper-plane"></i>
-                Submit Request
-              </button>
-            </div>
-          </form>
-        </div>
-      </div>
-    </div>
-
-    <!-- Scripts -->
-    <script src="/js/api.js"></script>
-    <script src="/js/auth.js"></script>
-    <script src="/js/main.js"></script>
+    <!-- Landing Page Manager (depends on components and utilities) -->
+    <script src="/js/landing.js"></script>
   </body>
 </html>
