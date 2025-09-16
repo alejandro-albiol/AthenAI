@@ -72,14 +72,18 @@ class ApiClient {
 
   // HTTP Methods
   async get(endpoint, params = {}) {
-    const url = new URL(`${this.baseUrl}${endpoint}`, window.location.origin);
-    Object.keys(params).forEach((key) => {
-      if (params[key] !== undefined && params[key] !== null) {
-        url.searchParams.append(key, params[key]);
-      }
-    });
+    let url = endpoint;
+    if (Object.keys(params).length > 0) {
+      const searchParams = new URLSearchParams();
+      Object.keys(params).forEach((key) => {
+        if (params[key] !== undefined && params[key] !== null) {
+          searchParams.append(key, params[key]);
+        }
+      });
+      url += `?${searchParams.toString()}`;
+    }
 
-    return this.request(url.pathname + url.search, {
+    return this.request(url, {
       method: "GET",
     });
   }
@@ -129,55 +133,55 @@ class ApiClient {
   }
 
   async getExercises() {
-    return this.get("/exercises");
+    return this.get("/exercise");
   }
 
   async createExercise(data) {
-    return this.post("/exercises", data);
+    return this.post("/exercise", data);
   }
 
   async updateExercise(id, data) {
-    return this.put(`/exercises/${id}`, data);
+    return this.put(`/exercise/${id}`, data);
   }
 
   async deleteExercise(id) {
-    return this.delete(`/exercises/${id}`);
+    return this.delete(`/exercise/${id}`);
   }
 
   async getMuscularGroups() {
-    return this.get("/muscular-groups");
+    return this.get("/muscular-group");
   }
 
   async createMuscularGroup(data) {
-    return this.post("/muscular-groups", data);
+    return this.post("/muscular-group", data);
   }
 
   async updateMuscularGroup(id, data) {
-    return this.put(`/muscular-groups/${id}`, data);
+    return this.put(`/muscular-group/${id}`, data);
   }
 
   async deleteMuscularGroup(id) {
-    return this.delete(`/muscular-groups/${id}`);
+    return this.delete(`/muscular-group/${id}`);
   }
 
   async getGyms() {
-    return this.get("/gyms");
+    return this.get("/gym");
   }
 
   async createGym(data) {
-    return this.post("/gyms", data);
+    return this.post("/gym", data);
   }
 
   async updateGym(id, data) {
-    return this.put(`/gyms/${id}`, data);
+    return this.put(`/gym/${id}`, data);
   }
 
   async deleteGym(id) {
-    return this.delete(`/gyms/${id}`);
+    return this.delete(`/gym/${id}`);
   }
 
   async restoreGym(id) {
-    return this.patch(`/gyms/${id}/restore`);
+    return this.patch(`/gym/${id}/restore`);
   }
 
   async getPlatformStats() {
