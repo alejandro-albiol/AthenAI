@@ -26,7 +26,7 @@
 
     <!-- FontAwesome Icons -->
     <link
-      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css"
+      href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"
       rel="stylesheet"
     />
   </head>
@@ -40,8 +40,13 @@
       <aside class="sidebar" id="sidebar">
         <div class="sidebar-header">
           <div class="nav-logo">
-            <i class="fas fa-dumbbell" aria-hidden="true"></i>
-            <span>AthenAI</span>
+            <div class="logo-icon">
+              <i class="fas fa-dumbbell" aria-hidden="true"></i>
+            </div>
+            <div class="logo-text">
+              <span class="logo-main">AthenAI</span>
+              <span class="logo-sub">Admin</span>
+            </div>
           </div>
           <button
             class="sidebar-toggle"
@@ -54,26 +59,71 @@
 
         <nav class="sidebar-nav" role="navigation" aria-label="Main navigation">
           <div id="navigation-menu">
-            <!-- Platform Overview -->
+            <!-- Dashboard Overview -->
             <div class="nav-section">
-              <h3 class="nav-section-title">Overview</h3>
+              <h3 class="nav-section-title">Dashboard</h3>
               <a
                 href="#"
                 class="nav-item active"
-                data-view="platform-overview"
+                data-view="overview"
                 role="menuitem"
               >
                 <i class="fas fa-chart-line" aria-hidden="true"></i>
-                <span>Platform Overview</span>
+                <span>Overview</span>
               </a>
             </div>
 
-            <!-- Platform Admin Section -->
-            <div class="nav-section platform-admin-nav">
-              <h3 class="nav-section-title">Platform Management</h3>
+            <!-- Gym Management (Primary Focus) -->
+            <div class="nav-section gym-management-nav">
+              <h3 class="nav-section-title">Gym Management</h3>
               <a href="#" class="nav-item" data-view="gyms" role="menuitem">
                 <i class="fas fa-building" aria-hidden="true"></i>
                 <span>Gyms</span>
+                <span class="nav-badge" id="gyms-count">-</span>
+              </a>
+              <a
+                href="#"
+                class="nav-item"
+                data-view="gym-users"
+                role="menuitem"
+              >
+                <i class="fas fa-users" aria-hidden="true"></i>
+                <span>Members & Trainers</span>
+              </a>
+              <a
+                href="#"
+                class="nav-item"
+                data-view="gym-analytics"
+                role="menuitem"
+              >
+                <i class="fas fa-chart-bar" aria-hidden="true"></i>
+                <span>Gym Analytics</span>
+              </a>
+              <a
+                href="#"
+                class="nav-item"
+                data-view="gym-requests"
+                role="menuitem"
+              >
+                <i class="fas fa-bell" aria-hidden="true"></i>
+                <span>Requests & Issues</span>
+                <span class="nav-badge nav-badge-alert" id="requests-count"
+                  >-</span
+                >
+              </a>
+            </div>
+
+            <!-- Content Management (Secondary) -->
+            <div class="nav-section content-management-nav">
+              <h3 class="nav-section-title">Content Library</h3>
+              <a
+                href="#"
+                class="nav-item"
+                data-view="exercises"
+                role="menuitem"
+              >
+                <i class="fas fa-running" aria-hidden="true"></i>
+                <span>Exercises</span>
               </a>
               <a
                 href="#"
@@ -87,20 +137,43 @@
               <a
                 href="#"
                 class="nav-item"
-                data-view="exercises"
-                role="menuitem"
-              >
-                <i class="fas fa-list-check" aria-hidden="true"></i>
-                <span>Exercises</span>
-              </a>
-              <a
-                href="#"
-                class="nav-item"
                 data-view="muscular-groups"
                 role="menuitem"
               >
                 <i class="fas fa-user-circle" aria-hidden="true"></i>
-                <span>Muscular Groups</span>
+                <span>Muscle Groups</span>
+              </a>
+              <a
+                href="#"
+                class="nav-item"
+                data-view="workout-templates"
+                role="menuitem"
+              >
+                <i class="fas fa-clipboard-list" aria-hidden="true"></i>
+                <span>Workout Templates</span>
+              </a>
+            </div>
+
+            <!-- System Management -->
+            <div class="nav-section system-management-nav">
+              <h3 class="nav-section-title">System</h3>
+              <a
+                href="#"
+                class="nav-item"
+                data-view="system-settings"
+                role="menuitem"
+              >
+                <i class="fas fa-cog" aria-hidden="true"></i>
+                <span>Settings</span>
+              </a>
+              <a
+                href="#"
+                class="nav-item"
+                data-view="system-logs"
+                role="menuitem"
+              >
+                <i class="fas fa-file-alt" aria-hidden="true"></i>
+                <span>Activity Logs</span>
               </a>
             </div>
           </div>
@@ -146,29 +219,6 @@
             >
               <i class="fas fa-bars"></i>
             </button>
-            <div class="page-title-section">
-              <h1 class="page-title" id="page-title">Platform Overview</h1>
-              <p class="page-subtitle" id="page-subtitle">
-                Monitor platform-wide statistics and activity.
-              </p>
-            </div>
-          </div>
-          <div class="page-actions">
-            <button
-              class="btn btn-secondary"
-              onclick="refreshCurrentView()"
-              aria-label="Refresh"
-            >
-              <i class="fas fa-sync-alt"></i>
-            </button>
-            <button
-              class="btn btn-secondary"
-              onclick="openHelp()"
-              aria-label="Help"
-            >
-              <i class="fas fa-question-circle"></i>
-            </button>
-          </div>
         </header>
 
         <!-- Content Body -->
