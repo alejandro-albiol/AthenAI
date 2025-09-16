@@ -1,8 +1,7 @@
-import BaseComponent from "./BaseComponent.js";
-
 /**
  * Grid Component
  * Reusable grid layout for displaying cards or items
+ * Extends BaseComponent (loaded via script tag)
  */
 class Grid extends BaseComponent {
   constructor(selector, options = {}) {
@@ -148,4 +147,5 @@ class Grid extends BaseComponent {
   }
 }
 
-export default Grid;
+// Make Grid globally available
+window.Grid = Grid;

@@ -1,8 +1,7 @@
-import BaseComponent from "./BaseComponent.js";
-
 /**
  * Card Component
  * Reusable card container with header, body, and footer
+ * Extends BaseComponent (loaded via script tag)
  */
 class Card extends BaseComponent {
   constructor(selector, options = {}) {
@@ -156,4 +155,5 @@ class Card extends BaseComponent {
   }
 }
 
-export default Card;
+// Make Card globally available
+window.Card = Card;

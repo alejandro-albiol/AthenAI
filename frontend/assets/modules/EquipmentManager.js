@@ -1,10 +1,7 @@
-import { ApiClient } from "../utils/api.js";
-import notifications from "../utils/notifications.js";
-import { appState } from "../utils/state.js";
-
 /**
  * Equipment Management Module
  * Handles all equipment-related functionality
+ * Uses global utilities (loaded via script tags)
  */
 class EquipmentManager {
   constructor() {
@@ -254,4 +251,5 @@ class EquipmentManager {
   }
 }
 
-export default EquipmentManager;
+// Make EquipmentManager globally available
+window.EquipmentManager = EquipmentManager;

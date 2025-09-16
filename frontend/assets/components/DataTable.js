@@ -1,8 +1,7 @@
-import BaseComponent from "./BaseComponent.js";
-
 /**
  * DataTable Component
  * Reusable table with sorting, filtering, and actions
+ * Extends BaseComponent (loaded via script tag)
  */
 class DataTable extends BaseComponent {
   constructor(selector, options = {}) {
@@ -25,11 +24,16 @@ class DataTable extends BaseComponent {
   }
 
   init() {
-    super.init();
+    // Initialize filteredData BEFORE calling super.init() which triggers render()
     this.currentPage = 1;
     this.sortColumn = null;
     this.sortDirection = "asc";
-    this.filteredData = [...this.options.data];
+    this.filteredData = Array.isArray(this.options.data)
+      ? [...this.options.data]
+      : [];
+
+    // Now call super.init() which will call render()
+    super.init();
   }
 
   render() {
@@ -175,6 +179,13 @@ class DataTable extends BaseComponent {
     const columnConfig = this.options.columns.find((col) => col.key === column);
     const getValue = columnConfig?.getValue || ((item) => item[column]);
 
+    // Safety check - ensure filteredData is an array before sorting
+    if (!this.filteredData || !Array.isArray(this.filteredData)) {
+      this.filteredData = Array.isArray(this.options.data)
+        ? [...this.options.data]
+        : [];
+    }
+
     this.filteredData.sort((a, b) => {
       const aVal = getValue(a);
       const bVal = getValue(b);
@@ -191,10 +202,13 @@ class DataTable extends BaseComponent {
   filter(searchTerm) {
     const term = searchTerm.toLowerCase().trim();
 
+    // Ensure we have valid data to filter
+    const data = Array.isArray(this.options.data) ? this.options.data : [];
+
     if (!term) {
-      this.filteredData = [...this.options.data];
+      this.filteredData = [...data];
     } else {
-      this.filteredData = this.options.data.filter((item) => {
+      this.filteredData = data.filter((item) => {
         return this.options.columns.some((column) => {
           const getValue = column.getValue || ((item) => item[column.key]);
           const value = getValue(item);
@@ -210,6 +224,13 @@ class DataTable extends BaseComponent {
   renderTable() {
     const tbody = this.element.querySelector(".table-body");
     const emptyState = this.element.querySelector(".table-empty");
+
+    // Safety check - ensure filteredData is always an array
+    if (!this.filteredData || !Array.isArray(this.filteredData)) {
+      this.filteredData = Array.isArray(this.options.data)
+        ? [...this.options.data]
+        : [];
+    }
 
     if (this.filteredData.length === 0) {
       tbody.innerHTML = "";
@@ -298,12 +319,14 @@ class DataTable extends BaseComponent {
     const nextBtn = this.element.querySelector('[data-action="next"]');
 
     if (info) {
+      // Safety check for filteredData
+      const safeFilteredData = this.filteredData || [];
       const start = (this.currentPage - 1) * this.options.pageSize + 1;
       const end = Math.min(
         this.currentPage * this.options.pageSize,
-        this.filteredData.length
+        safeFilteredData.length
       );
-      info.textContent = `Showing ${start}-${end} of ${this.filteredData.length}`;
+      info.textContent = `Showing ${start}-${end} of ${safeFilteredData.length}`;
     }
 
     if (pageNumbers) {
@@ -320,7 +343,8 @@ class DataTable extends BaseComponent {
   }
 
   getTotalPages() {
-    return Math.ceil(this.filteredData.length / this.options.pageSize);
+    const safeFilteredData = this.filteredData || [];
+    return Math.ceil(safeFilteredData.length / this.options.pageSize);
   }
 
   handleRowAction(action, rowData, target) {
@@ -336,8 +360,9 @@ class DataTable extends BaseComponent {
   }
 
   updateData(newData) {
-    this.options.data = newData;
-    this.filteredData = [...newData];
+    const safeNewData = Array.isArray(newData) ? newData : [];
+    this.options.data = safeNewData;
+    this.filteredData = [...safeNewData];
     this.currentPage = 1;
     this.renderTable();
   }
@@ -354,4 +379,5 @@ class DataTable extends BaseComponent {
   }
 }
 
-export default DataTable;
+// Make DataTable globally available
+window.DataTable = DataTable;

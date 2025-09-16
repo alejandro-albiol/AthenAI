@@ -1,10 +1,7 @@
-import { ApiClient } from "../utils/api.js";
-import notifications from "../utils/notifications.js";
-import { appState } from "../utils/state.js";
-
 /**
  * Exercise Management Module
  * Handles all exercise-related functionality
+ * Uses global utilities (loaded via script tags)
  */
 class ExerciseManager {
   constructor() {
@@ -391,4 +388,5 @@ class ExerciseManager {
   }
 }
 
-export default ExerciseManager;
+// Make ExerciseManager globally available
+window.ExerciseManager = ExerciseManager;

@@ -1,10 +1,7 @@
-import { ApiClient } from "../utils/api.js";
-import notifications from "../utils/notifications.js";
-import { appState } from "../utils/state.js";
-
 /**
  * Gym Management Module
  * Handles all gym-related functionality
+ * Uses global utilities (loaded via script tags)
  */
 class GymManager {
   constructor() {
@@ -16,17 +13,30 @@ class GymManager {
     try {
       appState.setState({ loading: true });
       const response = await this.api.getGyms();
-      const gyms = response?.data || [];
+
+      // Handle different response structures
+      let gyms = [];
+      if (response && Array.isArray(response)) {
+        gyms = response;
+      } else if (response && response.data && Array.isArray(response.data)) {
+        gyms = response.data;
+      } else if (response && Array.isArray(response.gyms)) {
+        gyms = response.gyms;
+      } else {
+        console.warn("Unexpected response structure:", response);
+      }
 
       this.currentGyms = gyms;
       appState.setState({ gyms, loading: false });
 
+      console.log("Loaded gyms:", gyms);
       return gyms;
     } catch (error) {
       console.error("Error loading gyms:", error);
       appState.setState({ loading: false, error: error.message });
       notifications.error("Failed to load gyms");
-      throw error;
+      // Return empty array on error instead of throwing
+      return [];
     }
   }
 
@@ -382,4 +392,5 @@ class GymManager {
   }
 }
 
-export default GymManager;
+// Make GymManager globally available
+window.GymManager = GymManager;
