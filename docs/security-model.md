@@ -1,51 +1,69 @@
-# Security Model Documentation
+# Security Model
 
 ## Overview
 
-This document outlines the comprehensive security model for the Athenai multi-tenant gym management platform, focusing on authentication, authorization, and tenant isolation.
+AthenAI implements a comprehensive security model designed for multi-tenant SaaS environments, providing robust authentication, fine-grained authorization, and complete tenant data isolation.
 
-## Authentication Architecture
+## 🔐 Authentication Architecture
 
 ### Single Login Endpoint Strategy
 
 **Endpoint**: `POST /api/v1/auth/login`
 
-**Routing Logic**:
+The authentication system uses a smart routing approach based on request context:
 
-```
-Request Headers:
-├── No X-Gym-ID header → Platform Admin Authentication
-│   └── Authenticate against public.admin table
-└── X-Gym-ID header present → Tenant User Authentication
-    ├── Lookup gym by ID to get domain
-    └── Authenticate against {gym_uuid}.users table
+```mermaid
+graph TD
+    A[Login Request] --> B{X-Gym-ID Header Present?}
+    B -->|No| C[Platform Admin Flow]
+    B -->|Yes| D[Tenant User Flow]
+    C --> E[Authenticate against public.admin]
+    D --> F[Lookup gym by ID]
+    F --> G[Authenticate against {gym_uuid}.users]
+    E --> H[Generate Admin JWT]
+    G --> I[Generate Tenant JWT]
+    H --> J[Return JWT Token]
+    I --> J
 ```
 
 **Security Benefits**:
 
-- Single point of authentication control
-- Automatic routing based on context
-- No complex endpoint management
-- Clear separation between admin and tenant flows
+- ✅ **Single endpoint** reduces attack surface
+- ✅ **Automatic routing** prevents credential confusion
+- ✅ **Clear separation** between admin and tenant authentication
+- ✅ **No credential overlap** between platform and tenant users
 
-## Authorization Model
+### JWT Token Structure
 
-### JWT-Based Stateless Authorization
-
-**JWT Claims Structure**:
+**Platform Admin JWT**:
 
 ```json
 {
   "user_id": "uuid",
-  "user_type": "platform_admin|tenant_user",
-  "username": "string",
-  "role": "admin|user|guest",     // Only for tenant users
-  "gym_id": "uuid",               // Only for tenant users
+  "user_type": "platform_admin",
+  "username": "admin_username",
   "is_active": true,
-  "exp": timestamp,
-  "iat": timestamp
+  "exp": 1234567890,
+  "iat": 1234567890
 }
 ```
+
+**Tenant User JWT**:
+
+```json
+{
+  "user_id": "uuid",
+  "user_type": "tenant_user",
+  "username": "user_username",
+  "role": "admin|trainer|member",
+  "gym_id": "uuid",
+  "is_active": true,
+  "exp": 1234567890,
+  "iat": 1234567890
+}
+```
+
+## 🛡️ Authorization Model
 
 ### Access Control Matrix
 
