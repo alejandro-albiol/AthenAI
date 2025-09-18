@@ -2,7 +2,7 @@
 
 **Multi-tenant gym management platform with AI-powered workout generation**
 
-[![Go Version](https://img.shields.io/badge/Go-1.19+-blue.svg)](https://golang.org)
+[![Go Version](https://img.shields.io/badge/Go-1.24+-blue.svg)](https://golang.org)
 [![License](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
 
 ## 🚀 Quick Start
