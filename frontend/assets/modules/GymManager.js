@@ -121,18 +121,13 @@ class GymManager {
         render: (value, item) => `
           <div class="contact-info">
             ${
-              item.contact_name
-                ? `<div><i class="fas fa-user"></i> ${item.contact_name}</div>`
+              item.email
+                ? `<div><i class="fas fa-envelope"></i> ${item.email}</div>`
                 : ""
             }
             ${
-              item.contact_email
-                ? `<div><i class="fas fa-envelope"></i> ${item.contact_email}</div>`
-                : ""
-            }
-            ${
-              item.contact_phone
-                ? `<div><i class="fas fa-phone"></i> ${item.contact_phone}</div>`
+              item.phone
+                ? `<div><i class="fas fa-phone"></i> ${item.phone}</div>`
                 : ""
             }
           </div>
@@ -161,14 +156,14 @@ class GymManager {
         action: "view",
         icon: "fas fa-eye",
         title: "View Details",
-        className: "btn btn-sm btn-info",
+        className: "btn btn-info",
         handler: (gym) => this.viewGymDetails(gym),
       },
       {
         action: "edit",
         icon: "fas fa-edit",
         title: "Edit Gym",
-        className: "btn btn-sm btn-outline",
+        className: "btn btn-outline",
         disabled: (gym) => Boolean(gym.deleted_at),
         handler: (gym) => this.editGym(gym),
       },
@@ -176,17 +171,17 @@ class GymManager {
         action: "delete",
         icon: "fas fa-trash",
         title: "Delete Gym",
-        className: "btn btn-sm btn-danger",
+        className: "btn btn-danger",
         disabled: (gym) => Boolean(gym.deleted_at),
-        handler: (gym) => this.confirmDeleteGym(gym),
+        handler: (gym) => this.requestDeleteGym(gym),
       },
       {
         action: "restore",
         icon: "fas fa-undo",
         title: "Restore Gym",
-        className: "btn btn-sm btn-warning",
+        className: "btn btn-warning",
         disabled: (gym) => !Boolean(gym.deleted_at),
-        handler: (gym) => this.confirmRestoreGym(gym),
+        handler: (gym) => this.requestRestoreGym(gym),
       },
     ];
   }
@@ -207,20 +202,29 @@ class GymManager {
     );
   }
 
+  async requestDeleteGym(gym) {
+    document.dispatchEvent(
+      new CustomEvent("gym:delete", {
+        detail: { gym },
+      })
+    );
+  }
+
+  async requestRestoreGym(gym) {
+    document.dispatchEvent(
+      new CustomEvent("gym:restore", {
+        detail: { gym },
+      })
+    );
+  }
+
+  // Legacy methods for backwards compatibility (can be removed later)
   async confirmDeleteGym(gym) {
-    if (
-      confirm(
-        `Are you sure you want to delete "${gym.name}"? This action can be undone later.`
-      )
-    ) {
-      await this.deleteGym(gym.id);
-    }
+    return this.requestDeleteGym(gym);
   }
 
   async confirmRestoreGym(gym) {
-    if (confirm(`Are you sure you want to restore "${gym.name}"?`)) {
-      await this.restoreGym(gym.id);
-    }
+    return this.requestRestoreGym(gym);
   }
 
   truncateText(text, maxLength) {
@@ -251,32 +255,24 @@ class GymManager {
         required: true,
         placeholder: "Enter gym name",
       },
-      contact_name: {
-        type: "text",
-        label: "Contact Name",
-        placeholder: "Enter contact person name",
-      },
-      contact_email: {
+      email: {
         type: "email",
         label: "Contact Email",
+        required: true,
         placeholder: "Enter contact email",
       },
-      contact_phone: {
+      phone: {
         type: "tel",
         label: "Contact Phone",
+        required: true,
         placeholder: "Enter contact phone number",
       },
       address: {
         type: "textarea",
         label: "Address",
+        required: true,
         rows: 3,
         placeholder: "Enter gym address",
-      },
-      description: {
-        type: "textarea",
-        label: "Description",
-        rows: 4,
-        placeholder: "Enter gym description (optional)",
       },
     };
   }
@@ -288,16 +284,20 @@ class GymManager {
       errors.name = "Gym name is required";
     }
 
-    if (data.contact_email && !this.isValidEmail(data.contact_email)) {
-      errors.contact_email = "Please enter a valid email address";
+    if (!data.email || data.email.trim() === "") {
+      errors.email = "Contact email is required";
+    } else if (!this.isValidEmail(data.email)) {
+      errors.email = "Please enter a valid email address";
     }
 
-    if (data.contact_phone && !this.isValidPhone(data.contact_phone)) {
-      errors.contact_phone = "Please enter a valid phone number";
+    if (!data.phone || data.phone.trim() === "") {
+      errors.phone = "Contact phone is required";
+    } else if (!this.isValidPhone(data.phone)) {
+      errors.phone = "Please enter a valid phone number";
     }
 
-    if (data.description && data.description.length > 1000) {
-      errors.description = "Description must be less than 1000 characters";
+    if (!data.address || data.address.trim() === "") {
+      errors.address = "Address is required";
     }
 
     return {

@@ -178,7 +178,7 @@ class ExerciseManager {
         icon: "fas fa-trash",
         title: "Delete Exercise",
         className: "btn btn-sm btn-danger",
-        handler: (exercise) => this.confirmDeleteExercise(exercise),
+        handler: (exercise) => this.requestDeleteExercise(exercise),
       },
     ];
   }
@@ -199,10 +199,12 @@ class ExerciseManager {
     );
   }
 
-  async confirmDeleteExercise(exercise) {
-    if (confirm(`Are you sure you want to delete "${exercise.name}"?`)) {
-      await this.deleteExercise(exercise.id);
-    }
+  async requestDeleteExercise(exercise) {
+    document.dispatchEvent(
+      new CustomEvent("exercise:delete", {
+        detail: { exercise },
+      })
+    );
   }
 
   truncateText(text, maxLength) {
@@ -218,52 +220,46 @@ class ExerciseManager {
         required: true,
         placeholder: "Enter exercise name",
       },
-      type: {
+      category: {
         type: "select",
-        label: "Exercise Type",
+        label: "Category",
         required: true,
         options: [
-          { value: "", label: "Select type..." },
-          { value: "strength", label: "Strength" },
+          { value: "", label: "Select category" },
           { value: "cardio", label: "Cardio" },
+          { value: "strength", label: "Strength" },
           { value: "flexibility", label: "Flexibility" },
           { value: "balance", label: "Balance" },
-          { value: "plyometrics", label: "Plyometrics" },
-          { value: "endurance", label: "Endurance" },
+          { value: "sports", label: "Sports" },
         ],
+      },
+      muscle_groups: {
+        type: "text",
+        label: "Muscle Groups",
+        placeholder: "Enter muscle groups (comma-separated)",
+        help: "Example: chest, shoulders, triceps",
       },
       difficulty: {
         type: "select",
-        label: "Difficulty Level",
-        required: true,
+        label: "Difficulty",
         options: [
-          { value: "", label: "Select difficulty..." },
+          { value: "", label: "Select difficulty" },
           { value: "beginner", label: "Beginner" },
           { value: "intermediate", label: "Intermediate" },
           { value: "advanced", label: "Advanced" },
-          { value: "expert", label: "Expert" },
         ],
+      },
+      description: {
+        type: "textarea",
+        label: "Description",
+        rows: 3,
+        placeholder: "Enter exercise description (optional)",
       },
       instructions: {
         type: "textarea",
         label: "Instructions",
         rows: 4,
         placeholder: "Enter detailed exercise instructions",
-      },
-      equipment_ids: {
-        type: "multiselect",
-        label: "Required Equipment",
-        placeholder: "Select equipment (optional)",
-      },
-      muscle_group_ids: {
-        type: "multiselect",
-        label: "Target Muscle Groups",
-        placeholder: "Select muscle groups",
-      },
-      video_url: {
-        type: "url",
-        label: "Video URL",
-        placeholder: "https://example.com/video (optional)",
       },
     };
   }
@@ -275,16 +271,20 @@ class ExerciseManager {
       errors.name = "Exercise name is required";
     }
 
-    if (!data.type) {
-      errors.type = "Exercise type is required";
+    if (!data.category) {
+      errors.category = "Category is required";
     }
 
-    if (!data.difficulty) {
-      errors.difficulty = "Difficulty level is required";
+    // Parse muscle groups if provided as string
+    if (data.muscle_groups && typeof data.muscle_groups === "string") {
+      data.muscle_groups = data.muscle_groups
+        .split(",")
+        .map((m) => m.trim())
+        .filter((m) => m.length > 0);
     }
 
-    if (data.video_url && !this.isValidUrl(data.video_url)) {
-      errors.video_url = "Please enter a valid URL";
+    if (data.description && data.description.length > 500) {
+      errors.description = "Description must be less than 500 characters";
     }
 
     if (data.instructions && data.instructions.length > 1000) {
@@ -295,6 +295,21 @@ class ExerciseManager {
       isValid: Object.keys(errors).length === 0,
       errors,
     };
+  }
+
+  formatDate(dateString) {
+    if (!dateString) return "Unknown";
+
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleDateString("en-US", {
+        year: "numeric",
+        month: "short",
+        day: "numeric",
+      });
+    } catch (error) {
+      return "Invalid date";
+    }
   }
 
   isValidUrl(string) {

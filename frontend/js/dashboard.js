@@ -117,6 +117,27 @@ class VanillaDashboardManager {
       this.openEquipmentModal("edit", e.detail.equipment);
     });
 
+    document.addEventListener("equipment:view", (e) => {
+      this.viewEquipmentDetails(e.detail.equipment);
+    });
+
+    document.addEventListener("equipment:delete", (e) => {
+      this.showDeleteConfirmation(e.detail.equipment, "equipment");
+    });
+
+    // Exercise events
+    document.addEventListener("exercise:edit", (e) => {
+      this.openExerciseModal("edit", e.detail.exercise);
+    });
+
+    document.addEventListener("exercise:view", (e) => {
+      this.viewExerciseDetails(e.detail.exercise);
+    });
+
+    document.addEventListener("exercise:delete", (e) => {
+      this.showDeleteConfirmation(e.detail.exercise, "exercise");
+    });
+
     // Exercise events
     document.addEventListener("exercise:edit", (e) => {
       this.openExerciseModal("edit", e.detail.exercise);
@@ -133,6 +154,14 @@ class VanillaDashboardManager {
 
     document.addEventListener("gym:view", (e) => {
       this.viewGymDetails(e.detail.gym);
+    });
+
+    document.addEventListener("gym:delete", (e) => {
+      this.showDeleteConfirmation(e.detail.gym);
+    });
+
+    document.addEventListener("gym:restore", (e) => {
+      this.showRestoreConfirmation(e.detail.gym);
     });
   }
 
@@ -1039,212 +1068,7 @@ class VanillaDashboardManager {
     this.setContent(content);
   }
 
-  // Modal Management
-  openEquipmentModal(mode = "create", equipment = null) {
-    const isEdit = mode === "edit" && equipment;
-    const title = isEdit ? "Edit Equipment" : "Add Equipment";
-
-    const formHtml = this.generateForm(
-      this.managers.equipment.getFormSchema(),
-      equipment
-    );
-
-    const modal = new Modal({
-      title: title,
-      content: formHtml,
-      size: "medium",
-      buttons: [
-        {
-          text: "Cancel",
-          action: "dismiss",
-          className: "btn btn-secondary",
-        },
-        {
-          text: isEdit ? "Update" : "Create",
-          action: "save",
-          className: "btn btn-primary",
-          handler: () => this.saveEquipment(isEdit, equipment?.id),
-        },
-      ],
-    });
-
-    modal.show();
-    this.components.equipmentModal = modal;
-  }
-
-  openExerciseModal(mode = "create", exercise = null) {
-    const isEdit = mode === "edit" && exercise;
-    const title = isEdit ? "Edit Exercise" : "Add Exercise";
-
-    const formHtml = this.generateForm(
-      this.managers.exercise.getFormSchema(),
-      exercise
-    );
-
-    const modal = new Modal({
-      title: title,
-      content: formHtml,
-      size: "large",
-      buttons: [
-        {
-          text: "Cancel",
-          action: "dismiss",
-          className: "btn btn-secondary",
-        },
-        {
-          text: isEdit ? "Update" : "Create",
-          action: "save",
-          className: "btn btn-primary",
-          handler: () => this.saveExercise(isEdit, exercise?.id),
-        },
-      ],
-    });
-
-    modal.show();
-    this.components.exerciseModal = modal;
-  }
-
-  openGymModal(mode = "create", gym = null) {
-    const isEdit = mode === "edit" && gym;
-    const title = isEdit ? "Edit Gym" : "Add Gym";
-
-    const formHtml = this.generateForm(this.managers.gym.getFormSchema(), gym);
-
-    const modal = new Modal({
-      title: title,
-      content: formHtml,
-      size: "medium",
-      buttons: [
-        {
-          text: "Cancel",
-          action: "dismiss",
-          className: "btn btn-secondary",
-        },
-        {
-          text: isEdit ? "Update" : "Create",
-          action: "save",
-          className: "btn btn-primary",
-          handler: () => this.saveGym(isEdit, gym?.id),
-        },
-      ],
-    });
-
-    modal.show();
-    this.components.gymModal = modal;
-  }
-
-  // Form Generation
-  generateForm(schema, data = null) {
-    let formHtml = '<form id="dynamic-form" class="form-grid">';
-
-    Object.keys(schema).forEach((fieldName) => {
-      const field = schema[fieldName];
-      const value = data ? data[fieldName] || "" : "";
-
-      formHtml += `<div class="form-group">`;
-      formHtml += `<label class="form-label" for="${fieldName}">${field.label}${
-        field.required ? " *" : ""
-      }</label>`;
-
-      if (field.type === "textarea") {
-        formHtml += `<textarea class="form-control" id="${fieldName}" name="${fieldName}" rows="${
-          field.rows || 3
-        }" placeholder="${field.placeholder || ""}">${value}</textarea>`;
-      } else if (field.type === "select") {
-        formHtml += `<select class="form-control" id="${fieldName}" name="${fieldName}">`;
-        field.options.forEach((option) => {
-          const selected = value === option.value ? "selected" : "";
-          formHtml += `<option value="${option.value}" ${selected}>${option.label}</option>`;
-        });
-        formHtml += `</select>`;
-      } else {
-        formHtml += `<input type="${
-          field.type
-        }" class="form-control" id="${fieldName}" name="${fieldName}" value="${value}" placeholder="${
-          field.placeholder || ""
-        }" ${field.required ? "required" : ""}>`;
-      }
-
-      formHtml += `</div>`;
-    });
-
-    formHtml += "</form>";
-    return formHtml;
-  }
-
-  // Save handlers
-  async saveEquipment(isEdit, id = null) {
-    try {
-      const formData = getFormData(document.getElementById("dynamic-form"));
-
-      if (isEdit) {
-        await this.managers.equipment.updateEquipment(id, formData);
-      } else {
-        await this.managers.equipment.createEquipment(formData);
-      }
-
-      this.components.equipmentModal.hide();
-
-      // Refresh the equipment table
-      if (this.components.equipmentTable) {
-        const equipment = await this.managers.equipment.loadEquipment();
-        this.components.equipmentTable.updateData(equipment);
-      }
-
-      return false; // Prevent modal from closing automatically
-    } catch (error) {
-      // Error is already handled by the manager
-      return false;
-    }
-  }
-
-  async saveExercise(isEdit, id = null) {
-    try {
-      const formData = getFormData(document.getElementById("dynamic-form"));
-
-      if (isEdit) {
-        await this.managers.exercise.updateExercise(id, formData);
-      } else {
-        await this.managers.exercise.createExercise(formData);
-      }
-
-      this.components.exerciseModal.hide();
-
-      // Refresh the exercises table
-      if (this.components.exercisesTable) {
-        const exercises = await this.managers.exercise.loadExercises();
-        this.components.exercisesTable.updateData(exercises);
-      }
-
-      return false;
-    } catch (error) {
-      return false;
-    }
-  }
-
-  async saveGym(isEdit, id = null) {
-    try {
-      const formData = getFormData(document.getElementById("dynamic-form"));
-
-      if (isEdit) {
-        await this.managers.gym.updateGym(id, formData);
-      } else {
-        await this.managers.gym.createGym(formData);
-      }
-
-      this.components.gymModal.hide();
-
-      // Refresh the gyms table
-      if (this.components.gymsTable) {
-        const gyms = await this.managers.gym.loadGyms();
-        this.components.gymsTable.updateData(gyms);
-      }
-
-      return false;
-    } catch (error) {
-      return false;
-    }
-  }
+  // Navigation and view management code continues here...
 
   // View exercise details
   viewExerciseDetails(exercise) {
@@ -1297,21 +1121,8 @@ class VanillaDashboardManager {
     const content = `
       <div class="gym-details">
         <h4>${gym.name}</h4>
-        ${
-          gym.contact_name
-            ? `<p><strong>Contact:</strong> ${gym.contact_name}</p>`
-            : ""
-        }
-        ${
-          gym.contact_email
-            ? `<p><strong>Email:</strong> ${gym.contact_email}</p>`
-            : ""
-        }
-        ${
-          gym.contact_phone
-            ? `<p><strong>Phone:</strong> ${gym.contact_phone}</p>`
-            : ""
-        }
+        ${gym.email ? `<p><strong>Email:</strong> ${gym.email}</p>` : ""}
+        ${gym.phone ? `<p><strong>Phone:</strong> ${gym.phone}</p>` : ""}
         ${gym.address ? `<p><strong>Address:</strong> ${gym.address}</p>` : ""}
         ${
           gym.description
@@ -1395,8 +1206,8 @@ class VanillaDashboardManager {
           <div class="gym-name">${gym.name}</div>
           <div class="gym-details">
             ${
-              gym.contact_email
-                ? `<span><i class="fas fa-envelope"></i> ${gym.contact_email}</span>`
+              gym.email
+                ? `<span><i class="fas fa-envelope"></i> ${gym.email}</span>`
                 : ""
             }
             ${
@@ -1637,22 +1448,14 @@ class VanillaDashboardManager {
       const gyms = await this.managers.gym.loadGyms();
 
       // Create CSV content
-      const headers = [
-        "Name",
-        "Contact Name",
-        "Contact Email",
-        "Contact Phone",
-        "Address",
-        "Created Date",
-      ];
+      const headers = ["Name", "Email", "Phone", "Address", "Created Date"];
       const csvContent = [
         headers.join(","),
         ...gyms.map((gym) =>
           [
             `"${gym.name || ""}"`,
-            `"${gym.contact_name || ""}"`,
-            `"${gym.contact_email || ""}"`,
-            `"${gym.contact_phone || ""}"`,
+            `"${gym.email || ""}"`,
+            `"${gym.phone || ""}"`,
             `"${gym.address || ""}"`,
             `"${gym.created_at || ""}"`,
           ].join(",")
@@ -1775,9 +1578,823 @@ class VanillaDashboardManager {
       console.log("Help documentation coming soon!");
     }
   }
-}
 
-// Global functions for compatibility
+  // Modal methods for CRUD operations
+  async openGymModal(mode = "create", gymData = null) {
+    try {
+      const isEdit = mode === "edit" && gymData;
+      const title = isEdit ? `Edit Gym: ${gymData.name}` : "Add New Gym";
+
+      const schema = this.managers.gym.getFormSchema();
+      const formHtml = this.generateFormHtml(schema, isEdit ? gymData : {});
+
+      const modal = new Modal({
+        title: title,
+        size: "lg",
+        content: `
+          <form id="gym-form">
+            ${formHtml}
+          </form>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" data-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="save-gym-btn">
+              <i class="fas fa-save"></i> ${isEdit ? "Update" : "Create"} Gym
+            </button>
+          </div>
+        `,
+      });
+
+      modal.show();
+
+      // Focus first input after modal is shown
+      setTimeout(() => {
+        const firstInput = modal.element.querySelector(
+          "input, textarea, select"
+        );
+        if (firstInput) firstInput.focus();
+      }, 100);
+
+      // Handle form submission
+      const form = modal.element.querySelector("#gym-form");
+      const saveBtn = modal.element.querySelector("#save-gym-btn");
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        try {
+          saveBtn.disabled = true;
+          saveBtn.innerHTML =
+            '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+          const formData = getFormData(form);
+          const validation = this.managers.gym.validateGymData(formData);
+
+          // Clear previous errors
+          this.clearFormErrors(form);
+
+          if (!validation.isValid) {
+            this.showFormErrors(form, validation.errors);
+            return;
+          }
+
+          if (isEdit) {
+            await this.managers.gym.updateGym(gymData.id, formData);
+          } else {
+            await this.managers.gym.createGym(formData);
+          }
+
+          modal.hide();
+          // Refresh the current view to show updated data
+          if (this.currentView === "gyms") {
+            await this.loadGymsManagement();
+          }
+        } catch (error) {
+          console.error("Error saving gym:", error);
+          notifications.error(
+            `Failed to ${isEdit ? "update" : "create"} gym: ${error.message}`
+          );
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = `<i class="fas fa-save"></i> ${
+            isEdit ? "Update" : "Create"
+          } Gym`;
+        }
+      };
+
+      form.addEventListener("submit", handleSubmit);
+      saveBtn.addEventListener("click", handleSubmit);
+    } catch (error) {
+      console.error("Error opening gym modal:", error);
+      notifications.error("Failed to open gym form");
+    }
+  }
+
+  async openEquipmentModal(mode = "create", equipmentData = null) {
+    try {
+      const isEdit = mode === "edit" && equipmentData;
+      const title = isEdit
+        ? `Edit Equipment: ${equipmentData.name}`
+        : "Add New Equipment";
+
+      const schema = this.managers.equipment.getFormSchema();
+      const formHtml = this.generateFormHtml(
+        schema,
+        isEdit ? equipmentData : {}
+      );
+
+      const modal = new Modal({
+        title: title,
+        size: "lg",
+        content: `
+          <form id="equipment-form">
+            ${formHtml}
+          </form>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" data-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="save-equipment-btn">
+              <i class="fas fa-save"></i> ${
+                isEdit ? "Update" : "Create"
+              } Equipment
+            </button>
+          </div>
+        `,
+      });
+
+      modal.show();
+
+      // Focus first input after modal is shown
+      setTimeout(() => {
+        const firstInput = modal.element.querySelector(
+          "input, textarea, select"
+        );
+        if (firstInput) firstInput.focus();
+      }, 100);
+
+      const form = modal.element.querySelector("#equipment-form");
+      const saveBtn = modal.element.querySelector("#save-equipment-btn");
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        try {
+          saveBtn.disabled = true;
+          saveBtn.innerHTML =
+            '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+          const formData = getFormData(form);
+          const validation =
+            this.managers.equipment.validateEquipmentData(formData);
+
+          this.clearFormErrors(form);
+
+          if (!validation.isValid) {
+            this.showFormErrors(form, validation.errors);
+            return;
+          }
+
+          if (isEdit) {
+            await this.managers.equipment.updateEquipment(
+              equipmentData.id,
+              formData
+            );
+          } else {
+            await this.managers.equipment.createEquipment(formData);
+          }
+
+          modal.hide();
+          if (this.currentView === "equipment") {
+            await this.loadEquipmentManagement();
+          }
+        } catch (error) {
+          console.error("Error saving equipment:", error);
+          notifications.error(
+            `Failed to ${isEdit ? "update" : "create"} equipment: ${
+              error.message
+            }`
+          );
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = `<i class="fas fa-save"></i> ${
+            isEdit ? "Update" : "Create"
+          } Equipment`;
+        }
+      };
+
+      form.addEventListener("submit", handleSubmit);
+      saveBtn.addEventListener("click", handleSubmit);
+    } catch (error) {
+      console.error("Error opening equipment modal:", error);
+      notifications.error("Failed to open equipment form");
+    }
+  }
+
+  async openExerciseModal(mode = "create", exerciseData = null) {
+    try {
+      const isEdit = mode === "edit" && exerciseData;
+      const title = isEdit
+        ? `Edit Exercise: ${exerciseData.name}`
+        : "Add New Exercise";
+
+      const schema = this.managers.exercise.getFormSchema();
+      const formHtml = this.generateFormHtml(
+        schema,
+        isEdit ? exerciseData : {}
+      );
+
+      const modal = new Modal({
+        title: title,
+        size: "lg",
+        content: `
+          <form id="exercise-form">
+            ${formHtml}
+          </form>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" data-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="save-exercise-btn">
+              <i class="fas fa-save"></i> ${
+                isEdit ? "Update" : "Create"
+              } Exercise
+            </button>
+          </div>
+        `,
+      });
+
+      modal.show();
+
+      // Focus first input after modal is shown
+      setTimeout(() => {
+        const firstInput = modal.element.querySelector(
+          "input, textarea, select"
+        );
+        if (firstInput) firstInput.focus();
+      }, 100);
+
+      const form = modal.element.querySelector("#exercise-form");
+      const saveBtn = modal.element.querySelector("#save-exercise-btn");
+
+      const handleSubmit = async (e) => {
+        e.preventDefault();
+
+        try {
+          saveBtn.disabled = true;
+          saveBtn.innerHTML =
+            '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+          const formData = getFormData(form);
+
+          // Convert muscle_groups from comma-separated string to array
+          if (formData.muscle_groups) {
+            formData.muscle_groups = formData.muscle_groups
+              .split(",")
+              .map((group) => group.trim())
+              .filter((group) => group.length > 0);
+          }
+
+          const validation =
+            this.managers.exercise.validateExerciseData(formData);
+
+          this.clearFormErrors(form);
+
+          if (!validation.isValid) {
+            this.showFormErrors(form, validation.errors);
+            return;
+          }
+
+          if (isEdit) {
+            await this.managers.exercise.updateExercise(
+              exerciseData.id,
+              formData
+            );
+          } else {
+            await this.managers.exercise.createExercise(formData);
+          }
+
+          modal.hide();
+          if (this.currentView === "exercises") {
+            await this.loadExercisesManagement();
+          }
+        } catch (error) {
+          console.error("Error saving exercise:", error);
+          notifications.error(
+            `Failed to ${isEdit ? "update" : "create"} exercise: ${
+              error.message
+            }`
+          );
+        } finally {
+          saveBtn.disabled = false;
+          saveBtn.innerHTML = `<i class="fas fa-save"></i> ${
+            isEdit ? "Update" : "Create"
+          } Exercise`;
+        }
+      };
+
+      form.addEventListener("submit", handleSubmit);
+      saveBtn.addEventListener("click", handleSubmit);
+    } catch (error) {
+      console.error("Error opening exercise modal:", error);
+      notifications.error("Failed to open exercise form");
+    }
+  }
+  async viewGymDetails(gym) {
+    try {
+      const modal = new Modal({
+        title: `Gym Details: ${gym.name}`,
+        size: "lg",
+        content: `
+          <div class="gym-details-modal">
+            <div class="detail-section">
+              <h4><i class="fas fa-building"></i> Basic Information</h4>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <label>Name:</label>
+                  <span>${gym.name}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Status:</label>
+                  <span class="status-badge ${
+                    gym.deleted_at ? "deleted" : "active"
+                  }">
+                    ${gym.deleted_at ? "Deleted" : "Active"}
+                  </span>
+                </div>
+                <div class="detail-item">
+                  <label>Created:</label>
+                  <span>${this.managers.gym.formatDate(gym.created_at)}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Updated:</label>
+                  <span>${this.managers.gym.formatDate(gym.updated_at)}</span>
+                </div>
+              </div>
+            </div>
+
+            ${
+              gym.email || gym.phone
+                ? `
+            <div class="detail-section">
+              <h4><i class="fas fa-address-card"></i> Contact Information</h4>
+              <div class="detail-grid">
+                ${
+                  gym.email
+                    ? `
+                  <div class="detail-item">
+                    <label>Email:</label>
+                    <span><a href="mailto:${gym.email}">${gym.email}</a></span>
+                  </div>
+                `
+                    : ""
+                }
+                ${
+                  gym.phone
+                    ? `
+                  <div class="detail-item">
+                    <label>Phone:</label>
+                    <span><a href="tel:${gym.phone}">${gym.phone}</a></span>
+                  </div>
+                `
+                    : ""
+                }
+              </div>
+            </div>
+            `
+                : ""
+            }
+
+            ${
+              gym.address
+                ? `
+            <div class="detail-section">
+              <h4><i class="fas fa-map-marker-alt"></i> Address</h4>
+              <p>${gym.address}</p>
+            </div>
+            `
+                : ""
+            }
+
+            ${
+              gym.description
+                ? `
+            <div class="detail-section">
+              <h4><i class="fas fa-info-circle"></i> Description</h4>
+              <p>${gym.description}</p>
+            </div>
+            `
+                : ""
+            }
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" data-dismiss="modal">Close</button>
+            ${
+              !gym.deleted_at
+                ? `
+              <button type="button" class="btn btn-primary" onclick="dashboard.openGymModal('edit', ${JSON.stringify(
+                gym
+              ).replace(/"/g, "&quot;")})">
+                <i class="fas fa-edit"></i> Edit Gym
+              </button>
+            `
+                : ""
+            }
+          </div>
+        `,
+      });
+
+      modal.show();
+    } catch (error) {
+      console.error("Error showing gym details:", error);
+      notifications.error("Failed to show gym details");
+    }
+  }
+
+  async viewEquipmentDetails(equipment) {
+    try {
+      const modal = new Modal({
+        title: `Equipment Details: ${equipment.name}`,
+        size: "lg",
+        content: `
+          <div class="equipment-details-modal">
+            <div class="detail-section">
+              <h4><i class="fas fa-dumbbell"></i> Basic Information</h4>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <label>Name:</label>
+                  <span>${equipment.name}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Category:</label>
+                  <span>${equipment.category}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Type:</label>
+                  <span>${equipment.type}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Status:</label>
+                  <span class="status-badge ${
+                    equipment.deleted_at ? "deleted" : "active"
+                  }">
+                    ${equipment.deleted_at ? "Deleted" : "Active"}
+                  </span>
+                </div>
+                <div class="detail-item">
+                  <label>Created:</label>
+                  <span>${this.managers.equipment.formatDate(
+                    equipment.created_at
+                  )}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Updated:</label>
+                  <span>${this.managers.equipment.formatDate(
+                    equipment.updated_at
+                  )}</span>
+                </div>
+              </div>
+            </div>
+
+            ${
+              equipment.description
+                ? `
+            <div class="detail-section">
+              <h4><i class="fas fa-info-circle"></i> Description</h4>
+              <p>${equipment.description}</p>
+            </div>
+            `
+                : ""
+            }
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" data-dismiss="modal">Close</button>
+            ${
+              !equipment.deleted_at
+                ? `
+              <button type="button" class="btn btn-primary" onclick="dashboard.openEquipmentModal('edit', ${JSON.stringify(
+                equipment
+              ).replace(/"/g, "&quot;")})">
+                <i class="fas fa-edit"></i> Edit Equipment
+              </button>
+            `
+                : ""
+            }
+          </div>
+        `,
+      });
+
+      modal.show();
+    } catch (error) {
+      console.error("Error showing equipment details:", error);
+      notifications.error("Failed to show equipment details");
+    }
+  }
+
+  async viewExerciseDetails(exercise) {
+    try {
+      const modal = new Modal({
+        title: `Exercise Details: ${exercise.name}`,
+        size: "lg",
+        content: `
+          <div class="exercise-details-modal">
+            <div class="detail-section">
+              <h4><i class="fas fa-running"></i> Basic Information</h4>
+              <div class="detail-grid">
+                <div class="detail-item">
+                  <label>Name:</label>
+                  <span>${exercise.name}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Category:</label>
+                  <span>${exercise.category}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Muscle Groups:</label>
+                  <span>${
+                    Array.isArray(exercise.muscle_groups)
+                      ? exercise.muscle_groups.join(", ")
+                      : exercise.muscle_groups || ""
+                  }</span>
+                </div>
+                <div class="detail-item">
+                  <label>Difficulty:</label>
+                  <span>${exercise.difficulty || "Not specified"}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Status:</label>
+                  <span class="status-badge ${
+                    exercise.deleted_at ? "deleted" : "active"
+                  }">
+                    ${exercise.deleted_at ? "Deleted" : "Active"}
+                  </span>
+                </div>
+                <div class="detail-item">
+                  <label>Created:</label>
+                  <span>${this.managers.exercise.formatDate(
+                    exercise.created_at
+                  )}</span>
+                </div>
+                <div class="detail-item">
+                  <label>Updated:</label>
+                  <span>${this.managers.exercise.formatDate(
+                    exercise.updated_at
+                  )}</span>
+                </div>
+              </div>
+            </div>
+
+            ${
+              exercise.description
+                ? `
+            <div class="detail-section">
+              <h4><i class="fas fa-info-circle"></i> Description</h4>
+              <p>${exercise.description}</p>
+            </div>
+            `
+                : ""
+            }
+
+            ${
+              exercise.instructions
+                ? `
+            <div class="detail-section">
+              <h4><i class="fas fa-list-ol"></i> Instructions</h4>
+              <p>${exercise.instructions}</p>
+            </div>
+            `
+                : ""
+            }
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" data-dismiss="modal">Close</button>
+            ${
+              !exercise.deleted_at
+                ? `
+              <button type="button" class="btn btn-primary" onclick="dashboard.openExerciseModal('edit', ${JSON.stringify(
+                exercise
+              ).replace(/"/g, "&quot;")})">
+                <i class="fas fa-edit"></i> Edit Exercise
+              </button>
+            `
+                : ""
+            }
+          </div>
+        `,
+      });
+
+      modal.show();
+    } catch (error) {
+      console.error("Error showing exercise details:", error);
+      notifications.error("Failed to show exercise details");
+    }
+  }
+
+  // Helper methods for form handling
+  generateFormHtml(schema, data = {}) {
+    return Object.entries(schema)
+      .map(([key, field]) => {
+        const value = data[key] || "";
+        const required = field.required ? "required" : "";
+        const fieldId = `field-${key}`;
+
+        switch (field.type) {
+          case "textarea":
+            return `
+            <div class="form-group">
+              <label for="${fieldId}">${field.label}</label>
+              <textarea 
+                id="${fieldId}" 
+                name="${key}" 
+                class="form-control" 
+                rows="${field.rows || 3}"
+                placeholder="${field.placeholder || ""}"
+                ${required}
+              >${value}</textarea>
+              ${
+                field.help
+                  ? `<small class="form-help">${field.help}</small>`
+                  : ""
+              }
+              <div class="field-error" id="${fieldId}-error"></div>
+            </div>
+          `;
+          case "select":
+            const optionsHtml = field.options
+              .map(
+                (option) =>
+                  `<option value="${option.value}" ${
+                    option.value === value ? "selected" : ""
+                  }>${option.label}</option>`
+              )
+              .join("");
+            return `
+            <div class="form-group">
+              <label for="${fieldId}">${field.label}</label>
+              <select 
+                id="${fieldId}" 
+                name="${key}" 
+                class="form-control" 
+                ${required}
+              >
+                ${optionsHtml}
+              </select>
+              ${
+                field.help
+                  ? `<small class="form-help">${field.help}</small>`
+                  : ""
+              }
+              <div class="field-error" id="${fieldId}-error"></div>
+            </div>
+          `;
+          default:
+            // Handle arrays (like muscle_groups)
+            const displayValue = Array.isArray(value)
+              ? value.join(", ")
+              : value;
+            return `
+            <div class="form-group">
+              <label for="${fieldId}">${field.label}</label>
+              <input 
+                type="${field.type || "text"}" 
+                id="${fieldId}" 
+                name="${key}" 
+                class="form-control" 
+                value="${displayValue}"
+                placeholder="${field.placeholder || ""}"
+                ${required}
+              />
+              ${
+                field.help
+                  ? `<small class="form-help">${field.help}</small>`
+                  : ""
+              }
+              <div class="field-error" id="${fieldId}-error"></div>
+            </div>
+          `;
+        }
+      })
+      .join("");
+  }
+
+  clearFormErrors(form) {
+    const errorElements = form.querySelectorAll(".field-error");
+    errorElements.forEach((el) => {
+      el.textContent = "";
+      el.style.display = "none";
+    });
+
+    const inputElements = form.querySelectorAll(".form-control");
+    inputElements.forEach((el) => {
+      el.classList.remove("is-invalid");
+    });
+  }
+
+  showFormErrors(form, errors) {
+    Object.entries(errors).forEach(([field, message]) => {
+      const input = form.querySelector(`[name="${field}"]`);
+      const errorElement = form.querySelector(`#field-${field}-error`);
+
+      if (input) {
+        input.classList.add("is-invalid");
+      }
+
+      if (errorElement) {
+        errorElement.textContent = message;
+        errorElement.style.display = "block";
+      }
+    });
+  }
+
+  // Confirmation modal methods
+  async showDeleteConfirmation(gym) {
+    try {
+      const modal = new Modal({
+        title: "Delete Gym",
+        size: "md",
+        content: `
+        <div class="confirmation-modal">
+          <div class="confirmation-icon delete">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <h4>Delete "${gym.name}"?</h4>
+          <p>This action will remove the gym from active listings. The gym can be restored later if needed.</p>
+          <div class="confirmation-details">
+            <strong>Note:</strong> This is a soft delete - all data will be preserved.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirm-delete-btn">
+            <i class="fas fa-trash"></i> Delete Gym
+          </button>
+        </div>
+      `,
+      });
+
+      modal.show();
+
+      // Wait a bit for modal to render before accessing elements
+      setTimeout(() => {
+        const confirmBtn = modal.element.querySelector("#confirm-delete-btn");
+        confirmBtn.addEventListener("click", async () => {
+          try {
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML =
+              '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+
+            await this.managers.gym.deleteGym(gym.id);
+            modal.hide();
+
+            // Refresh the current view
+            if (this.currentView === "gyms") {
+              await this.loadGymsManagement();
+            }
+          } catch (error) {
+            console.error("Error deleting gym:", error);
+            notifications.error(`Failed to delete gym: ${error.message}`);
+          } finally {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<i class="fas fa-trash"></i> Delete Gym';
+          }
+        });
+      }, 100);
+    } catch (error) {
+      console.error("Error showing delete confirmation:", error);
+      notifications.error("Failed to show confirmation dialog");
+    }
+  }
+
+  async showRestoreConfirmation(gym) {
+    try {
+      const modal = new Modal({
+        title: "Restore Gym",
+        size: "md",
+        content: `
+        <div class="confirmation-modal">
+          <div class="confirmation-icon restore">
+            <i class="fas fa-undo"></i>
+          </div>
+          <h4>Restore "${gym.name}"?</h4>
+          <p>This action will restore the gym to active status and make it available for use again.</p>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-warning" id="confirm-restore-btn">
+            <i class="fas fa-undo"></i> Restore Gym
+          </button>
+        </div>
+      `,
+      });
+
+      modal.show();
+
+      // Wait for modal to render before accessing elements
+      setTimeout(() => {
+        const confirmBtn = modal.element.querySelector("#confirm-restore-btn");
+        confirmBtn.addEventListener("click", async () => {
+          try {
+            confirmBtn.disabled = true;
+            confirmBtn.innerHTML =
+              '<i class="fas fa-spinner fa-spin"></i> Restoring...';
+
+            await this.managers.gym.restoreGym(gym.id);
+            modal.hide();
+
+            // Refresh the current view
+            if (this.currentView === "gyms") {
+              await this.loadGymsManagement();
+            }
+          } catch (error) {
+            console.error("Error restoring gym:", error);
+            notifications.error(`Failed to restore gym: ${error.message}`);
+          } finally {
+            confirmBtn.disabled = false;
+            confirmBtn.innerHTML = '<i class="fas fa-undo"></i> Restore Gym';
+          }
+        });
+      }, 100);
+    } catch (error) {
+      console.error("Error showing restore confirmation:", error);
+      notifications.error("Failed to show confirmation dialog");
+    }
+  }
+} // Global functions for compatibility
 function logout() {
   localStorage.removeItem("auth_token");
   window.location.href = "/";
