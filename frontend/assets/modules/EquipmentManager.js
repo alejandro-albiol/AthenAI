@@ -75,6 +75,22 @@ class EquipmentManager {
     }
   }
 
+  async restoreEquipment(id) {
+    try {
+      await this.api.restoreEquipment(id);
+      notifications.success("Equipment restored successfully");
+
+      // Refresh equipment list
+      await this.loadEquipment();
+
+      return true;
+    } catch (error) {
+      console.error("Error restoring equipment:", error);
+      notifications.error("Failed to restore equipment: " + error.message);
+      throw error;
+    }
+  }
+
   getEquipmentIcon(category) {
     const icons = {
       cardio: '<i class="fas fa-heartbeat" style="color: #e74c3c;"></i>',

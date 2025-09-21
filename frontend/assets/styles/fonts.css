@@ -1,0 +1,33 @@
+/**
+ * Font Optimization Styles
+ * Handles font loading, performance, and warning suppression
+ */
+
+/* Font Display Optimization - Improves loading performance */
+.fas, .far, .fal, .fab, .fa {
+  font-display: swap;
+}
+
+/* Font Awesome specific optimizations */
+@supports (font-display: swap) {
+  .fa-solid, .fa-regular, .fa-light, .fa-brands {
+    font-display: swap;
+  }
+}
+
+/* Prevent font bbox warnings by ensuring proper font metrics */
+.fa, .fas, .far, .fal, .fab {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+}
+
+/* Font loading optimization for better performance */
+.fa-stack {
+  font-display: swap;
+}
+
+/* Additional font loading hints */
+link[href*="font-awesome"] {
+  font-display: swap;
+}

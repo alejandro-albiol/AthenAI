@@ -182,6 +182,10 @@ class ApiClient {
     return this.delete(`/equipment/${id}`);
   }
 
+  async restoreEquipment(id) {
+    return this.post(`/equipment/${id}/restore`);
+  }
+
   async getExercises() {
     return this.get("/exercise");
   }
@@ -198,6 +202,10 @@ class ApiClient {
     return this.delete(`/exercise/${id}`);
   }
 
+  async restoreExercise(id) {
+    return this.post(`/exercise/${id}/restore`);
+  }
+
   async getMuscularGroups() {
     return this.get("/muscular-group");
   }
@@ -212,6 +220,32 @@ class ApiClient {
 
   async deleteMuscularGroup(id) {
     return this.delete(`/muscular-group/${id}`);
+  }
+
+  // Exercise-Muscular Group linking
+  async createExerciseMuscularGroupLink(data) {
+    return this.post("/exercise-muscular-groups/link", data);
+  }
+
+  async deleteExerciseMuscularGroupLink(id) {
+    return this.delete(`/exercise-muscular-groups/link/${id}`);
+  }
+
+  async getExerciseMuscularGroupLinks(exerciseId) {
+    return this.get(`/exercise-muscular-groups/exercise/${exerciseId}/links`);
+  }
+
+  // Exercise-Equipment linking
+  async createExerciseEquipmentLink(data) {
+    return this.post("/exercise-equipment/link", data);
+  }
+
+  async deleteExerciseEquipmentLink(id) {
+    return this.delete(`/exercise-equipment/link/${id}`);
+  }
+
+  async getExerciseEquipmentLinks(exerciseId) {
+    return this.get(`/exercise-equipment/exercise/${exerciseId}/links`);
   }
 
   async getGyms() {

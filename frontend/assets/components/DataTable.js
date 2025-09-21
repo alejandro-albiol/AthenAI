@@ -15,11 +15,14 @@ class DataTable extends BaseComponent {
       columns: [],
       sortable: true,
       filterable: true,
-      pagination: false,
+      pagination: true,
       pageSize: 10,
       emptyMessage: "No data available",
       className: "data-table",
       rowActions: [],
+      bulkActions: [],
+      selectable: false,
+      exportable: false,
     };
   }
 
@@ -28,6 +31,7 @@ class DataTable extends BaseComponent {
     this.currentPage = 1;
     this.sortColumn = null;
     this.sortDirection = "asc";
+    this.selectedRows = new Set();
     this.filteredData = Array.isArray(this.options.data)
       ? [...this.options.data]
       : [];
@@ -46,11 +50,22 @@ class DataTable extends BaseComponent {
 
   getTemplate() {
     return `
-      ${this.options.filterable ? this.getFilterTemplate() : ""}
+      ${
+        this.options.filterable ||
+        this.options.selectable ||
+        this.options.exportable
+          ? this.getToolbarTemplate()
+          : ""
+      }
       <div class="table-container">
         <table class="table">
           <thead>
             <tr>
+              ${
+                this.options.selectable
+                  ? '<th class="select-column"><input type="checkbox" class="select-all"></th>'
+                  : ""
+              }
               ${this.options.columns
                 .map((col) => this.getHeaderCell(col))
                 .join("")}
@@ -77,12 +92,53 @@ class DataTable extends BaseComponent {
     `;
   }
 
-  getFilterTemplate() {
+  getToolbarTemplate() {
     return `
-      <div class="table-filters">
-        <div class="search-input-container">
-          <i class="fas fa-search"></i>
-          <input type="text" class="search-input" placeholder="Search...">
+      <div class="table-toolbar">
+        <div class="toolbar-left">
+          ${
+            this.options.filterable
+              ? `
+            <div class="search-input-container">
+              <i class="fas fa-search"></i>
+              <input type="text" class="search-input" placeholder="Search...">
+            </div>
+          `
+              : ""
+          }
+          ${
+            this.options.selectable && this.options.bulkActions.length > 0
+              ? `
+            <div class="bulk-actions" style="display: none;">
+              <span class="bulk-selected-count">0 selected</span>
+              ${this.options.bulkActions
+                .map(
+                  (action) => `
+                <button class="btn btn-sm ${
+                  action.className || "btn-outline"
+                }" data-bulk-action="${action.action}">
+                  ${action.icon ? `<i class="${action.icon}"></i>` : ""} ${
+                    action.text
+                  }
+                </button>
+              `
+                )
+                .join("")}
+            </div>
+          `
+              : ""
+          }
+        </div>
+        <div class="toolbar-right">
+          ${
+            this.options.exportable
+              ? `
+            <button class="btn btn-outline btn-sm export-btn" data-action="export">
+              <i class="fas fa-download"></i> Export
+            </button>
+          `
+              : ""
+          }
         </div>
       </div>
     `;
@@ -159,13 +215,66 @@ class DataTable extends BaseComponent {
     // Row actions
     this.addEventListener("click", "[data-action]", (e, target) => {
       const action = target.getAttribute("data-action");
-      const rowId = target.closest("tr").getAttribute("data-id");
+
+      // Handle export action
+      if (action === "export") {
+        this.exportData();
+        return;
+      }
+
+      const rowId = target.closest("tr")?.getAttribute("data-id");
       const rowData = this.options.data.find((item) => item.id == rowId);
 
       if (action && rowData) {
         this.handleRowAction(action, rowData, target);
       }
     });
+
+    // Bulk selection
+    if (this.options.selectable) {
+      // Select all checkbox
+      this.addEventListener("change", ".select-all", (e, target) => {
+        const isChecked = target.checked;
+        const pageData = this.getCurrentPageData();
+
+        pageData.forEach((item) => {
+          if (isChecked) {
+            this.selectedRows.add(item.id);
+          } else {
+            this.selectedRows.delete(item.id);
+          }
+        });
+
+        this.updateBulkActions();
+        this.renderTable(); // Re-render to update checkboxes
+      });
+
+      // Individual row checkboxes
+      this.addEventListener("change", ".row-select", (e, target) => {
+        const rowId = target.closest("tr").getAttribute("data-id");
+
+        if (target.checked) {
+          this.selectedRows.add(rowId);
+        } else {
+          this.selectedRows.delete(rowId);
+        }
+
+        this.updateBulkActions();
+        this.updateSelectAllCheckbox();
+      });
+
+      // Bulk actions
+      this.addEventListener("click", "[data-bulk-action]", (e, target) => {
+        const action = target.getAttribute("data-bulk-action");
+        const selectedData = Array.from(this.selectedRows)
+          .map((id) => this.options.data.find((item) => item.id == id))
+          .filter(Boolean);
+
+        if (selectedData.length > 0) {
+          this.handleBulkAction(action, selectedData);
+        }
+      });
+    }
   }
 
   sort(column) {
@@ -258,6 +367,14 @@ class DataTable extends BaseComponent {
   }
 
   renderRow(item) {
+    const selectCell = this.options.selectable
+      ? `<td class="select-cell">
+          <input type="checkbox" class="row-select" ${
+            this.selectedRows.has(item.id) ? "checked" : ""
+          }>
+         </td>`
+      : "";
+
     const cells = this.options.columns
       .map((column) => {
         const getValue = column.getValue || ((item) => item[column.key]);
@@ -273,7 +390,7 @@ class DataTable extends BaseComponent {
         ? `<td class="actions-cell">${this.renderRowActions(item)}</td>`
         : "";
 
-    return `<tr data-id="${item.id}">${cells}${actions}</tr>`;
+    return `<tr data-id="${item.id}">${selectCell}${cells}${actions}</tr>`;
   }
 
   renderRowActions(item) {
@@ -369,6 +486,104 @@ class DataTable extends BaseComponent {
 
   refresh() {
     this.renderTable();
+  }
+
+  // Bulk selection methods
+  updateBulkActions() {
+    const bulkActionsContainer = this.element.querySelector(".bulk-actions");
+    const selectedCount = this.selectedRows.size;
+
+    if (bulkActionsContainer) {
+      if (selectedCount > 0) {
+        bulkActionsContainer.style.display = "flex";
+        const countElement = bulkActionsContainer.querySelector(
+          ".bulk-selected-count"
+        );
+        if (countElement) {
+          countElement.textContent = `${selectedCount} selected`;
+        }
+      } else {
+        bulkActionsContainer.style.display = "none";
+      }
+    }
+  }
+
+  updateSelectAllCheckbox() {
+    const selectAllCheckbox = this.element.querySelector(".select-all");
+    if (selectAllCheckbox) {
+      const pageData = this.getCurrentPageData();
+      const allSelected =
+        pageData.length > 0 &&
+        pageData.every((item) => this.selectedRows.has(item.id));
+      const someSelected = pageData.some((item) =>
+        this.selectedRows.has(item.id)
+      );
+
+      selectAllCheckbox.checked = allSelected;
+      selectAllCheckbox.indeterminate = someSelected && !allSelected;
+    }
+  }
+
+  getCurrentPageData() {
+    if (!this.options.pagination) {
+      return this.filteredData;
+    }
+
+    const startIndex = (this.currentPage - 1) * this.options.pageSize;
+    const endIndex = startIndex + this.options.pageSize;
+    return this.filteredData.slice(startIndex, endIndex);
+  }
+
+  // Export functionality
+  exportData() {
+    const dataToExport =
+      this.selectedRows.size > 0
+        ? Array.from(this.selectedRows)
+            .map((id) => this.options.data.find((item) => item.id == id))
+            .filter(Boolean)
+        : this.filteredData;
+
+    const csvContent = this.convertToCSV(dataToExport);
+    this.downloadCSV(csvContent, "table-export.csv");
+  }
+
+  convertToCSV(data) {
+    if (data.length === 0) return "";
+
+    const headers = this.options.columns.map((col) => col.title);
+    const rows = data.map((item) =>
+      this.options.columns.map((col) => {
+        const getValue = col.getValue || ((item) => item[col.key]);
+        const value = getValue(item);
+        // Escape quotes and wrap in quotes if contains comma
+        return typeof value === "string" &&
+          (value.includes(",") || value.includes('"'))
+          ? `"${value.replace(/"/g, '""')}"`
+          : value;
+      })
+    );
+
+    return [headers, ...rows].map((row) => row.join(",")).join("\n");
+  }
+
+  downloadCSV(csvContent, filename) {
+    const blob = new Blob([csvContent], { type: "text/csv;charset=utf-8;" });
+    const link = document.createElement("a");
+
+    if (link.download !== undefined) {
+      const url = URL.createObjectURL(blob);
+      link.setAttribute("href", url);
+      link.setAttribute("download", filename);
+      link.style.visibility = "hidden";
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  }
+
+  // Event handlers
+  handleBulkAction(action, selectedData) {
+    this.trigger("bulkAction", { action, data: selectedData });
   }
 
   trigger(eventName, data = {}) {

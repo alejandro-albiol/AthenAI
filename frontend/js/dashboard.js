@@ -93,6 +93,7 @@ class VanillaDashboardManager {
     this.managers.equipment = new EquipmentManager();
     this.managers.exercise = new ExerciseManager();
     this.managers.gym = new GymManager();
+    this.managers.muscularGroup = new MuscularGroupManager();
 
     // Set up event listeners for manager events
     this.setupManagerEventListeners();
@@ -149,6 +150,11 @@ class VanillaDashboardManager {
 
     document.addEventListener("gym:restore", (e) => {
       this.showRestoreConfirmation(e.detail.gym);
+    });
+
+    // Bulk action events
+    document.addEventListener("datatable:bulkAction", (e) => {
+      this.handleBulkAction(e.detail.action, e.detail.data);
     });
   }
 
@@ -695,6 +701,24 @@ class VanillaDashboardManager {
         emptyMessage: "No equipment found. Add some equipment to get started.",
         filterable: true,
         sortable: true,
+        pagination: true,
+        pageSize: 10,
+        selectable: true,
+        exportable: true,
+        bulkActions: [
+          {
+            action: "delete",
+            text: "Delete Selected",
+            icon: "fas fa-trash",
+            className: "btn btn-sm btn-danger",
+          },
+          {
+            action: "restore",
+            text: "Restore Selected",
+            icon: "fas fa-undo",
+            className: "btn btn-sm btn-success",
+          },
+        ],
       });
     } catch (error) {
       throw new Error("Failed to load equipment management: " + error.message);
@@ -739,6 +763,24 @@ class VanillaDashboardManager {
         emptyMessage: "No exercises found. Add some exercises to get started.",
         filterable: true,
         sortable: true,
+        pagination: true,
+        pageSize: 10,
+        selectable: true,
+        exportable: true,
+        bulkActions: [
+          {
+            action: "delete",
+            text: "Delete Selected",
+            icon: "fas fa-trash",
+            className: "btn btn-sm btn-danger",
+          },
+          {
+            action: "restore",
+            text: "Restore Selected",
+            icon: "fas fa-undo",
+            className: "btn btn-sm btn-success",
+          },
+        ],
       });
     } catch (error) {
       throw new Error("Failed to load exercises management: " + error.message);
@@ -798,6 +840,24 @@ class VanillaDashboardManager {
         emptyMessage: "No gyms found. Add some gyms to get started.",
         filterable: true,
         sortable: true,
+        pagination: true,
+        pageSize: 10,
+        selectable: true,
+        exportable: true,
+        bulkActions: [
+          {
+            action: "delete",
+            text: "Delete Selected",
+            icon: "fas fa-trash",
+            className: "btn btn-sm btn-danger",
+          },
+          {
+            action: "restore",
+            text: "Restore Selected",
+            icon: "fas fa-undo",
+            className: "btn btn-sm btn-success",
+          },
+        ],
       });
     } catch (error) {
       console.error("Error in loadGymsManagement:", error);
@@ -806,20 +866,102 @@ class VanillaDashboardManager {
   }
 
   async loadMuscularGroupsManagement() {
-    const content = `
-      <div class="dashboard-header">
-        <h1 class="dashboard-title">Muscle Groups</h1>
-        <p class="dashboard-subtitle">Manage muscle group categories</p>
-      </div>
-      <div class="dashboard-content">
-        <div class="empty-state">
-          <i class="fas fa-clock"></i>
-          <h3>Coming Soon</h3>
-          <p>Muscular Groups Management functionality is under development and will be available soon.</p>
+    try {
+      const muscularGroups =
+        await this.managers.muscularGroup.loadMuscularGroups();
+
+      const content = `
+        <div class="dashboard-header">
+          <h1 class="dashboard-title">Muscle Groups</h1>
+          <p class="dashboard-subtitle">Manage muscle group categories</p>
         </div>
-      </div>
-    `;
-    this.setContent(content);
+        <div class="dashboard-content">
+          <div class="dashboard-card">
+          <div class="card-header">
+            <div class="card-header-content">
+              <h3 class="card-title">Muscle Groups Catalog</h3>
+              <p class="card-subtitle">${muscularGroups.length} groups available</p>
+            </div>
+            <button class="btn btn-primary" onclick="dashboard.openMuscularGroupModal('create')">
+              <i class="fas fa-plus"></i> Add Muscle Group
+            </button>
+          </div>
+          <div class="card-body">
+            <div id="muscular-groups-table"></div>
+          </div>
+        </div>
+        </div>
+      `;
+
+      this.setContent(content);
+
+      // Initialize data table
+      this.components.muscularGroupsTable = new DataTable(
+        "#muscular-groups-table",
+        {
+          data: muscularGroups,
+          columns: this.managers.muscularGroup.getTableColumns(),
+          rowActions: this.managers.muscularGroup.getRowActions(),
+          emptyMessage:
+            "No muscle groups found. Add some muscle groups to get started.",
+          pagination: {
+            enabled: true,
+            pageSize: 10,
+          },
+          search: {
+            enabled: true,
+            placeholder: "Search muscle groups...",
+          },
+          bulkActions: {
+            enabled: true,
+            actions: [
+              {
+                label: "Delete Selected",
+                icon: "fas fa-trash",
+                variant: "danger",
+                action: async (selectedIds) => {
+                  if (
+                    confirm(
+                      `Are you sure you want to delete ${selectedIds.length} muscle group(s)?`
+                    )
+                  ) {
+                    for (const id of selectedIds) {
+                      try {
+                        await this.managers.muscularGroup.deleteMuscularGroup(
+                          id
+                        );
+                      } catch (error) {
+                        console.error(
+                          `Error deleting muscle group ${id}:`,
+                          error
+                        );
+                      }
+                    }
+                    this.showNotification(
+                      "Selected muscle groups deleted",
+                      "success"
+                    );
+                    this.loadMuscularGroupsManagement(); // Reload
+                  }
+                },
+              },
+            ],
+          },
+          export: {
+            enabled: true,
+            filename: "muscle_groups",
+          },
+        }
+      );
+
+      this.components.muscularGroupsTable.render();
+    } catch (error) {
+      console.error("Error loading muscle groups management:", error);
+      this.showError("Failed to load muscle groups: " + error.message);
+      throw new Error(
+        "Failed to load muscle groups management: " + error.message
+      );
+    }
   }
 
   // New Gym-Focused Views
@@ -1730,6 +1872,137 @@ class VanillaDashboardManager {
     }
   }
 
+  async openMuscularGroupModal(mode = "create", muscularGroupData = null) {
+    try {
+      const isEdit = mode === "edit" && muscularGroupData;
+      const isView = mode === "view" && muscularGroupData;
+      const title = isView
+        ? `View Muscle Group: ${muscularGroupData.name}`
+        : isEdit
+        ? `Edit Muscle Group: ${muscularGroupData.name}`
+        : "Add New Muscle Group";
+
+      const fields = this.managers.muscularGroup.getFormFields();
+      const formHtml = this.generateFormHtml(
+        fields,
+        isEdit || isView ? muscularGroupData : {},
+        isView // readonly mode
+      );
+
+      const modal = new Modal({
+        title: title,
+        size: "lg",
+        content: `
+          <form id="muscular-group-form">
+            ${formHtml}
+          </form>
+          ${
+            !isView
+              ? `
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" data-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="save-muscular-group-btn">
+              <i class="fas fa-save"></i> ${
+                isEdit ? "Update" : "Create"
+              } Muscle Group
+            </button>
+          </div>
+          `
+              : `
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" data-dismiss="modal">Close</button>
+            ${
+              isEdit
+                ? ""
+                : `<button type="button" class="btn btn-primary" onclick="dashboard.openMuscularGroupModal('edit', ${JSON.stringify(
+                    muscularGroupData
+                  ).replace(/"/g, "&quot;")})">
+              <i class="fas fa-edit"></i> Edit
+            </button>`
+            }
+          </div>
+          `
+          }
+        `,
+      });
+
+      modal.show();
+
+      if (!isView) {
+        // Focus first input after modal is shown
+        setTimeout(() => {
+          const firstInput = modal.element.querySelector(
+            "input, textarea, select"
+          );
+          if (firstInput) firstInput.focus();
+        }, 100);
+
+        const form = modal.element.querySelector("#muscular-group-form");
+        const saveBtn = modal.element.querySelector("#save-muscular-group-btn");
+
+        const handleSubmit = async (e) => {
+          e.preventDefault();
+
+          try {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML =
+              '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+            const formData = getFormData(form);
+            const validation =
+              this.managers.muscularGroup.validateMuscularGroupData(formData);
+
+            this.clearFormErrors(form);
+
+            if (validation.length > 0) {
+              this.showFormErrors(form, validation);
+              return;
+            }
+
+            const preparedData =
+              this.managers.muscularGroup.prepareDataForSubmission(formData);
+
+            if (isEdit) {
+              await this.managers.muscularGroup.updateMuscularGroup(
+                muscularGroupData.id,
+                preparedData
+              );
+              notifications.success("Muscle group updated successfully");
+            } else {
+              await this.managers.muscularGroup.createMuscularGroup(
+                preparedData
+              );
+              notifications.success("Muscle group created successfully");
+            }
+
+            modal.hide();
+            if (this.currentView === "muscular-groups") {
+              await this.loadMuscularGroupsManagement();
+            }
+          } catch (error) {
+            console.error("Error saving muscle group:", error);
+            notifications.error(
+              `Failed to ${isEdit ? "update" : "create"} muscle group: ${
+                error.message
+              }`
+            );
+          } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = `<i class="fas fa-save"></i> ${
+              isEdit ? "Update" : "Create"
+            } Muscle Group`;
+          }
+        };
+
+        form.addEventListener("submit", handleSubmit);
+        saveBtn.addEventListener("click", handleSubmit);
+      }
+    } catch (error) {
+      console.error("Error opening muscle group modal:", error);
+      notifications.error("Failed to open muscle group form");
+    }
+  }
+
   async openExerciseModal(mode = "create", exerciseData = null) {
     try {
       const isEdit = mode === "edit" && exerciseData;
@@ -1737,11 +2010,24 @@ class VanillaDashboardManager {
         ? `Edit Exercise: ${exerciseData.name}`
         : "Add New Exercise";
 
-      const schema = this.managers.exercise.getFormSchema();
-      const formHtml = this.generateFormHtml(
-        schema,
-        isEdit ? exerciseData : {}
-      );
+      // Get form schema asynchronously
+      const schema = await this.managers.exercise.getFormSchema();
+
+      // If editing, load existing links
+      let formData = isEdit ? { ...exerciseData } : {};
+      if (isEdit && exerciseData.id) {
+        const links = await this.managers.exercise.getExerciseLinks(
+          exerciseData.id
+        );
+        formData.muscular_groups = links.muscularGroups.map(
+          (link) => link.muscular_group_id
+        );
+        formData.equipment_ids = links.equipment.map(
+          (link) => link.equipment_id
+        );
+      }
+
+      const formHtml = this.generateFormHtml(schema, formData);
 
       const modal = new Modal({
         title: title,
@@ -1784,13 +2070,8 @@ class VanillaDashboardManager {
 
           const formData = getFormData(form);
 
-          // Convert muscle_groups from comma-separated string to array
-          if (formData.muscle_groups) {
-            formData.muscle_groups = formData.muscle_groups
-              .split(",")
-              .map((group) => group.trim())
-              .filter((group) => group.length > 0);
-          }
+          // muscular_groups and equipment_ids are now arrays from multiselect
+          // No need to convert from comma-separated strings
 
           const validation =
             this.managers.exercise.validateExerciseData(formData);
@@ -2128,12 +2409,13 @@ class VanillaDashboardManager {
   }
 
   // Helper methods for form handling
-  generateFormHtml(schema, data = {}) {
+  generateFormHtml(schema, data = {}, readonly = false) {
     return Object.entries(schema)
       .map(([key, field]) => {
         const value = data[key] || "";
-        const required = field.required ? "required" : "";
+        const required = field.required && !readonly ? "required" : "";
         const fieldId = `field-${key}`;
+        const readonlyAttr = readonly ? "readonly disabled" : "";
 
         switch (field.type) {
           case "textarea":
@@ -2147,6 +2429,7 @@ class VanillaDashboardManager {
                 rows="${field.rows || 3}"
                 placeholder="${field.placeholder || ""}"
                 ${required}
+                ${readonlyAttr}
               >${value}</textarea>
               ${
                 field.help
@@ -2173,8 +2456,41 @@ class VanillaDashboardManager {
                 name="${key}" 
                 class="form-control" 
                 ${required}
+                ${readonlyAttr}
               >
                 ${optionsHtml}
+              </select>
+              ${
+                field.help
+                  ? `<small class="form-help">${field.help}</small>`
+                  : ""
+              }
+              <div class="field-error" id="${fieldId}-error"></div>
+            </div>
+          `;
+          case "multiselect":
+            const selectedValues = Array.isArray(value) ? value : [];
+            const multiselectOptionsHtml = field.options
+              .filter((option) => option.value !== "") // Remove empty option for multiselect
+              .map(
+                (option) =>
+                  `<option value="${option.value}" ${
+                    selectedValues.includes(option.value) ? "selected" : ""
+                  }>${option.label}</option>`
+              )
+              .join("");
+            return `
+            <div class="form-group">
+              <label for="${fieldId}">${field.label}</label>
+              <select 
+                id="${fieldId}" 
+                name="${key}" 
+                class="form-control multiselect" 
+                multiple
+                ${required}
+                ${readonlyAttr}
+              >
+                ${multiselectOptionsHtml}
               </select>
               ${
                 field.help
@@ -2200,6 +2516,7 @@ class VanillaDashboardManager {
                 value="${displayValue}"
                 placeholder="${field.placeholder || ""}"
                 ${required}
+                ${readonlyAttr}
               />
               ${
                 field.help
@@ -2239,6 +2556,198 @@ class VanillaDashboardManager {
       if (errorElement) {
         errorElement.textContent = message;
         errorElement.style.display = "block";
+      }
+    });
+  }
+
+  // Bulk action handler
+  async handleBulkAction(action, selectedData) {
+    if (!selectedData || selectedData.length === 0) {
+      notifications.warn("No items selected");
+      return;
+    }
+
+    const itemType =
+      this.currentView === "gyms"
+        ? "gym"
+        : this.currentView === "equipment"
+        ? "equipment"
+        : "exercise";
+    const manager =
+      this.currentView === "gyms"
+        ? this.managers.gym
+        : this.currentView === "equipment"
+        ? this.managers.equipment
+        : this.managers.exercise;
+
+    try {
+      switch (action) {
+        case "delete":
+          await this.showBulkDeleteConfirmation(
+            selectedData,
+            itemType,
+            manager
+          );
+          break;
+        case "restore":
+          await this.showBulkRestoreConfirmation(
+            selectedData,
+            itemType,
+            manager
+          );
+          break;
+        default:
+          notifications.warn(`Unknown bulk action: ${action}`);
+      }
+    } catch (error) {
+      notifications.error(`Failed to perform bulk ${action}: ${error.message}`);
+    }
+  }
+
+  async showBulkDeleteConfirmation(selectedData, itemType, manager) {
+    const modal = new Modal({
+      title: `Delete ${selectedData.length} ${itemType}${
+        selectedData.length > 1 ? "s" : ""
+      }`,
+      size: "md",
+      content: `
+        <div class="confirmation-modal">
+          <div class="confirmation-icon delete">
+            <i class="fas fa-exclamation-triangle"></i>
+          </div>
+          <h4>Delete ${selectedData.length} selected ${itemType}${
+        selectedData.length > 1 ? "s" : ""
+      }?</h4>
+          <p>This action will remove the selected items from active listings. They can be restored later if needed.</p>
+          <div class="selected-items-list">
+            ${selectedData
+              .slice(0, 5)
+              .map((item) => `<div class="selected-item">• ${item.name}</div>`)
+              .join("")}
+            ${
+              selectedData.length > 5
+                ? `<div class="more-items">... and ${
+                    selectedData.length - 5
+                  } more</div>`
+                : ""
+            }
+          </div>
+          <div class="confirmation-details">
+            <strong>Note:</strong> This is a soft delete - all data will be preserved.
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-danger" id="confirm-bulk-delete">
+            <i class="fas fa-trash"></i> Delete Selected
+          </button>
+        </div>
+      `,
+    });
+
+    modal.show();
+
+    const confirmBtn = modal.element.querySelector("#confirm-bulk-delete");
+    confirmBtn.addEventListener("click", async () => {
+      try {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> Deleting...';
+
+        const deletePromises = selectedData.map((item) => {
+          if (itemType === "gym") return manager.deleteGym(item.id);
+          if (itemType === "equipment") return manager.deleteEquipment(item.id);
+          if (itemType === "exercise") return manager.deleteExercise(item.id);
+        });
+
+        await Promise.all(deletePromises);
+
+        modal.hide();
+        notifications.success(
+          `Successfully deleted ${selectedData.length} ${itemType}${
+            selectedData.length > 1 ? "s" : ""
+          }`
+        );
+
+        // Refresh the current view
+        await this.loadView(this.currentView);
+      } catch (error) {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = '<i class="fas fa-trash"></i> Delete Selected';
+        notifications.error(`Failed to delete items: ${error.message}`);
+      }
+    });
+  }
+
+  async showBulkRestoreConfirmation(selectedData, itemType, manager) {
+    const modal = new Modal({
+      title: `Restore ${selectedData.length} ${itemType}${
+        selectedData.length > 1 ? "s" : ""
+      }`,
+      size: "md",
+      content: `
+        <div class="confirmation-modal">
+          <div class="confirmation-icon restore">
+            <i class="fas fa-undo"></i>
+          </div>
+          <h4>Restore ${selectedData.length} selected ${itemType}${
+        selectedData.length > 1 ? "s" : ""
+      }?</h4>
+          <p>This action will restore the selected items to active status.</p>
+          <div class="selected-items-list">
+            ${selectedData
+              .slice(0, 5)
+              .map((item) => `<div class="selected-item">• ${item.name}</div>`)
+              .join("")}
+            ${
+              selectedData.length > 5
+                ? `<div class="more-items">... and ${
+                    selectedData.length - 5
+                  } more</div>`
+                : ""
+            }
+          </div>
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-outline" data-dismiss="modal">Cancel</button>
+          <button type="button" class="btn btn-success" id="confirm-bulk-restore">
+            <i class="fas fa-undo"></i> Restore Selected
+          </button>
+        </div>
+      `,
+    });
+
+    modal.show();
+
+    const confirmBtn = modal.element.querySelector("#confirm-bulk-restore");
+    confirmBtn.addEventListener("click", async () => {
+      try {
+        confirmBtn.disabled = true;
+        confirmBtn.innerHTML =
+          '<i class="fas fa-spinner fa-spin"></i> Restoring...';
+
+        const restorePromises = selectedData.map((item) => {
+          if (itemType === "gym") return manager.restoreGym(item.id);
+          if (itemType === "equipment")
+            return manager.restoreEquipment(item.id);
+          if (itemType === "exercise") return manager.restoreExercise(item.id);
+        });
+
+        await Promise.all(restorePromises);
+
+        modal.hide();
+        notifications.success(
+          `Successfully restored ${selectedData.length} ${itemType}${
+            selectedData.length > 1 ? "s" : ""
+          }`
+        );
+
+        // Refresh the current view
+        await this.loadView(this.currentView);
+      } catch (error) {
+        confirmBtn.disabled = false;
+        confirmBtn.innerHTML = '<i class="fas fa-undo"></i> Restore Selected';
+        notifications.error(`Failed to restore items: ${error.message}`);
       }
     });
   }

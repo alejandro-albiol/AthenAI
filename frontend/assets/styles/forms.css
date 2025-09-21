@@ -344,3 +344,51 @@ select.form-control:focus {
 .form-switch input:checked + .form-switch-slider:before {
   transform: translateX(20px);
 }
+
+/* Multiselect Controls */
+.form-control.multiselect {
+  min-height: 80px;
+  max-height: 150px;
+  resize: vertical;
+  overflow-y: auto;
+}
+
+.form-control.multiselect option {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  margin: 1px 0;
+  border-radius: var(--radius-sm);
+}
+
+.form-control.multiselect option:checked {
+  background-color: var(--color-primary);
+  color: var(--color-white);
+  font-weight: var(--font-weight-medium);
+}
+
+.form-control.multiselect:focus option:checked {
+  background-color: var(--color-primary-dark);
+}
+
+/* Form Help Text */
+.form-help {
+  display: block;
+  margin-top: var(--spacing-xs);
+  font-size: var(--font-size-xs);
+  color: var(--text-tertiary);
+  line-height: var(--line-height-relaxed);
+}
+
+/* Readonly Form Controls */
+.form-control[readonly],
+.form-control[disabled] {
+  background-color: var(--bg-secondary);
+  color: var(--text-secondary);
+  border-color: var(--border-secondary);
+  cursor: not-allowed;
+}
+
+.form-control[readonly]:focus,
+.form-control[disabled]:focus {
+  border-color: var(--border-secondary);
+  box-shadow: none;
+}

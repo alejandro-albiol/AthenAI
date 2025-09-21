@@ -7,6 +7,27 @@ class ExerciseManager {
   constructor() {
     this.api = new ApiClient();
     this.currentExercises = [];
+    this.muscularGroups = [];
+    this.equipment = [];
+    this.loadedReferenceData = false;
+  }
+
+  async loadReferenceData() {
+    if (this.loadedReferenceData) return;
+
+    try {
+      const [muscularGroupsResponse, equipmentResponse] = await Promise.all([
+        this.api.getMuscularGroups(),
+        this.api.getEquipment(),
+      ]);
+
+      this.muscularGroups = muscularGroupsResponse?.data || [];
+      this.equipment = equipmentResponse?.data || [];
+      this.loadedReferenceData = true;
+    } catch (error) {
+      console.error("Error loading reference data:", error);
+      // Don't throw here as it's not critical for basic functionality
+    }
   }
 
   async loadExercises() {
@@ -29,9 +50,27 @@ class ExerciseManager {
 
   async createExercise(exerciseData) {
     try {
-      const response = await this.api.createExercise(exerciseData);
-      notifications.success("Exercise created successfully");
+      // Extract linking data
+      const { muscular_groups, equipment_ids, ...baseExerciseData } =
+        exerciseData;
 
+      // Create the exercise first
+      const response = await this.api.createExercise(baseExerciseData);
+      const exerciseId = response.data?.id;
+
+      if (exerciseId) {
+        // Create muscular group links
+        if (muscular_groups && muscular_groups.length > 0) {
+          await this.createMuscularGroupLinks(exerciseId, muscular_groups);
+        }
+
+        // Create equipment links
+        if (equipment_ids && equipment_ids.length > 0) {
+          await this.createEquipmentLinks(exerciseId, equipment_ids);
+        }
+      }
+
+      notifications.success("Exercise created successfully");
       await this.loadExercises();
       return response;
     } catch (error) {
@@ -43,9 +82,20 @@ class ExerciseManager {
 
   async updateExercise(id, exerciseData) {
     try {
-      const response = await this.api.updateExercise(id, exerciseData);
-      notifications.success("Exercise updated successfully");
+      // Extract linking data
+      const { muscular_groups, equipment_ids, ...baseExerciseData } =
+        exerciseData;
 
+      // Update the exercise first
+      const response = await this.api.updateExercise(id, baseExerciseData);
+
+      // Update muscular group links
+      await this.updateMuscularGroupLinks(id, muscular_groups || []);
+
+      // Update equipment links
+      await this.updateEquipmentLinks(id, equipment_ids || []);
+
+      notifications.success("Exercise updated successfully");
       await this.loadExercises();
       return response;
     } catch (error) {
@@ -66,6 +116,124 @@ class ExerciseManager {
       console.error("Error deleting exercise:", error);
       notifications.error("Failed to delete exercise: " + error.message);
       throw error;
+    }
+  }
+
+  async restoreExercise(id) {
+    try {
+      await this.api.restoreExercise(id);
+      notifications.success("Exercise restored successfully");
+
+      await this.loadExercises();
+      return true;
+    } catch (error) {
+      console.error("Error restoring exercise:", error);
+      notifications.error("Failed to restore exercise: " + error.message);
+      throw error;
+    }
+  }
+
+  // Helper methods for managing exercise links
+  async createMuscularGroupLinks(exerciseId, muscularGroupIds) {
+    const linkPromises = muscularGroupIds.map((muscularGroupId) =>
+      this.api.createExerciseMuscularGroupLink({
+        exercise_id: exerciseId,
+        muscular_group_id: muscularGroupId,
+      })
+    );
+    await Promise.all(linkPromises);
+  }
+
+  async createEquipmentLinks(exerciseId, equipmentIds) {
+    const linkPromises = equipmentIds.map((equipmentId) =>
+      this.api.createExerciseEquipmentLink({
+        exercise_id: exerciseId,
+        equipment_id: equipmentId,
+      })
+    );
+    await Promise.all(linkPromises);
+  }
+
+  async updateMuscularGroupLinks(exerciseId, newMuscularGroupIds) {
+    try {
+      // Get existing links
+      const existingLinksResponse =
+        await this.api.getExerciseMuscularGroupLinks(exerciseId);
+      const existingLinks = existingLinksResponse?.data || [];
+      const existingMuscularGroupIds = existingLinks.map(
+        (link) => link.muscular_group_id
+      );
+
+      // Determine which links to add and remove
+      const toAdd = newMuscularGroupIds.filter(
+        (id) => !existingMuscularGroupIds.includes(id)
+      );
+      const toRemove = existingLinks.filter(
+        (link) => !newMuscularGroupIds.includes(link.muscular_group_id)
+      );
+
+      // Remove old links
+      const removePromises = toRemove.map((link) =>
+        this.api.deleteExerciseMuscularGroupLink(link.id)
+      );
+      await Promise.all(removePromises);
+
+      // Add new links
+      await this.createMuscularGroupLinks(exerciseId, toAdd);
+    } catch (error) {
+      console.error("Error updating muscular group links:", error);
+      // Don't throw here to avoid breaking the main exercise update
+    }
+  }
+
+  async updateEquipmentLinks(exerciseId, newEquipmentIds) {
+    try {
+      // Get existing links
+      const existingLinksResponse = await this.api.getExerciseEquipmentLinks(
+        exerciseId
+      );
+      const existingLinks = existingLinksResponse?.data || [];
+      const existingEquipmentIds = existingLinks.map(
+        (link) => link.equipment_id
+      );
+
+      // Determine which links to add and remove
+      const toAdd = newEquipmentIds.filter(
+        (id) => !existingEquipmentIds.includes(id)
+      );
+      const toRemove = existingLinks.filter(
+        (link) => !newEquipmentIds.includes(link.equipment_id)
+      );
+
+      // Remove old links
+      const removePromises = toRemove.map((link) =>
+        this.api.deleteExerciseEquipmentLink(link.id)
+      );
+      await Promise.all(removePromises);
+
+      // Add new links
+      await this.createEquipmentLinks(exerciseId, toAdd);
+    } catch (error) {
+      console.error("Error updating equipment links:", error);
+      // Don't throw here to avoid breaking the main exercise update
+    }
+  }
+
+  async getExerciseLinks(exerciseId) {
+    try {
+      const [muscularGroupLinksResponse, equipmentLinksResponse] =
+        await Promise.all([
+          this.api.getExerciseMuscularGroupLinks(exerciseId),
+          this.api.getExerciseEquipmentLinks(exerciseId),
+        ]);
+
+      return {
+        muscularGroups: muscularGroupLinksResponse?.data || [],
+        equipment: equipmentLinksResponse?.data || [],
+      };
+    } catch (error) {
+      console.error("Error loading exercise links:", error);
+      return { muscularGroups: [], equipment: [] };
     }
   }
 
@@ -212,7 +380,10 @@ class ExerciseManager {
     return text.substring(0, maxLength) + "...";
   }
 
-  getFormSchema() {
+  async getFormSchema() {
+    // Ensure reference data is loaded
+    await this.loadReferenceData();
+
     return {
       name: {
         type: "text",
@@ -233,11 +404,31 @@ class ExerciseManager {
           { value: "sports", label: "Sports" },
         ],
       },
-      muscle_groups: {
-        type: "text",
+      muscular_groups: {
+        type: "multiselect",
         label: "Muscle Groups",
-        placeholder: "Enter muscle groups (comma-separated)",
-        help: "Example: chest, shoulders, triceps",
+        placeholder: "Select muscle groups",
+        options: [
+          { value: "", label: "Select muscle groups" },
+          ...this.muscularGroups.map((mg) => ({
+            value: mg.id,
+            label: mg.name,
+          })),
+        ],
+        help: "Select one or more muscle groups targeted by this exercise",
+      },
+      equipment_ids: {
+        type: "multiselect",
+        label: "Equipment",
+        placeholder: "Select equipment (optional)",
+        options: [
+          { value: "", label: "Select equipment" },
+          ...this.equipment.map((eq) => ({
+            value: eq.id,
+            label: eq.name,
+          })),
+        ],
+        help: "Select equipment needed for this exercise (leave empty for bodyweight exercises)",
       },
       difficulty: {
         type: "select",
