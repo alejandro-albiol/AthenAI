@@ -2,8 +2,9 @@ package dto
 
 // LoginRequestDTO - Single login DTO that works for both admin and tenant users
 type LoginRequestDTO struct {
-	Email    string `json:"email" validate:"required,email"`
-	Password string `json:"password" validate:"required"`
+	Email      string `json:"email" validate:"required,email"`
+	Password   string `json:"password" validate:"required"`
+	RememberMe bool   `json:"remember_me"`
 }
 
 // LoginResponseDTO - Authentication response

@@ -11,7 +11,13 @@ class ApiClient {
   }
 
   getAuthToken() {
-    return localStorage.getItem("auth_token");
+    // Use authManager if available, fallback to direct localStorage access
+    if (window.authManager) {
+      return window.authManager.getToken();
+    }
+    return (
+      localStorage.getItem("auth_token") || sessionStorage.getItem("auth_token")
+    );
   }
 
   getHeaders(additionalHeaders = {}) {
@@ -36,6 +42,50 @@ class ApiClient {
       const response = await fetch(url, config);
 
       if (!response.ok) {
+        // Handle 401 errors with automatic token refresh
+        if (
+          response.status === 401 &&
+          window.authManager &&
+          !endpoint.includes("/auth/")
+        ) {
+          try {
+            console.log("Access token expired, attempting refresh...");
+            await window.authManager.handleTokenRefresh();
+
+            // Retry the original request with new token
+            const retryHeaders = {
+              "Content-Type": "application/json",
+              ...headers,
+            };
+
+            const newToken = window.authManager.getToken();
+            if (newToken) {
+              retryHeaders.Authorization = `Bearer ${newToken}`;
+            }
+
+            const retryResponse = await fetch(url, {
+              ...options,
+              headers: retryHeaders,
+            });
+
+            if (retryResponse.ok) {
+              const contentType = retryResponse.headers.get("content-type");
+              if (contentType && contentType.includes("application/json")) {
+                return await retryResponse.json();
+              }
+              return retryResponse;
+            }
+          } catch (refreshError) {
+            console.error("Token refresh failed:", refreshError);
+            // Clear auth and redirect to login
+            if (window.authManager) {
+              window.authManager.clearAuth();
+            }
+            window.location.href = "/";
+            return;
+          }
+        }
+
         throw new ApiError(
           `HTTP ${response.status}: ${response.statusText}`,
           response.status,
@@ -189,7 +239,7 @@ class ApiClient {
   }
 
   // Authentication methods
-  async login(email, password, inviteToken = null) {
+  async login(email, password, inviteToken = null, rememberMe = false) {
     const credentials = {
       email,
       password,
@@ -199,6 +249,9 @@ class ApiClient {
       credentials.invite_token = inviteToken;
     }
 
+    // Note: remember_me handled client-side only for now
+    // TODO: Add remember_me to backend when DTO is updated
+
     return this.post("/auth/login", credentials);
   }
 
@@ -207,7 +260,7 @@ class ApiClient {
   }
 
   async getCurrentUser() {
-    return this.get("/auth/me");
+    return this.get("/auth/validate");
   }
 }
 

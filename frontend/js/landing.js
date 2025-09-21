@@ -29,6 +29,12 @@ class LandingPageManager {
       // Wait for dependencies (Modal, notifications, etc.)
       await this.waitForDependencies();
 
+      // Check if user is already authenticated and redirect
+      const isAuthenticated = await this.checkExistingAuth();
+      if (isAuthenticated) {
+        return; // Stop initialization, user is being redirected
+      }
+
       // Check for invitation token in URL
       this.checkInvitationToken();
 
@@ -68,6 +74,64 @@ class LandingPageManager {
     }
 
     console.warn("Some landing page dependencies may not have loaded");
+  }
+
+  async checkExistingAuth() {
+    try {
+      // Check if we have stored authentication tokens
+      const hasTokens = window.authManager
+        ? window.authManager.isAuthenticated()
+        : localStorage.getItem("auth_token") ||
+          sessionStorage.getItem("auth_token");
+
+      if (!hasTokens) {
+        console.log("No stored authentication tokens found");
+        return false;
+      }
+
+      console.log("Found stored tokens, validating...");
+
+      // Try to validate the token by making an authenticated request
+      const api = new ApiClient();
+      const userInfo = await api.getCurrentUser();
+
+      if (userInfo && userInfo.status === "success") {
+        console.log("Valid authentication found, redirecting to dashboard...");
+        notifications.info("Welcome back! Redirecting to dashboard...");
+
+        // Redirect to dashboard
+        setTimeout(() => {
+          const currentOrigin = window.location.origin;
+          let currentPath = window.location.pathname.replace("/index.html", "");
+
+          // Remove trailing slash to avoid double slashes
+          if (currentPath.endsWith("/")) {
+            currentPath = currentPath.slice(0, -1);
+          }
+
+          const redirectUrl = `${currentOrigin}${currentPath}/pages/dashboard/index.html`;
+          window.location.href = redirectUrl;
+        }, 1000);
+
+        return true;
+      }
+    } catch (error) {
+      console.log("Token validation failed:", error);
+
+      // Clear invalid tokens
+      if (window.authManager) {
+        window.authManager.clearAuth();
+      } else {
+        localStorage.removeItem("auth_token");
+        localStorage.removeItem("refresh_token");
+        localStorage.removeItem("user_info");
+        sessionStorage.removeItem("auth_token");
+        sessionStorage.removeItem("refresh_token");
+        sessionStorage.removeItem("user_info");
+      }
+    }
+
+    return false;
   }
 
   checkInvitationToken() {
@@ -336,17 +400,30 @@ class LandingPageManager {
       const response = await api.login(
         formData.email,
         formData.password,
-        formData.invite_token
+        formData.invite_token,
+        formData.remember // Pass the remember me flag
       );
 
       if (response.status === "success" && response.data) {
-        // Store auth token
-        localStorage.setItem("auth_token", response.data.access_token);
-        localStorage.setItem("refresh_token", response.data.refresh_token);
-        localStorage.setItem(
-          "user_info",
-          JSON.stringify(response.data.user_info)
-        );
+        // Use AuthManager for proper token storage
+        if (window.authManager) {
+          window.authManager.storeTokens(
+            response.data.access_token,
+            response.data.refresh_token,
+            response.data.user_info,
+            formData.remember
+          );
+        } else {
+          // Fallback to direct storage
+          const storage = formData.remember ? localStorage : sessionStorage;
+          storage.setItem("auth_token", response.data.access_token);
+          storage.setItem("refresh_token", response.data.refresh_token);
+          storage.setItem("user_info", JSON.stringify(response.data.user_info));
+          localStorage.setItem(
+            "remember_me",
+            formData.remember ? "true" : "false"
+          );
+        }
 
         notifications.success("Login successful! Redirecting...");
 
@@ -355,10 +432,13 @@ class LandingPageManager {
         // Redirect to dashboard with absolute path
         setTimeout(() => {
           const currentOrigin = window.location.origin;
-          const currentPath = window.location.pathname.replace(
-            "/index.html",
-            ""
-          );
+          let currentPath = window.location.pathname.replace("/index.html", "");
+
+          // Remove trailing slash to avoid double slashes
+          if (currentPath.endsWith("/")) {
+            currentPath = currentPath.slice(0, -1);
+          }
+
           const redirectUrl = `${currentOrigin}${currentPath}/pages/dashboard/index.html`;
           window.location.href = redirectUrl;
         }, this.config.REDIRECT_DELAY);
