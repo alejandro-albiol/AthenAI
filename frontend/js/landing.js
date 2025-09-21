@@ -46,8 +46,6 @@ class LandingPageManager {
 
       // Initialize components
       this.initializeComponents();
-
-      console.log("Landing Page Manager initialized");
     } catch (error) {
       console.error("Failed to initialize landing page:", error);
     }
@@ -65,7 +63,6 @@ class LandingPageManager {
       });
 
       if (allLoaded) {
-        console.log("Landing page dependencies loaded");
         return;
       }
 
@@ -85,7 +82,6 @@ class LandingPageManager {
           sessionStorage.getItem("auth_token");
 
       if (!hasTokens) {
-        console.log("No stored authentication tokens found");
         return false;
       }
 
@@ -517,5 +513,4 @@ class LandingPageManager {
 // Initialize landing page when DOM is loaded
 document.addEventListener("DOMContentLoaded", function () {
   window.landingPage = new LandingPageManager();
-  console.log("Landing page initialized");
 });

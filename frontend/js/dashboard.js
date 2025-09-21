@@ -16,15 +16,11 @@ class VanillaDashboardManager {
 
   async init() {
     try {
-      console.log("Starting dashboard initialization...");
-
       // Wait for all component scripts to load
       await this.waitForDependencies();
-      console.log("Dependencies loaded successfully");
 
       // Initialize content area
       this.contentArea = document.getElementById("content-body");
-      console.log("Content area found:", this.contentArea);
 
       if (!this.contentArea) {
         throw new Error("Content area element not found");
@@ -33,29 +29,21 @@ class VanillaDashboardManager {
       // Test content area by adding a simple message
       this.contentArea.innerHTML =
         '<div style="padding: 20px; text-align: center; color: #666;">Initializing dashboard...</div>';
-      console.log("Content area test successful");
 
       // Initialize managers
       this.initializeManagers();
-      console.log("Managers initialized");
 
       // Check authentication
       await this.checkAuth();
-      console.log("Authentication checked");
 
       // Initialize navigation
       this.initNavigation();
-      console.log("Navigation initialized");
 
       // Initialize mobile functionality
       this.initMobile();
-      console.log("Mobile functionality initialized");
 
       // Load the initial overview automatically
-      console.log("Loading initial overview...");
       await this.loadView("overview");
-
-      console.log("Vanilla Dashboard Manager initialized successfully");
     } catch (error) {
       console.error("Failed to initialize dashboard:", error);
       this.showError("Failed to initialize dashboard: " + error.message);
@@ -87,7 +75,6 @@ class VanillaDashboardManager {
       });
 
       if (allLoaded) {
-        console.log("All dependencies loaded successfully");
         return;
       }
 
@@ -344,8 +331,6 @@ class VanillaDashboardManager {
   // Dashboard Overview - Gym Management Focus
   async loadDashboardOverview() {
     try {
-      console.log("Loading dashboard overview...");
-
       // Load real data from available APIs
       const api = new ApiClient();
 
@@ -368,26 +353,12 @@ class VanillaDashboardManager {
           ? exercises.value?.data || exercises.value || []
           : [];
 
-      // Debug logging
-      console.log("API Response Debug:", {
-        gyms: gyms.status === "fulfilled" ? gyms.value : gyms.reason,
-        equipment:
-          equipment.status === "fulfilled" ? equipment.value : equipment.reason,
-        exercises:
-          exercises.status === "fulfilled" ? exercises.value : exercises.reason,
-        gymsData,
-        equipmentData,
-        exercisesData,
-      });
-
       // Build dashboard data from real API responses
       const dashboardData = this.buildDashboardDataFromAPIs(
         gymsData,
         equipmentData,
         exercisesData
       );
-
-      console.log("Built dashboard data:", dashboardData);
 
       const content = `
         <div class="dashboard-header">
@@ -570,16 +541,14 @@ class VanillaDashboardManager {
       `;
 
       this.contentArea.innerHTML = content;
-      console.log("Dashboard content rendered successfully");
 
       // Add event listeners for header actions
       const refreshBtn = document.getElementById("refreshDashboard");
       const helpBtn = document.getElementById("dashboardHelp");
 
       if (refreshBtn) {
-        refreshBtn.addEventListener("click", () => {
-          console.log("Refreshing dashboard...");
-          this.showOverview(); // Reload the dashboard
+        refreshBtn.addEventListener("click", async () => {
+          await this.loadDashboardOverview();
         });
       }
 
@@ -591,7 +560,6 @@ class VanillaDashboardManager {
 
       // Update navigation badges
       this.updateNavigationBadges(dashboardData);
-      console.log("Dashboard overview loaded successfully");
     } catch (error) {
       console.error("Error loading dashboard overview:", error);
       this.showError("Failed to load dashboard overview");
@@ -831,12 +799,6 @@ class VanillaDashboardManager {
         filterable: true,
         sortable: true,
       });
-
-      console.log(
-        "Gyms management loaded successfully with",
-        safeGyms.length,
-        "gyms"
-      );
     } catch (error) {
       console.error("Error in loadGymsManagement:", error);
       throw new Error("Failed to load gyms management: " + error.message);
@@ -1575,7 +1537,7 @@ class VanillaDashboardManager {
     if (typeof openHelp === "function") {
       openHelp();
     } else {
-      console.log("Help documentation coming soon!");
+      // Help documentation coming soon - could show a modal here
     }
   }
 
@@ -2422,9 +2384,7 @@ function retryLoad() {
 
 // Initialize dashboard when DOM is loaded
 document.addEventListener("DOMContentLoaded", function () {
-  console.log("DOM loaded, initializing dashboard...");
   window.dashboard = new VanillaDashboardManager();
-  console.log("Vanilla Dashboard initialized");
 });
 
 // Fallback initialization if DOM is already loaded
@@ -2432,7 +2392,5 @@ if (document.readyState === "loading") {
   // DOM is still loading, event listener above will handle it
 } else {
   // DOM is already loaded
-  console.log("DOM already loaded, initializing dashboard immediately...");
   window.dashboard = new VanillaDashboardManager();
-  console.log("Vanilla Dashboard initialized (immediate)");
 }

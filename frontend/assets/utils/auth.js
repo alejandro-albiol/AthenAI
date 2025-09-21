@@ -171,7 +171,6 @@ class AuthManager {
       if (this.isAuthenticated()) {
         // In a real implementation, you'd decode JWT to check expiry
         // For now, we'll rely on API calls to trigger refresh when needed
-        console.log("Token refresh check...");
       }
     }, 5 * 60 * 1000); // 5 minutes
   }
