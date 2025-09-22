@@ -21,7 +21,7 @@ func NewMuscularGroupService(repository interfaces.MuscularGroupRepository) *Mus
 func (s *MuscularGroupService) CreateMuscularGroup(mg *dto.CreateMuscularGroupDTO) (*string, error) {
 	// Optimized: Check for name uniqueness using GetMuscularGroupByName
 	existing, err := s.repository.GetMuscularGroupByName(mg.Name)
-	if err != nil && err != sql.ErrNoRows {
+	if err != nil && !errors.Is(err, sql.ErrNoRows) {
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to check muscular group name uniqueness", err)
 	}
 	if existing != nil {
@@ -58,7 +58,10 @@ func (s *MuscularGroupService) UpdateMuscularGroup(id string, dto *dto.UpdateMus
 	// Check if muscular group exists
 	existing, err := s.repository.GetMuscularGroupByID(id)
 	if err != nil {
-		return nil, apierror.New(errorcode_enum.CodeNotFound, "Muscular group not found", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return nil, apierror.New(errorcode_enum.CodeNotFound, "Muscular group not found", err)
+		}
+		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve muscular group", err)
 	}
 	if existing == nil {
 		return nil, apierror.New(errorcode_enum.CodeNotFound, "Muscular group not found", nil)
@@ -67,7 +70,10 @@ func (s *MuscularGroupService) UpdateMuscularGroup(id string, dto *dto.UpdateMus
 	// If name is being updated, check for uniqueness
 	if dto.Name != nil {
 		dup, err := s.repository.GetMuscularGroupByName(*dto.Name)
-		if err == nil && dup != nil && dup.ID != id {
+		if err != nil && !errors.Is(err, sql.ErrNoRows) {
+			return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to check name uniqueness", err)
+		}
+		if dup != nil && dup.ID != id {
 			return nil, apierror.New(errorcode_enum.CodeConflict, "Muscular group with this name already exists", nil)
 		}
 	}
@@ -83,7 +89,10 @@ func (s *MuscularGroupService) DeleteMuscularGroup(id string) error {
 	// Check if muscular group exists
 	_, err := s.repository.GetMuscularGroupByID(id)
 	if err != nil {
-		return apierror.New(errorcode_enum.CodeNotFound, "Muscular group not found", err)
+		if errors.Is(err, sql.ErrNoRows) {
+			return apierror.New(errorcode_enum.CodeNotFound, "Muscular group not found", err)
+		}
+		return apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve muscular group", err)
 	}
 
 	err = s.repository.DeleteMuscularGroup(id)

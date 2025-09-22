@@ -61,6 +61,9 @@ func (r *MuscularGroupRepository) GetMuscularGroupByName(name string) (*dto.Musc
 	query := `SELECT id, name, description, body_part, is_active FROM public.muscular_group WHERE name = $1 AND is_active = TRUE`
 	err := r.db.QueryRow(query, name).Scan(&mg.ID, &mg.Name, &mg.Description, &mg.BodyPart, &mg.IsActive)
 	if err != nil {
+		if err == sql.ErrNoRows {
+			return nil, sql.ErrNoRows
+		}
 		return nil, err
 	}
 	return mg, nil
