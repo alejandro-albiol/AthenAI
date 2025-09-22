@@ -89,7 +89,7 @@ func (s *GymService) UpdateGym(id string, updateDTO *dto.GymUpdateDTO) (*dto.Gym
 	// Check if gym exists before updating
 	existingGym, err := s.repository.GetGymByID(id)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", err)
 		}
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to get gym", err)
@@ -100,7 +100,7 @@ func (s *GymService) UpdateGym(id string, updateDTO *dto.GymUpdateDTO) (*dto.Gym
 
 	updatedGym, err := s.repository.UpdateGym(id, updateDTO)
 	if err != nil {
-		if err == sql.ErrNoRows {
+		if errors.Is(err, sql.ErrNoRows) {
 			return nil, apierror.New(errorcode_enum.CodeNotFound, "Gym not found", err)
 		}
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to update gym", err)

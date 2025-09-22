@@ -193,7 +193,7 @@ func (r *GymRepository) SetGymActive(id string, active bool) error {
 func (r *GymRepository) DeleteGym(id string) error {
 	query := `
 		UPDATE gym 
-		SET deleted_at = $1
+		SET deleted_at = $1, is_active = false
 		WHERE id = $2 AND deleted_at IS NULL`
 
 	result, err := r.db.Exec(query, time.Now(), id)
