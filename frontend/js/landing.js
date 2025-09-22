@@ -95,7 +95,7 @@ class LandingPageManager {
         console.log("Valid authentication found, redirecting to dashboard...");
         notifications.info("Welcome back! Redirecting to dashboard...");
 
-        // Redirect to dashboard
+        // Redirect to appropriate dashboard based on user type
         setTimeout(() => {
           const currentOrigin = window.location.origin;
           let currentPath = window.location.pathname.replace("/index.html", "");
@@ -105,7 +105,21 @@ class LandingPageManager {
             currentPath = currentPath.slice(0, -1);
           }
 
-          const redirectUrl = `${currentOrigin}${currentPath}/pages/dashboard/index.html`;
+          let redirectUrl;
+          if (userInfo.data && userInfo.data.user_type === "platform_admin") {
+            // Platform admins go to the main dashboard
+            redirectUrl = `${currentOrigin}${currentPath}/pages/dashboard/index.html`;
+          } else if (
+            userInfo.data &&
+            userInfo.data.user_type === "tenant_user"
+          ) {
+            // Tenant users go to tenant dashboard
+            redirectUrl = `${currentOrigin}${currentPath}/pages/tenant/index.html`;
+          } else {
+            // Fallback to main dashboard
+            redirectUrl = `${currentOrigin}${currentPath}/pages/dashboard/index.html`;
+          }
+
           window.location.href = redirectUrl;
         }, 1000);
 
@@ -319,6 +333,25 @@ class LandingPageManager {
 
     modal.show();
     this.loginModal = modal;
+
+    // Add Enter key functionality to the login form
+    setTimeout(() => {
+      const form = document.getElementById("loginForm");
+      if (form) {
+        form.addEventListener("keypress", (e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            this.handleLogin();
+          }
+        });
+
+        // Focus the email field when modal opens
+        const emailField = document.getElementById("email");
+        if (emailField) {
+          emailField.focus();
+        }
+      }
+    }, 100); // Small delay to ensure modal is fully rendered
   }
 
   generateLoginForm() {
@@ -425,7 +458,7 @@ class LandingPageManager {
 
         this.loginModal.hide();
 
-        // Redirect to dashboard with absolute path
+        // Redirect to appropriate dashboard based on user type
         setTimeout(() => {
           const currentOrigin = window.location.origin;
           let currentPath = window.location.pathname.replace("/index.html", "");
@@ -435,7 +468,18 @@ class LandingPageManager {
             currentPath = currentPath.slice(0, -1);
           }
 
-          const redirectUrl = `${currentOrigin}${currentPath}/pages/dashboard/index.html`;
+          let redirectUrl;
+          if (response.data.user_info.user_type === "platform_admin") {
+            // Platform admins go to the main dashboard
+            redirectUrl = `${currentOrigin}${currentPath}/pages/dashboard/index.html`;
+          } else if (response.data.user_info.user_type === "tenant_user") {
+            // Tenant users (gym_admin, trainer, member) go to tenant dashboard
+            redirectUrl = `${currentOrigin}${currentPath}/pages/tenant/index.html`;
+          } else {
+            // Fallback to main dashboard
+            redirectUrl = `${currentOrigin}${currentPath}/pages/dashboard/index.html`;
+          }
+
           window.location.href = redirectUrl;
         }, this.config.REDIRECT_DELAY);
 
