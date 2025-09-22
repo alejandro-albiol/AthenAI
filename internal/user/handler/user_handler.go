@@ -393,3 +393,322 @@ func (h *UsersHandler) SetUserActive(w http.ResponseWriter, r *http.Request) {
 	}
 	response.WriteAPISuccess(w, fmt.Sprintf("User %s successfully", statusMsg), nil)
 }
+
+// Platform Admin Methods - Allow specifying gym context
+
+func (h *UsersHandler) GetUsersByGymID(w http.ResponseWriter, r *http.Request) {
+	// Security check: Only platform admins can access users from any gym
+	if !middleware.IsPlatformAdmin(r) {
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeForbidden,
+			"Access denied: Only platform administrators can access users from any gym",
+			nil,
+		))
+		return
+	}
+
+	gymID := chi.URLParam(r, "gymId")
+	if gymID == "" {
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeBadRequest,
+			"Gym ID is required",
+			nil,
+		))
+		return
+	}
+
+	users, err := h.service.GetAllUsers(gymID)
+	if err != nil {
+		if apiErr, ok := err.(*apierror.APIError); ok {
+			response.WriteAPIError(w, apiErr)
+			return
+		}
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeInternal,
+			"Internal server error",
+			err,
+		))
+		return
+	}
+	response.WriteAPISuccess(w, "Users retrieved successfully", users)
+}
+
+func (h *UsersHandler) RegisterUserInGym(w http.ResponseWriter, r *http.Request) {
+	// Security check: Only platform admins can create users in any gym
+	if !middleware.IsPlatformAdmin(r) {
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeForbidden,
+			"Access denied: Only platform administrators can create users in any gym",
+			nil,
+		))
+		return
+	}
+
+	gymID := chi.URLParam(r, "gymId")
+	if gymID == "" {
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeBadRequest,
+			"Gym ID is required",
+			nil,
+		))
+		return
+	}
+
+	var userDTO dto.UserCreationDTO
+	if err := json.NewDecoder(r.Body).Decode(&userDTO); err != nil {
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeBadRequest,
+			"Invalid request payload",
+			err,
+		))
+		return
+	}
+
+	// Validate required fields
+	if userDTO.Username == "" || userDTO.Email == "" || userDTO.Password == "" || userDTO.Role == "" {
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeBadRequest,
+			"Missing required user fields",
+			nil,
+		))
+		return
+	}
+
+	// Platform admin can create any type of user
+	userID, err := h.service.RegisterUser(gymID, &userDTO)
+	if err != nil {
+		if apiErr, ok := err.(*apierror.APIError); ok {
+			response.WriteAPIError(w, apiErr)
+			return
+		}
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeInternal,
+			"Internal server error",
+			err,
+		))
+		return
+	}
+	response.WriteAPISuccess(w, "User created successfully", map[string]string{"id": *userID})
+}
+
+func (h *UsersHandler) GetUserByIDInGym(w http.ResponseWriter, r *http.Request) {
+	// Security check: Only platform admins can access users from any gym
+	if !middleware.IsPlatformAdmin(r) {
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeForbidden,
+			"Access denied: Only platform administrators can access users from any gym",
+			nil,
+		))
+		return
+	}
+
+	gymID := chi.URLParam(r, "gymId")
+	userID := chi.URLParam(r, "id")
+
+	if gymID == "" || userID == "" {
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeBadRequest,
+			"Gym ID and User ID are required",
+			nil,
+		))
+		return
+	}
+
+	user, err := h.service.GetUserByID(gymID, userID)
+	if err != nil {
+		if apiErr, ok := err.(*apierror.APIError); ok {
+			response.WriteAPIError(w, apiErr)
+			return
+		}
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeInternal,
+			"Internal server error",
+			err,
+		))
+		return
+	}
+	response.WriteAPISuccess(w, "User retrieved successfully", user)
+}
+
+func (h *UsersHandler) UpdateUserInGym(w http.ResponseWriter, r *http.Request) {
+	// Security check: Only platform admins can update users in any gym
+	if !middleware.IsPlatformAdmin(r) {
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeForbidden,
+			"Access denied: Only platform administrators can update users in any gym",
+			nil,
+		))
+		return
+	}
+
+	gymID := chi.URLParam(r, "gymId")
+	userID := chi.URLParam(r, "id")
+
+	if gymID == "" || userID == "" {
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeBadRequest,
+			"Gym ID and User ID are required",
+			nil,
+		))
+		return
+	}
+
+	var userDTO dto.UserUpdateDTO
+	if err := json.NewDecoder(r.Body).Decode(&userDTO); err != nil {
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeBadRequest,
+			"Invalid request payload",
+			err,
+		))
+		return
+	}
+
+	err := h.service.UpdateUser(gymID, userID, &userDTO)
+	if err != nil {
+		if apiErr, ok := err.(*apierror.APIError); ok {
+			response.WriteAPIError(w, apiErr)
+			return
+		}
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeInternal,
+			"Internal server error",
+			err,
+		))
+		return
+	}
+	response.WriteAPISuccess(w, "User updated successfully", nil)
+}
+
+func (h *UsersHandler) DeleteUserInGym(w http.ResponseWriter, r *http.Request) {
+	// Security check: Only platform admins can delete users from any gym
+	if !middleware.IsPlatformAdmin(r) {
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeForbidden,
+			"Access denied: Only platform administrators can delete users from any gym",
+			nil,
+		))
+		return
+	}
+
+	gymID := chi.URLParam(r, "gymId")
+	userID := chi.URLParam(r, "id")
+
+	if gymID == "" || userID == "" {
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeBadRequest,
+			"Gym ID and User ID are required",
+			nil,
+		))
+		return
+	}
+
+	err := h.service.DeleteUser(gymID, userID)
+	if err != nil {
+		if apiErr, ok := err.(*apierror.APIError); ok {
+			response.WriteAPIError(w, apiErr)
+			return
+		}
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeInternal,
+			"Internal server error",
+			err,
+		))
+		return
+	}
+	response.WriteAPISuccess(w, "User deleted successfully", nil)
+}
+
+func (h *UsersHandler) VerifyUserInGym(w http.ResponseWriter, r *http.Request) {
+	// Security check: Only platform admins can verify users in any gym
+	if !middleware.IsPlatformAdmin(r) {
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeForbidden,
+			"Access denied: Only platform administrators can verify users in any gym",
+			nil,
+		))
+		return
+	}
+
+	gymID := chi.URLParam(r, "gymId")
+	userID := chi.URLParam(r, "id")
+
+	if gymID == "" || userID == "" {
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeBadRequest,
+			"Gym ID and User ID are required",
+			nil,
+		))
+		return
+	}
+
+	err := h.service.VerifyUser(gymID, userID)
+	if err != nil {
+		if apiErr, ok := err.(*apierror.APIError); ok {
+			response.WriteAPIError(w, apiErr)
+			return
+		}
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeInternal,
+			"Internal server error",
+			err,
+		))
+		return
+	}
+	response.WriteAPISuccess(w, "User verified successfully", nil)
+}
+
+func (h *UsersHandler) SetUserActiveInGym(w http.ResponseWriter, r *http.Request) {
+	// Security check: Only platform admins can set user status in any gym
+	if !middleware.IsPlatformAdmin(r) {
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeForbidden,
+			"Access denied: Only platform administrators can set user status in any gym",
+			nil,
+		))
+		return
+	}
+
+	gymID := chi.URLParam(r, "gymId")
+	userID := chi.URLParam(r, "id")
+
+	if gymID == "" || userID == "" {
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeBadRequest,
+			"Gym ID and User ID are required",
+			nil,
+		))
+		return
+	}
+
+	var activeReq struct {
+		Active bool `json:"active"`
+	}
+	if err := json.NewDecoder(r.Body).Decode(&activeReq); err != nil {
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeBadRequest,
+			"Invalid request payload",
+			err,
+		))
+		return
+	}
+
+	err := h.service.SetUserActive(gymID, userID, activeReq.Active)
+	if err != nil {
+		if apiErr, ok := err.(*apierror.APIError); ok {
+			response.WriteAPIError(w, apiErr)
+			return
+		}
+		response.WriteAPIError(w, apierror.New(
+			errorcode_enum.CodeInternal,
+			"Internal server error",
+			err,
+		))
+		return
+	}
+
+	statusMsg := "deactivated"
+	if activeReq.Active {
+		statusMsg = "activated"
+	}
+	response.WriteAPISuccess(w, fmt.Sprintf("User %s successfully", statusMsg), nil)
+}

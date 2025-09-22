@@ -83,6 +83,11 @@ func (s *UsersService) GetPasswordHashByUsername(gymID, username string) (string
 func (s *UsersService) GetAllUsers(gymID string) ([]*dto.UserResponseDTO, error) {
 	users, err := s.repository.GetAllUsers(gymID)
 	if err != nil {
+		// Check if it's a "no rows" error, which is acceptable for GetAllUsers
+		if errors.Is(err, sql.ErrNoRows) || err.Error() == "sql: no rows in result set" {
+			// Return empty slice instead of error when no users found
+			return []*dto.UserResponseDTO{}, nil
+		}
 		return nil, apierror.New(errorcode_enum.CodeInternal, "Failed to retrieve users", err)
 	}
 	return users, nil

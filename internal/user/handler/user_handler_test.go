@@ -146,7 +146,7 @@ func TestRegisterUser(t *testing.T) {
 				Username: "testuser",
 				Email:    "test@test.com",
 				Password: "password123",
-				Role:     userrole_enum.User,
+				Role:     userrole_enum.Member,
 			},
 			setupMock: func(mockService *MockUserService) {
 				mockService.On("RegisterUser", "gym123", mock.AnythingOfType("*dto.UserCreationDTO")).Return("user-123", nil)
@@ -160,7 +160,7 @@ func TestRegisterUser(t *testing.T) {
 				Username: "existing",
 				Email:    "test@test.com",
 				Password: "password123",
-				Role:     userrole_enum.User,
+				Role:     userrole_enum.Member,
 			},
 			setupMock: func(mockService *MockUserService) {
 				mockService.On("RegisterUser", "gym123", mock.AnythingOfType("*dto.UserCreationDTO")).Return(
@@ -280,13 +280,13 @@ func TestGetAllUsers(t *testing.T) {
 						ID:       "user1",
 						Username: "testuser1",
 						Email:    "test1@test.com",
-						Role:     userrole_enum.User,
+						Role:     userrole_enum.Member,
 					},
 					{
 						ID:       "user2",
 						Username: "testuser2",
 						Email:    "test2@test.com",
-						Role:     userrole_enum.Admin,
+						Role:     userrole_enum.Trainer,
 					},
 				}
 				mockService.On("GetAllUsers", "gym123").Return(users, nil)
@@ -346,7 +346,7 @@ func TestGetUserByID(t *testing.T) {
 					ID:       "user123",
 					Username: "testuser",
 					Email:    "test@test.com",
-					Role:     userrole_enum.User,
+					Role:     userrole_enum.Member,
 				}
 				mockService.On("GetUserByID", "gym123", "user123").Return(user, nil)
 			},
@@ -407,7 +407,7 @@ func TestGetUserByUsername(t *testing.T) {
 					ID:       "user123",
 					Username: "testuser",
 					Email:    "test@test.com",
-					Role:     userrole_enum.User,
+					Role:     userrole_enum.Member,
 				}
 				mockService.On("GetUserByUsername", "gym123", "testuser").Return(user, nil)
 			},
@@ -468,7 +468,7 @@ func TestGetUserByEmail(t *testing.T) {
 					ID:       "user123",
 					Username: "testuser",
 					Email:    "test@test.com",
-					Role:     userrole_enum.User,
+					Role:     userrole_enum.Member,
 				}
 				mockService.On("GetUserByEmail", "gym123", "test@test.com").Return(user, nil)
 			},
@@ -739,7 +739,7 @@ func TestRegisterUserInternalError(t *testing.T) {
 		Username: "testuser",
 		Email:    "test@test.com",
 		Password: "password123",
-		Role:     userrole_enum.User,
+		Role:     userrole_enum.Member,
 	}
 
 	// Mock service returns a non-APIError
