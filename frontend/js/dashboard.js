@@ -89,11 +89,15 @@ class VanillaDashboardManager {
   }
 
   initializeManagers() {
+    // Initialize API client first
+    this.api = new ApiClient();
+
     // Initialize our specialized managers - they should all be available now
     this.managers.equipment = new EquipmentManager();
     this.managers.exercise = new ExerciseManager();
     this.managers.gym = new GymManager();
     this.managers.muscularGroup = new MuscularGroupManager();
+    this.managers.user = new UserManager();
 
     // Set up event listeners for manager events
     this.setupManagerEventListeners();
@@ -166,19 +170,28 @@ class VanillaDashboardManager {
 
       if (!authToken || !userInfo) {
         console.error("No authentication data found");
-        window.location.href = "/";
+        this.redirectToLogin();
         return;
       }
 
       this.currentUser = JSON.parse(userInfo);
+
+      // Verify this is a platform admin
+      if (this.currentUser.user_type !== "platform_admin") {
+        console.error(
+          "Access denied: Platform dashboard is for platform admins only"
+        );
+        this.redirectToTenantDashboard();
+        return;
+      }
+
       appState.setState({ user: this.currentUser });
 
       this.updateUserInfo();
       this.setupNavigation();
     } catch (error) {
       console.error("Authentication check failed:", error);
-      // Redirect to login or show auth error
-      window.location.href = "/";
+      this.redirectToLogin();
     }
   }
 
@@ -296,11 +309,11 @@ class VanillaDashboardManager {
         case "gyms":
           await this.loadGymsManagement();
           break;
-        case "gym-users":
-          await this.loadGymUsersManagement();
+        case "platform-users":
+          await this.loadPlatformUsersManagement();
           break;
-        case "gym-analytics":
-          await this.loadGymAnalytics();
+        case "platform-analytics":
+          await this.loadPlatformAnalytics();
           break;
         case "gym-requests":
           await this.loadGymRequests();
@@ -337,14 +350,11 @@ class VanillaDashboardManager {
   // Dashboard Overview - Gym Management Focus
   async loadDashboardOverview() {
     try {
-      // Load real data from available APIs
-      const api = new ApiClient();
-
       // Get real data from existing endpoints
       const [gyms, equipment, exercises] = await Promise.allSettled([
-        api.request("/gym"),
-        api.request("/equipment"),
-        api.request("/exercise"),
+        this.api.request("/gym"),
+        this.api.request("/equipment"),
+        this.api.request("/exercise"),
       ]);
 
       // Extract successful results and handle API response format
@@ -964,58 +974,943 @@ class VanillaDashboardManager {
     }
   }
 
-  // New Gym-Focused Views
-  async loadGymUsersManagement() {
+  async loadPlatformUsersManagement() {
     try {
-      // Since we don't have a gym-users endpoint, let's show a placeholder
+      // Show gym-centric user management interface
       const content = `
         <div class="dashboard-header">
-          <h1 class="dashboard-title">Members & Trainers</h1>
-          <p class="dashboard-subtitle">Manage gym members and training staff</p>
+          <h1 class="dashboard-title">Platform User Management</h1>
+          <p class="dashboard-subtitle">Manage users across all gyms - select a gym to view its users</p>
         </div>
         <div class="dashboard-content">
+          <!-- Gym Selection and Overview -->
           <div class="dashboard-card">
             <div class="card-header">
               <h3 class="card-title">
-                <i class="fas fa-users"></i>
-                Gym Members & Trainers
+                <i class="fas fa-building"></i>
+                Gym Overview & User Statistics
               </h3>
               <div class="card-actions">
-                <button class="btn btn-secondary btn-sm" onclick="dashboard.exportGymUsers()">
-                  <i class="fas fa-download"></i> Export
-                </button>
-                <button class="btn btn-primary" onclick="dashboard.openAddUserModal()">
-                  <i class="fas fa-plus"></i> Add User
+                <button class="btn btn-secondary btn-sm" onclick="dashboard.refreshGymStats()">
+                  <i class="fas fa-refresh"></i> Refresh
                 </button>
               </div>
             </div>
-            <div class="card-body">
-              <div class="empty-state">
+            <div class="card-body" id="gym-stats-container">
+              <div class="loading-state">
+                <i class="fas fa-spinner fa-spin"></i>
+                <p>Loading gym statistics...</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Selected Gym Users -->
+          <div class="dashboard-card" id="selected-gym-users" style="display: none;">
+            <div class="card-header">
+              <h3 class="card-title">
                 <i class="fas fa-users"></i>
-                <h3>User Management</h3>
-                <p>User management functionality will be implemented when user endpoints are available.</p>
-                <button class="btn btn-primary" onclick="dashboard.loadView('gyms')">
-                  <i class="fas fa-building"></i> Manage Gyms Instead
+                <span id="selected-gym-title">Gym Users</span>
+              </h3>
+              <div class="card-actions">
+                <button class="btn btn-secondary btn-sm" onclick="dashboard.exportSelectedGymUsers()">
+                  <i class="fas fa-download"></i> Export
+                </button>
+                <button class="btn btn-primary" onclick="dashboard.openPlatformUserModal('create')" id="add-user-btn">
+                  <i class="fas fa-plus"></i> Add User
+                </button>
+                <button class="btn btn-outline btn-sm" onclick="dashboard.clearSelectedGym()">
+                  <i class="fas fa-times"></i> Clear Selection
                 </button>
               </div>
+            </div>
+            <div class="card-body" id="selected-gym-users-table">
+              <!-- Users table will be loaded here -->
             </div>
           </div>
         </div>
       `;
 
       this.setContent(content);
+
+      // Load gym statistics with user counts
+      await this.loadGymUserStatistics();
     } catch (error) {
-      console.error("Error loading gym users:", error);
-      this.showError("Failed to load gym users");
+      console.error("Error loading platform users:", error);
+      this.showError(
+        "Failed to load platform user management: " + error.message
+      );
     }
   }
 
-  async loadGymAnalytics() {
+  async loadGymUserStatistics() {
+    try {
+      // Load all gyms first
+      const gyms = await this.managers.gym.loadGyms();
+
+      // For each gym, get the actual users using platform admin endpoints
+      const gymStats = await Promise.all(
+        gyms.map(async (gym) => {
+          try {
+            const users = await this.api.getUsers(gym.id);
+            const userList = users?.data || users || [];
+
+            // Calculate statistics from real user data
+            const userCount = userList.length;
+            const activeUserCount = userList.filter(
+              (user) => user.active !== false
+            ).length;
+
+            // Count users by role
+            const roles = {};
+            userList.forEach((user) => {
+              const role = user.role || "member";
+              roles[role] = (roles[role] || 0) + 1;
+            });
+
+            return {
+              ...gym,
+              userCount,
+              activeUserCount,
+              roles,
+            };
+          } catch (error) {
+            console.error(`Error getting users for gym ${gym.id}:`, error);
+            return {
+              ...gym,
+              userCount: 0,
+              activeUserCount: 0,
+              roles: {},
+              error: true,
+            };
+          }
+        })
+      );
+
+      this.renderGymUserStatistics(gymStats);
+    } catch (error) {
+      console.error("Error loading gym statistics:", error);
+      throw error;
+    }
+  }
+
+  renderGymUserStatistics(gymStats) {
+    const container = document.getElementById("gym-stats-container");
+
+    if (!gymStats || gymStats.length === 0) {
+      container.innerHTML = `
+        <div class="empty-state">
+          <i class="fas fa-building"></i>
+          <h3>No Gyms Found</h3>
+          <p>No gyms are currently registered in the platform.</p>
+        </div>
+      `;
+      return;
+    }
+
+    // Calculate totals
+    const totalUsers = gymStats.reduce((sum, gym) => sum + gym.userCount, 0);
+    const totalActiveUsers = gymStats.reduce(
+      (sum, gym) => sum + gym.activeUserCount,
+      0
+    );
+    const totalGyms = gymStats.length;
+
+    container.innerHTML = `
+      <!-- Platform Statistics Summary -->
+      <div class="platform-stats-grid">
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-building"></i>
+          </div>
+          <div class="stat-value">${totalGyms}</div>
+          <div class="stat-label">Total Gyms</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-users"></i>
+          </div>
+          <div class="stat-value">${totalUsers}</div>
+          <div class="stat-label">Total Users</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-user-check"></i>
+          </div>
+          <div class="stat-value">${totalActiveUsers}</div>
+          <div class="stat-label">Active Users</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-icon">
+            <i class="fas fa-percentage"></i>
+          </div>
+          <div class="stat-value">${
+            totalUsers > 0
+              ? Math.round((totalActiveUsers / totalUsers) * 100)
+              : 0
+          }%</div>
+          <div class="stat-label">Activity Rate</div>
+        </div>
+      </div>
+
+      <!-- Gym List with User Statistics -->
+      <div class="gym-user-management-list">
+        <h4>Gyms & User Management</h4>
+        <div class="gym-list-table">
+          <div class="gym-list-header">
+            <div class="gym-name">Gym Name</div>
+            <div class="gym-status">Status</div>
+            <div class="gym-users">Total Users</div>
+            <div class="gym-active">Active</div>
+            <div class="gym-roles">Roles</div>
+            <div class="gym-actions">Actions</div>
+          </div>
+          ${gymStats
+            .map(
+              (gym) => `
+            <div class="gym-list-row ${
+              gym.error ? "gym-error" : ""
+            }" data-gym-id="${gym.id}">
+              <div class="gym-name">
+                <strong>${gym.name}</strong>
+                <small>${gym.address || "No address"}</small>
+              </div>
+              <div class="gym-status">
+                <span class="status-badge ${
+                  gym.is_active ? "status-active" : "status-inactive"
+                }">
+                  ${gym.is_active ? "Active" : "Inactive"}
+                </span>
+              </div>
+              <div class="gym-users">
+                <span class="user-count">${gym.userCount}</span>
+              </div>
+              <div class="gym-active">
+                <span class="active-count">${gym.activeUserCount}</span>
+              </div>
+              <div class="gym-roles">
+                <div class="role-distribution">
+                  ${
+                    Object.entries(gym.roles)
+                      .map(
+                        ([role, count]) =>
+                          `<span class="role-badge role-${role}" title="${count} ${role}s">${count}</span>`
+                      )
+                      .join("") || '<span class="text-muted">No data</span>'
+                  }
+                </div>
+              </div>
+              <div class="gym-actions">
+                <button class="btn btn-primary btn-sm" onclick="dashboard.selectGymForUserManagement('${
+                  gym.id
+                }', '${gym.name}')">
+                  <i class="fas fa-users"></i> Manage Users
+                </button>
+                ${
+                  gym.error
+                    ? `
+                  <span class="text-danger" title="Error loading user data">
+                    <i class="fas fa-exclamation-triangle"></i>
+                  </span>
+                `
+                    : ""
+                }
+              </div>
+            </div>
+          `
+            )
+            .join("")}
+        </div>
+      </div>
+    `;
+  }
+
+  async selectGymForUserManagement(gymId, gymName) {
+    try {
+      this.selectedGymId = gymId;
+      this.selectedGymName = gymName;
+
+      // Show the selected gym users section
+      const selectedSection = document.getElementById("selected-gym-users");
+      const titleElement = document.getElementById("selected-gym-title");
+
+      selectedSection.style.display = "block";
+      titleElement.textContent = `${gymName} - Users`;
+
+      // Auto-scroll to the users table
+      selectedSection.scrollIntoView({
+        behavior: "smooth",
+        block: "start",
+      });
+
+      // Update the gym context for user manager
+      this.managers.user.setGymContext(gymId);
+
+      // Load users for the selected gym
+      const tableContainer = document.getElementById(
+        "selected-gym-users-table"
+      );
+      tableContainer.innerHTML = `
+        <div class="loading-state">
+          <i class="fas fa-spinner fa-spin"></i>
+          <p>Loading users for ${gymName}...</p>
+        </div>
+      `;
+
+      const users = await this.managers.user.loadUsers(gymId);
+
+      console.log("Loaded users for gym:", gymId, "Users:", users);
+
+      if (!users || users.length === 0) {
+        console.log("No users found or empty array");
+        tableContainer.innerHTML = `
+          <div class="empty-state">
+            <i class="fas fa-users"></i>
+            <h3>No Users Found</h3>
+            <p>This gym has no registered users yet.</p>
+            <button class="btn btn-primary" onclick="dashboard.openPlatformUserModal('create')">
+              <i class="fas fa-plus"></i> Add First User
+            </button>
+          </div>
+        `;
+        return;
+      }
+
+      // Create users table
+      const dataTable = new DataTable(tableContainer, {
+        data: users,
+        columns: this.getPlatformUserTableColumns(),
+        title: `${gymName} Users`,
+        rowActions: this.getPlatformUserRowActions(),
+        searchable: true,
+        sortable: true,
+        pagination: true,
+        pageSize: 20,
+        emptyMessage: `No users found in ${gymName}`,
+        filters: [
+          {
+            name: "role",
+            label: "Role",
+            type: "select",
+            options: [
+              { value: "", label: "All Roles" },
+              { value: "gym_admin", label: "Gym Admin" },
+              { value: "trainer", label: "Trainer" },
+              { value: "member", label: "Member" },
+            ],
+          },
+          {
+            name: "is_active",
+            label: "Status",
+            type: "select",
+            options: [
+              { value: "", label: "All Status" },
+              { value: "true", label: "Active" },
+              { value: "false", label: "Inactive" },
+            ],
+          },
+        ],
+      });
+
+      // Scroll to the users section
+      selectedSection.scrollIntoView({ behavior: "smooth" });
+    } catch (error) {
+      console.error("Error selecting gym for user management:", error);
+      notifications.error(
+        `Failed to load users for ${gymName}: ${error.message}`
+      );
+    }
+  }
+
+  clearSelectedGym() {
+    this.selectedGymId = null;
+    this.selectedGymName = null;
+
+    const selectedSection = document.getElementById("selected-gym-users");
+    selectedSection.style.display = "none";
+
+    // Clear the user manager context
+    this.managers.user.setGymContext(null);
+  }
+
+  async refreshGymStats() {
+    try {
+      notifications.info("Refreshing gym statistics...");
+      await this.loadGymUserStatistics();
+      notifications.success("Statistics refreshed successfully");
+    } catch (error) {
+      console.error("Error refreshing stats:", error);
+      notifications.error("Failed to refresh statistics: " + error.message);
+    }
+  }
+
+  async exportSelectedGymUsers() {
+    if (!this.selectedGymId || !this.selectedGymName) {
+      notifications.warning("Please select a gym first");
+      return;
+    }
+
+    try {
+      notifications.info("Preparing user export...");
+
+      const users = await this.managers.user.loadUsers(this.selectedGymId);
+
+      if (!users || users.length === 0) {
+        notifications.warning("No users found to export");
+        return;
+      }
+
+      // Prepare CSV data
+      const csvHeaders = [
+        "Username",
+        "Email",
+        "Role",
+        "Status",
+        "Verified",
+        "Phone",
+        "Created",
+      ];
+      const csvData = users.map((user) => [
+        user.username,
+        user.email,
+        user.role,
+        user.is_active ? "Active" : "Inactive",
+        user.verified ? "Yes" : "No",
+        user.phone || "",
+        new Date(user.created_at).toLocaleDateString(),
+      ]);
+
+      // Create CSV content
+      const csvContent = [csvHeaders, ...csvData]
+        .map((row) => row.map((field) => `"${field}"`).join(","))
+        .join("\n");
+
+      // Download CSV
+      const blob = new Blob([csvContent], { type: "text/csv" });
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = `${this.selectedGymName.replace(/[^a-z0-9]/gi, "_")}-users-${
+        new Date().toISOString().split("T")[0]
+      }.csv`;
+      a.click();
+      window.URL.revokeObjectURL(url);
+
+      notifications.success("User export completed successfully");
+    } catch (error) {
+      console.error("Error exporting users:", error);
+      notifications.error("Failed to export users: " + error.message);
+    }
+  }
+
+  getPlatformUserTableColumns() {
+    return [
+      {
+        key: "username",
+        title: "Username",
+        sortable: true,
+      },
+      {
+        key: "email",
+        title: "Email",
+        sortable: true,
+      },
+      {
+        key: "role",
+        title: "Role",
+        sortable: true,
+        render: (value) => {
+          const roleLabels = {
+            gym_admin: "Gym Admin",
+            trainer: "Trainer",
+            member: "Member",
+          };
+          return `<span class="role-badge role-${value}">${
+            roleLabels[value] || value
+          }</span>`;
+        },
+      },
+      {
+        key: "is_active",
+        title: "Status",
+        sortable: true,
+        render: (value) => {
+          return value
+            ? '<span class="status-badge status-active">Active</span>'
+            : '<span class="status-badge status-inactive">Inactive</span>';
+        },
+      },
+      {
+        key: "verified",
+        title: "Verified",
+        sortable: true,
+        render: (value) => {
+          return value
+            ? '<i class="fas fa-check-circle text-success" title="Verified"></i>'
+            : '<i class="fas fa-times-circle text-danger" title="Unverified"></i>';
+        },
+      },
+      {
+        key: "created_at",
+        title: "Created",
+        sortable: true,
+        render: (value) => {
+          return new Date(value).toLocaleDateString();
+        },
+      },
+    ];
+  }
+
+  getPlatformUserRowActions() {
+    return [
+      {
+        action: "view",
+        icon: "fas fa-eye",
+        title: "View",
+        className: "btn btn-sm btn-outline",
+        handler: (user) => this.openPlatformUserModal("view", user),
+      },
+      {
+        action: "edit",
+        icon: "fas fa-edit",
+        title: "Edit",
+        className: "btn btn-sm btn-outline",
+        handler: (user) => this.openPlatformUserModal("edit", user),
+      },
+      {
+        action: "transfer",
+        icon: "fas fa-exchange-alt",
+        title: "Transfer Gym",
+        className: "btn btn-sm btn-outline",
+        handler: (user) => this.openGymTransferModal(user),
+        condition: (user) => user.role !== "platform_admin",
+      },
+      {
+        action: "deactivate",
+        icon: "fas fa-ban",
+        title: "Deactivate",
+        className: "btn btn-sm btn-warning",
+        handler: (user) => this.toggleUserStatus(user),
+        condition: (user) => user.is_active,
+      },
+      {
+        action: "activate",
+        icon: "fas fa-check",
+        title: "Activate",
+        className: "btn btn-sm btn-success",
+        handler: (user) => this.toggleUserStatus(user),
+        condition: (user) => !user.is_active,
+      },
+      {
+        action: "delete",
+        icon: "fas fa-trash",
+        title: "Delete",
+        className: "btn btn-sm btn-danger",
+        handler: (user) => this.deletePlatformUser(user),
+      },
+    ];
+  }
+
+  async getGymFilterOptions() {
+    try {
+      const gyms = await this.managers.gym.loadGyms();
+      const options = [{ value: "", label: "All Gyms" }];
+      gyms.forEach((gym) => {
+        options.push({ value: gym.id, label: gym.name });
+      });
+      return options;
+    } catch (error) {
+      console.error("Error loading gym options:", error);
+      return [{ value: "", label: "All Gyms" }];
+    }
+  }
+
+  async openPlatformUserModal(mode = "create", userData = null) {
+    try {
+      const isEdit = mode === "edit" && userData;
+      const isView = mode === "view" && userData;
+
+      const title = isView
+        ? `View User: ${userData.username}`
+        : isEdit
+        ? `Edit User: ${userData.username}`
+        : "Add New User";
+
+      // Get all available gyms for platform admin user creation
+      const gyms = await this.managers.gym.loadGyms();
+
+      // Enhanced form fields for platform admin user management
+      const fields = this.getPlatformUserFormFields(gyms);
+
+      // Pre-select gym if we have one selected
+      const initialData = isEdit || isView ? userData : {};
+      if (mode === "create" && this.selectedGymId) {
+        initialData.gym_id = this.selectedGymId;
+      }
+
+      const formHtml = this.generateFormHtml(fields, initialData, isView);
+
+      const modal = new Modal({
+        title: title,
+        size: "lg",
+        content: `
+          <form id="platform-user-form">
+            ${formHtml}
+          </form>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" data-dismiss="modal">Cancel</button>
+            ${
+              !isView
+                ? `
+              <button type="submit" class="btn btn-primary" id="save-platform-user-btn">
+                <i class="fas fa-save"></i> ${isEdit ? "Update" : "Create"} User
+              </button>
+            `
+                : ""
+            }
+          </div>
+        `,
+      });
+
+      modal.show();
+
+      if (!isView) {
+        const form = modal.element.querySelector("#platform-user-form");
+        const saveBtn = modal.element.querySelector("#save-platform-user-btn");
+
+        const handleSubmit = async (e) => {
+          e.preventDefault();
+
+          try {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML =
+              '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+            const formData = getFormData(form);
+            const validation = this.validatePlatformUserData(formData);
+
+            if (validation.length > 0) {
+              this.showFormErrors(form, validation);
+              return;
+            }
+
+            const preparedData = this.preparePlatformUserData(formData, isEdit);
+
+            if (isEdit) {
+              await this.managers.user.updateUser(userData.id, preparedData);
+              notifications.success("User updated successfully");
+            } else {
+              // For creation, use the selected gym context
+              if (this.selectedGymId) {
+                // Temporarily set gym context for creation
+                const originalGymContext = this.managers.user.currentGymId;
+                this.managers.user.setGymContext(this.selectedGymId);
+
+                await this.managers.user.createUser(preparedData);
+
+                // Restore original context
+                this.managers.user.setGymContext(originalGymContext);
+
+                notifications.success("User created successfully");
+              } else {
+                throw new Error("Please select a gym first to manage users");
+              }
+            }
+            modal.hide();
+
+            // Reload appropriate view with a small delay to ensure backend processing
+            if (this.currentView === "platform-users") {
+              if (this.selectedGymId) {
+                // Add small delay to ensure backend has processed the creation
+                setTimeout(async () => {
+                  await this.selectGymForUserManagement(
+                    this.selectedGymId,
+                    this.selectedGymName
+                  );
+                }, 500);
+              }
+              await this.refreshGymStats();
+            }
+          } catch (error) {
+            console.error("Error saving platform user:", error);
+            notifications.error(
+              `Failed to ${isEdit ? "update" : "create"} user: ${error.message}`
+            );
+          } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = `<i class="fas fa-save"></i> ${
+              isEdit ? "Update" : "Create"
+            } User`;
+          }
+        };
+
+        form.addEventListener("submit", handleSubmit);
+        saveBtn.addEventListener("click", handleSubmit);
+      }
+    } catch (error) {
+      console.error("Error opening platform user modal:", error);
+      notifications.error("Failed to open user form");
+    }
+  }
+
+  getPlatformUserFormFields(gyms) {
+    // No gym field needed - context is automatically determined by selected gym
+    return [
+      {
+        name: "role",
+        label: "Role",
+        type: "select",
+        options: [
+          { value: "gym_admin", label: "Gym Admin" },
+          { value: "trainer", label: "Trainer" },
+          { value: "member", label: "Member" },
+        ],
+        required: true,
+        helpText: "Select the user's role first to determine available fields",
+      },
+      {
+        name: "username",
+        label: "Username",
+        type: "text",
+        required: true,
+      },
+      {
+        name: "email",
+        label: "Email",
+        type: "email",
+        required: true,
+      },
+      {
+        name: "password",
+        label: "Password",
+        type: "password",
+        required: true,
+        helpText: "Leave blank to keep existing password (for edits)",
+      },
+      {
+        name: "phone",
+        label: "Phone Number",
+        type: "tel",
+      },
+      {
+        name: "is_active",
+        label: "Active Status",
+        type: "checkbox",
+        defaultValue: true,
+        helpText: "User will be active by default",
+      },
+      {
+        name: "verified",
+        label: "Verified Status",
+        type: "checkbox",
+        defaultValue: true,
+        helpText: "User will be verified by default",
+      },
+      {
+        name: "description",
+        label: "Description",
+        type: "textarea",
+        helpText: "Optional description or notes about the user",
+      },
+    ];
+  }
+
+  validatePlatformUserData(formData) {
+    const errors = [];
+
+    if (!formData.username || formData.username.trim().length < 3) {
+      errors.push({
+        field: "username",
+        message: "Username must be at least 3 characters",
+      });
+    }
+
+    if (!formData.email || !formData.email.includes("@")) {
+      errors.push({
+        field: "email",
+        message: "Valid email address is required",
+      });
+    }
+
+    // Gym context is required but managed automatically
+    if (!this.selectedGymId) {
+      errors.push({
+        field: "general",
+        message: "Please select a gym first to manage users",
+      });
+    }
+
+    if (!formData.role) {
+      errors.push({ field: "role", message: "User role is required" });
+    }
+
+    return errors;
+  }
+
+  preparePlatformUserData(formData, isEdit) {
+    const data = {
+      username: formData.username.trim(),
+      email: formData.email.trim(),
+      role: formData.role,
+      phone: formData.phone || "",
+      is_active: !!formData.is_active,
+      verified: !!formData.verified,
+      description: formData.description || "",
+    };
+
+    // Only include password if provided (for creation or password updates)
+    if (formData.password && formData.password.trim()) {
+      data.password = formData.password;
+    }
+
+    return data;
+  }
+
+  async openGymTransferModal(user) {
+    try {
+      const gyms = await this.managers.gym.loadGyms();
+      const gymOptions = gyms
+        .filter((gym) => gym.id !== user.gym_id) // Exclude current gym
+        .map((gym) => ({
+          value: gym.id,
+          label: gym.name,
+        }));
+
+      const modal = new Modal({
+        title: `Transfer User: ${user.username}`,
+        content: `
+          <div class="transfer-user-form">
+            <p>Transfer <strong>${user.username}</strong> from <strong>${
+          user.gym_name || "Unknown Gym"
+        }</strong> to:</p>
+            
+            <div class="form-group">
+              <label for="new-gym-id">New Gym:</label>
+              <select id="new-gym-id" class="form-control" required>
+                <option value="">Select a gym...</option>
+                ${gymOptions
+                  .map(
+                    (gym) =>
+                      `<option value="${gym.value}">${gym.label}</option>`
+                  )
+                  .join("")}
+              </select>
+            </div>
+            
+            <div class="form-group">
+              <label for="transfer-reason">Reason for Transfer:</label>
+              <textarea id="transfer-reason" class="form-control" placeholder="Optional reason for the transfer..."></textarea>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" data-dismiss="modal">Cancel</button>
+            <button type="button" class="btn btn-primary" id="confirm-transfer-btn">
+              <i class="fas fa-exchange-alt"></i> Transfer User
+            </button>
+          </div>
+        `,
+      });
+
+      modal.show();
+
+      const confirmBtn = modal.element.querySelector("#confirm-transfer-btn");
+      confirmBtn.addEventListener("click", async () => {
+        const newGymId = modal.element.querySelector("#new-gym-id").value;
+        const reason = modal.element.querySelector("#transfer-reason").value;
+
+        if (!newGymId) {
+          notifications.error("Please select a gym to transfer to");
+          return;
+        }
+
+        try {
+          confirmBtn.disabled = true;
+          confirmBtn.innerHTML =
+            '<i class="fas fa-spinner fa-spin"></i> Transferring...';
+
+          // Update user's gym_id
+          await this.managers.user.updateUser(user.id, {
+            gym_id: newGymId,
+            // Could add transfer_reason to user notes/description
+            description:
+              user.description +
+              `\n[Transfer: ${reason || "No reason provided"}]`,
+          });
+
+          notifications.success(`User transferred successfully`);
+          modal.hide();
+
+          if (this.currentView === "platform-users") {
+            await this.loadPlatformUsersManagement();
+          }
+        } catch (error) {
+          console.error("Error transferring user:", error);
+          notifications.error("Failed to transfer user: " + error.message);
+        } finally {
+          confirmBtn.disabled = false;
+          confirmBtn.innerHTML =
+            '<i class="fas fa-exchange-alt"></i> Transfer User';
+        }
+      });
+    } catch (error) {
+      console.error("Error opening gym transfer modal:", error);
+      notifications.error("Failed to open transfer dialog");
+    }
+  }
+
+  async toggleUserStatus(user) {
+    const action = user.is_active ? "deactivate" : "activate";
+    const confirmed = await this.confirmAction(
+      `${action.charAt(0).toUpperCase() + action.slice(1)} User`,
+      `Are you sure you want to ${action} ${user.username}?`,
+      user.is_active ? "warning" : "success"
+    );
+
+    if (confirmed) {
+      try {
+        await this.managers.user.updateUser(user.id, {
+          is_active: !user.is_active,
+        });
+
+        notifications.success(`User ${action}d successfully`);
+
+        if (this.currentView === "platform-users") {
+          await this.loadPlatformUsersManagement();
+        }
+      } catch (error) {
+        console.error(`Error ${action}ing user:`, error);
+        notifications.error(`Failed to ${action} user: ${error.message}`);
+      }
+    }
+  }
+
+  async deletePlatformUser(user) {
+    const confirmed = await this.confirmAction(
+      "Delete User",
+      `Are you sure you want to permanently delete ${user.username}? This action cannot be undone.`,
+      "danger"
+    );
+
+    if (confirmed) {
+      try {
+        await this.managers.user.deleteUser(user.id);
+        notifications.success("User deleted successfully");
+
+        if (this.currentView === "platform-users") {
+          await this.loadPlatformUsersManagement();
+        }
+      } catch (error) {
+        console.error("Error deleting user:", error);
+        notifications.error("Failed to delete user: " + error.message);
+      }
+    }
+  }
+
+  async loadPlatformAnalytics() {
     try {
       const content = `
         <div class="dashboard-header">
-          <h1 class="dashboard-title">Gym Analytics</h1>
-          <p class="dashboard-subtitle">Performance metrics and usage statistics</p>
+          <h1 class="dashboard-title">Platform Analytics</h1>
+          <p class="dashboard-subtitle">Cross-gym metrics and platform statistics</p>
         </div>
         <div class="dashboard-content">
           <div class="analytics-dashboard">
@@ -1025,13 +1920,13 @@ class VanillaDashboardManager {
                 <div class="card-header">
                   <h3 class="card-title">
                     <i class="fas fa-chart-line"></i>
-                    Gym Performance Trends
+                    Platform Performance Trends
                   </h3>
                 </div>
                 <div class="card-body">
                   <div class="empty-state">
                     <i class="fas fa-chart-line"></i>
-                    <h3>Analytics Dashboard</h3>
+                    <h3>Platform Analytics</h3>
                     <p>Advanced analytics and reporting features will be available when analytics endpoints are implemented.</p>
                     <button class="btn btn-primary" onclick="dashboard.loadView('gyms')">
                       <i class="fas fa-building"></i> View Gyms Data
@@ -1591,9 +2486,7 @@ class VanillaDashboardManager {
   }
 
   async openAddUserModal() {
-    notifications.info(
-      "User creation will be available when user endpoints are implemented"
-    );
+    await this.openUserModal("create");
   }
 
   async filterRequests(filter) {
@@ -2118,6 +3011,166 @@ class VanillaDashboardManager {
       notifications.error("Failed to open exercise form");
     }
   }
+
+  async openUserModal(mode = "create", userData = null) {
+    try {
+      // Get current user info to determine context
+      const currentUser = appState.getState().user;
+      if (!currentUser) {
+        notifications.error("User authentication required");
+        return;
+      }
+
+      // Determine gym context based on user type
+      let gymContext = null;
+
+      if (currentUser.user_type === "platform_admin") {
+        // Platform admins can work with any gym
+        // For create/edit operations, they need to specify which gym
+        const currentGym = appState.getState().currentGym;
+        if ((mode === "create" || mode === "edit") && !currentGym) {
+          notifications.error("Please select a gym first to manage users");
+          return;
+        }
+        gymContext = currentGym ? currentGym.id : null;
+      } else if (currentUser.user_type === "tenant_user") {
+        // Tenant users work within their own gym
+        if (currentUser.gym_id) {
+          gymContext = currentUser.gym_id;
+        } else {
+          notifications.error(
+            "Unable to determine gym context. Please contact support."
+          );
+          return;
+        }
+      } else {
+        notifications.error("Invalid user type for user management");
+        return;
+      }
+
+      const isEdit = mode === "edit" && userData;
+      const isView = mode === "view" && userData;
+      const title = isView
+        ? `View User: ${userData.username}`
+        : isEdit
+        ? `Edit User: ${userData.username}`
+        : "Add New User";
+
+      const fields = this.managers.user.getFormFields();
+      const formHtml = this.generateFormHtml(
+        fields,
+        isEdit || isView ? userData : {},
+        isView // readonly mode
+      );
+
+      const modal = new Modal({
+        title: title,
+        size: "lg",
+        content: `
+          <form id="user-form">
+            ${formHtml}
+          </form>
+          ${
+            !isView
+              ? `
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" data-dismiss="modal">Cancel</button>
+            <button type="submit" class="btn btn-primary" id="save-user-btn">
+              <i class="fas fa-save"></i> ${isEdit ? "Update" : "Create"} User
+            </button>
+          </div>
+          `
+              : `
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" data-dismiss="modal">Close</button>
+            ${
+              isEdit
+                ? ""
+                : `<button type="button" class="btn btn-primary" onclick="dashboard.openUserModal('edit', ${JSON.stringify(
+                    userData
+                  ).replace(/"/g, "&quot;")})">
+              <i class="fas fa-edit"></i> Edit
+            </button>`
+            }
+          </div>
+          `
+          }
+        `,
+      });
+
+      modal.show();
+
+      if (!isView) {
+        // Focus first input after modal is shown
+        setTimeout(() => {
+          const firstInput = modal.element.querySelector(
+            "input, textarea, select"
+          );
+          if (firstInput) firstInput.focus();
+        }, 100);
+
+        const form = modal.element.querySelector("#user-form");
+        const saveBtn = modal.element.querySelector("#save-user-btn");
+
+        const handleSubmit = async (e) => {
+          e.preventDefault();
+
+          try {
+            saveBtn.disabled = true;
+            saveBtn.innerHTML =
+              '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
+            const formData = getFormData(form);
+            const validation = this.managers.user.validateUserData(formData);
+
+            this.clearFormErrors(form);
+
+            if (validation.length > 0) {
+              this.showFormErrors(form, validation);
+              return;
+            }
+
+            const preparedData = this.managers.user.prepareDataForSubmission(
+              formData,
+              isEdit
+            );
+
+            if (isEdit) {
+              await this.managers.user.updateUser(userData.id, preparedData);
+              notifications.success("User updated successfully");
+            } else {
+              await this.managers.user.createUser(preparedData);
+              notifications.success("User created successfully");
+            }
+
+            modal.hide();
+
+            // Reload current view if applicable
+            if (this.currentView === "gyms") {
+              await this.loadGymsManagement();
+            }
+          } catch (error) {
+            console.error("Error saving user:", error);
+            notifications.error(
+              `Failed to ${isEdit ? "update" : "create"} user: ${error.message}`
+            );
+          } finally {
+            saveBtn.disabled = false;
+            saveBtn.innerHTML = `<i class="fas fa-save"></i> ${
+              isEdit ? "Update" : "Create"
+            } User`;
+          }
+        };
+
+        form.addEventListener("submit", handleSubmit);
+        saveBtn.addEventListener("click", handleSubmit);
+      }
+    } catch (error) {
+      console.error("Error opening user modal:", error);
+      notifications.error("Failed to open user form");
+    }
+  }
+
   async viewGymDetails(gym) {
     try {
       const modal = new Modal({
@@ -2864,6 +3917,206 @@ class VanillaDashboardManager {
       console.error("Error showing restore confirmation:", error);
       notifications.error("Failed to show confirmation dialog");
     }
+  }
+
+  redirectToLogin() {
+    // Clear stored auth data
+    localStorage.removeItem("auth_token");
+    localStorage.removeItem("refresh_token");
+    localStorage.removeItem("user_info");
+
+    // Redirect to login page
+    const currentOrigin = window.location.origin;
+    let currentPath = window.location.pathname.replace(
+      /\/pages\/dashboard\/.*/,
+      ""
+    );
+    if (currentPath.endsWith("/")) {
+      currentPath = currentPath.slice(0, -1);
+    }
+    window.location.href = `${currentOrigin}${currentPath}/`;
+  }
+
+  redirectToTenantDashboard() {
+    // Redirect tenant users to their appropriate dashboard
+    const currentOrigin = window.location.origin;
+    let currentPath = window.location.pathname.replace(
+      /\/pages\/dashboard\/.*/,
+      ""
+    );
+    if (currentPath.endsWith("/")) {
+      currentPath = currentPath.slice(0, -1);
+    }
+    window.location.href = `${currentOrigin}${currentPath}/pages/tenant/index.html`;
+  }
+
+  async confirmAction(title, message, variant = "primary") {
+    return new Promise((resolve) => {
+      const modal = new Modal({
+        title: title,
+        content: `
+          <div class="confirmation-modal">
+            <div class="confirmation-icon ${
+              variant === "danger"
+                ? "text-danger"
+                : variant === "warning"
+                ? "text-warning"
+                : "text-info"
+            }">
+              <i class="fas fa-${
+                variant === "danger"
+                  ? "exclamation-triangle"
+                  : variant === "warning"
+                  ? "exclamation-circle"
+                  : "question-circle"
+              }"></i>
+            </div>
+            <p>${message}</p>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-outline" data-dismiss="modal" onclick="this.closest('.modal').dispatchEvent(new CustomEvent('resolve', {detail: false}))">Cancel</button>
+            <button type="button" class="btn btn-${variant}" onclick="this.closest('.modal').dispatchEvent(new CustomEvent('resolve', {detail: true}))">Confirm</button>
+          </div>
+        `,
+      });
+
+      modal.element.addEventListener("resolve", (e) => {
+        modal.hide();
+        resolve(e.detail);
+      });
+
+      modal.show();
+    });
+  }
+
+  showFormErrors(form, errors) {
+    // Clear previous errors
+    this.clearFormErrors(form);
+
+    errors.forEach((error) => {
+      const field = form.querySelector(`[name="${error.field}"]`);
+      if (field) {
+        field.classList.add("error");
+
+        // Add error message
+        const errorDiv = document.createElement("div");
+        errorDiv.className = "field-error";
+        errorDiv.textContent = error.message;
+        field.parentNode.appendChild(errorDiv);
+      }
+    });
+  }
+
+  clearFormErrors(form) {
+    // Remove error classes and messages
+    form.querySelectorAll(".error").forEach((field) => {
+      field.classList.remove("error");
+    });
+
+    form.querySelectorAll(".field-error").forEach((error) => {
+      error.remove();
+    });
+  }
+
+  generateFormHtml(fields, data = {}, readonly = false) {
+    return fields
+      .map((field) => {
+        const value = data[field.name] || field.defaultValue || "";
+        const readonlyAttr = readonly ? "readonly disabled" : "";
+
+        switch (field.type) {
+          case "select":
+            const options = field.options
+              .map(
+                (opt) =>
+                  `<option value="${opt.value}" ${
+                    value === opt.value ? "selected" : ""
+                  }>${opt.label}</option>`
+              )
+              .join("");
+
+            return `
+            <div class="form-group">
+              <label for="${field.name}">${field.label}${
+              field.required ? " *" : ""
+            }</label>
+              <select name="${field.name}" id="${
+              field.name
+            }" class="form-control" ${readonlyAttr} ${
+              field.required ? "required" : ""
+            }>
+                <option value="">Select ${field.label}</option>
+                ${options}
+              </select>
+              ${
+                field.helpText
+                  ? `<small class="form-help">${field.helpText}</small>`
+                  : ""
+              }
+            </div>
+          `;
+
+          case "textarea":
+            return `
+            <div class="form-group">
+              <label for="${field.name}">${field.label}${
+              field.required ? " *" : ""
+            }</label>
+              <textarea name="${field.name}" id="${
+              field.name
+            }" class="form-control" ${readonlyAttr} ${
+              field.required ? "required" : ""
+            }>${value}</textarea>
+              ${
+                field.helpText
+                  ? `<small class="form-help">${field.helpText}</small>`
+                  : ""
+              }
+            </div>
+          `;
+
+          case "checkbox":
+            return `
+            <div class="form-group">
+              <div class="form-check">
+                <input type="checkbox" name="${field.name}" id="${
+              field.name
+            }" class="form-check-input" ${
+              value ? "checked" : ""
+            } ${readonlyAttr}>
+                <label for="${field.name}" class="form-check-label">${
+              field.label
+            }</label>
+              </div>
+              ${
+                field.helpText
+                  ? `<small class="form-help">${field.helpText}</small>`
+                  : ""
+              }
+            </div>
+          `;
+
+          default:
+            return `
+            <div class="form-group">
+              <label for="${field.name}">${field.label}${
+              field.required ? " *" : ""
+            }</label>
+              <input type="${field.type}" name="${field.name}" id="${
+              field.name
+            }" class="form-control" value="${value}" ${readonlyAttr} ${
+              field.required ? "required" : ""
+            }>
+              ${
+                field.helpText
+                  ? `<small class="form-help">${field.helpText}</small>`
+                  : ""
+              }
+            </div>
+          `;
+        }
+      })
+      .join("");
   }
 } // Global functions for compatibility
 function logout() {

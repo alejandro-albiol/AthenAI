@@ -296,6 +296,70 @@ class ApiClient {
   async getCurrentUser() {
     return this.get("/auth/validate");
   }
+
+  // User Management Endpoints
+  async getUsers(gymId = null) {
+    // If gymId is provided, use platform admin endpoint to get users for specific gym
+    if (gymId) {
+      return this.get(`/user/gym/${gymId}`);
+    }
+    // Otherwise, get users for current authenticated gym context
+    return this.get("/user");
+  }
+
+  async getAllUsers() {
+    // For platform admins - get users across all gyms
+    return this.get("/user");
+  }
+
+  async getUserById(userId, gymId = null) {
+    if (gymId) {
+      return this.get(`/user/gym/${gymId}/${userId}`);
+    }
+    return this.get(`/user/${userId}`);
+  }
+
+  async createUser(userData, gymId = null) {
+    if (gymId) {
+      return this.post(`/user/gym/${gymId}`, userData);
+    }
+    return this.post("/user", userData);
+  }
+
+  async updateUser(userId, userData, gymId = null) {
+    if (gymId) {
+      return this.put(`/user/gym/${gymId}/${userId}`, userData);
+    }
+    return this.put(`/user/${userId}`, userData);
+  }
+
+  async deleteUser(userId, gymId = null) {
+    if (gymId) {
+      return this.delete(`/user/gym/${gymId}/${userId}`);
+    }
+    return this.delete(`/user/${userId}`);
+  }
+
+  async updateUserPassword(userId, passwordData, gymId = null) {
+    if (gymId) {
+      return this.put(`/user/gym/${gymId}/${userId}/password`, passwordData);
+    }
+    return this.put(`/user/${userId}/password`, passwordData);
+  }
+
+  async verifyUser(userId, gymId = null) {
+    if (gymId) {
+      return this.post(`/user/gym/${gymId}/${userId}/verify`);
+    }
+    return this.post(`/user/${userId}/verify`);
+  }
+
+  async setUserActive(userId, active, gymId = null) {
+    if (gymId) {
+      return this.post(`/user/gym/${gymId}/${userId}/active`, { active });
+    }
+    return this.post(`/user/${userId}/active`, { active });
+  }
 }
 
 /**

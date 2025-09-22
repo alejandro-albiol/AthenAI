@@ -29,7 +29,6 @@ class GymManager {
       this.currentGyms = gyms;
       appState.setState({ gyms, loading: false });
 
-      console.log("Loaded gyms:", gyms);
       return gyms;
     } catch (error) {
       console.error("Error loading gyms:", error);
