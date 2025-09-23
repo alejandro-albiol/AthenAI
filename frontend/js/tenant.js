@@ -91,9 +91,13 @@ class TenantDashboardManager {
 
   async checkAuth() {
     try {
-      // Check for stored auth token
-      const authToken = localStorage.getItem("auth_token");
-      const userInfo = localStorage.getItem("user_info");
+      // Check for stored auth token (both localStorage and sessionStorage)
+      const authToken =
+        localStorage.getItem("auth_token") ||
+        sessionStorage.getItem("auth_token");
+      const userInfo =
+        localStorage.getItem("user_info") ||
+        sessionStorage.getItem("user_info");
 
       if (!authToken || !userInfo) {
         console.error("No authentication data found");
