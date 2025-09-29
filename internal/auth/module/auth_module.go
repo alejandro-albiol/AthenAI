@@ -15,8 +15,10 @@ import (
 
 // AuthModule holds the auth service and router
 type AuthModule struct {
-	Service interfaces.AuthServiceInterface
-	Router  http.Handler
+	Service           interfaces.AuthServiceInterface
+	Router            http.Handler
+	InvitationHandler interfaces.InvitationHandler
+	InvitationRouter  http.Handler
 }
 
 // NewAuthModule creates a new auth module with all dependencies wired and returns both service and router
@@ -36,14 +38,21 @@ func NewAuthModule(db *sql.DB) *AuthModule {
 	// Create service with both repositories
 	service := authservice.NewAuthService(authRepo, gymRepo, jwtSecret)
 
-	// Create handler
+	// Create auth handler
 	handler := authhandler.NewAuthHandler(service)
 
-	// Create router with all endpoints wired
-	router := authrouter.NewAuthRouter(handler)
+	// Create invitation service and handler
+	invitationService := authservice.NewInvitationService()
+	invitationHandler := authhandler.NewInvitationHandler(invitationService)
+
+	// Create routers with all endpoints wired
+	router := authrouter.NewAuthRouter(handler, invitationHandler)
+	invitationRouter := authrouter.NewInvitationRouter(invitationHandler)
 
 	return &AuthModule{
-		Service: service,
-		Router:  router,
+		Service:           service,
+		Router:            router,
+		InvitationHandler: invitationHandler,
+		InvitationRouter:  invitationRouter,
 	}
 }

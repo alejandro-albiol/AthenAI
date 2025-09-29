@@ -17,3 +17,24 @@ type AuthServiceInterface interface {
 	RefreshToken(refreshReq *dto.RefreshTokenRequestDTO) (*dto.LoginResponseDTO, *apierror.APIError)
 	Logout(logoutReq *dto.LogoutRequestDTO) *apierror.APIError
 }
+
+// InvitationServiceInterface defines invitation business logic
+type InvitationServiceInterface interface {
+	// CreateInvitation generates a new gym invitation
+	CreateInvitation(req *dto.InvitationCreateRequestDTO, creatorID string) (*dto.InvitationResponseDTO, *apierror.APIError)
+
+	// GetGymInvitations retrieves invitations for a specific gym
+	GetGymInvitations(gymID string, limit, offset int, status string) (*dto.InvitationListResponseDTO, *apierror.APIError)
+
+	// DecodeInvitation validates and decodes an invitation token
+	DecodeInvitation(token string) (*dto.InvitationDecodeResponseDTO, *apierror.APIError)
+
+	// AcceptInvitation processes invitation acceptance and creates user account
+	AcceptInvitation(req *dto.InvitationAcceptRequestDTO) (*dto.LoginResponseDTO, *apierror.APIError)
+
+	// ResendInvitation sends invitation email again
+	ResendInvitation(invitationID string) *apierror.APIError
+
+	// DeleteInvitation removes an invitation
+	DeleteInvitation(invitationID string) *apierror.APIError
+}
