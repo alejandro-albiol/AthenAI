@@ -316,6 +316,9 @@ class VanillaDashboardManager {
         case "platform-users":
           await this.loadPlatformUsersManagement();
           break;
+        case "invitations":
+          await this.loadInvitationsManagement();
+          break;
         case "platform-analytics":
           await this.loadPlatformAnalytics();
           break;
@@ -1043,6 +1046,429 @@ class VanillaDashboardManager {
       this.showError(
         "Failed to load platform user management: " + error.message
       );
+    }
+  }
+
+  // Invitations Management
+  async loadInvitationsManagement() {
+    try {
+      const gyms = await this.managers.gym.loadGyms();
+      const safeGyms = Array.isArray(gyms) ? gyms : [];
+
+      const content = `
+        <div class="dashboard-header">
+          <h1 class="dashboard-title">Invitation Management</h1>
+          <p class="dashboard-subtitle">Send and manage gym invitations for new users</p>
+        </div>
+        <div class="dashboard-content">
+          <!-- Send New Invitation -->
+          <div class="dashboard-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-paper-plane"></i>
+                Send New Invitation
+              </h3>
+            </div>
+            <div class="card-body">
+              <form id="invitation-form" class="invitation-form">
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="invitation-gym">Target Gym</label>
+                    <select id="invitation-gym" name="gym_id" class="form-control" required>
+                      <option value="">Select a gym...</option>
+                      ${safeGyms
+                        .map(
+                          (gym) =>
+                            `<option value="${gym.id}">${gym.name}</option>`
+                        )
+                        .join("")}
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label for="invitation-role">User Role</label>
+                    <select id="invitation-role" name="role" class="form-control" required>
+                      <option value="">Select role...</option>
+                      <option value="gym_admin">Gym Admin</option>
+                      <option value="trainer">Trainer</option>
+                      <option value="member">Member</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-row">
+                  <div class="form-group">
+                    <label for="invitation-email">Email Address</label>
+                    <input type="email" id="invitation-email" name="email" class="form-control" required>
+                  </div>
+                  <div class="form-group">
+                    <label for="invitation-expires">Expires In</label>
+                    <select id="invitation-expires" name="expires_days" class="form-control">
+                      <option value="7">7 days</option>
+                      <option value="14" selected>14 days</option>
+                      <option value="30">30 days</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group">
+                  <label for="invitation-message">Personal Message (Optional)</label>
+                  <textarea id="invitation-message" name="message" class="form-control" rows="3" placeholder="Add a personal message to the invitation email..."></textarea>
+                </div>
+                <button type="submit" class="btn btn-primary">
+                  <i class="fas fa-paper-plane"></i> Send Invitation
+                </button>
+              </form>
+            </div>
+          </div>
+
+          <!-- Invitations by Gym -->
+          <div class="dashboard-card">
+            <div class="card-header">
+              <h3 class="card-title">
+                <i class="fas fa-list"></i>
+                Gym Invitations
+              </h3>
+              <div class="card-actions">
+                <button class="btn btn-secondary btn-sm" onclick="dashboard.refreshInvitations()">
+                  <i class="fas fa-refresh"></i> Refresh
+                </button>
+              </div>
+            </div>
+            <div class="card-body">
+              <div class="gym-tabs">
+                <nav class="gym-tabs-nav" id="gym-tabs-nav">
+                  ${safeGyms
+                    .map(
+                      (gym) =>
+                        `<button class="gym-tab" data-gym-id="${gym.id}" onclick="dashboard.loadGymInvitations(${gym.id}, '${gym.name}')">
+                      ${gym.name}
+                      <span class="gym-tab-count" id="gym-${gym.id}-invitations-count">-</span>
+                    </button>`
+                    )
+                    .join("")}
+                </nav>
+                <div class="gym-tab-content">
+                  <div id="gym-invitations-content" class="empty-state">
+                    <i class="fas fa-envelope"></i>
+                    <h3>Select a Gym</h3>
+                    <p>Choose a gym above to view its pending invitations</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      `;
+
+      this.setContent(content);
+
+      // Setup form submission
+      this.setupInvitationForm();
+
+      // Load invitation counts for all gyms
+      await this.loadInvitationCounts();
+    } catch (error) {
+      console.error("Error loading invitations management:", error);
+      this.showError("Failed to load invitations management: " + error.message);
+    }
+  }
+
+  setupInvitationForm() {
+    const form = document.getElementById("invitation-form");
+    if (!form) return;
+
+    form.addEventListener("submit", async (e) => {
+      e.preventDefault();
+      await this.handleInvitationSubmit(e.target);
+    });
+  }
+
+  async handleInvitationSubmit(form) {
+    try {
+      const formData = new FormData(form);
+      const invitationData = {
+        gym_id: parseInt(formData.get("gym_id")),
+        role: formData.get("role"),
+        email: formData.get("email"),
+        expires_days: parseInt(formData.get("expires_days")),
+        message: formData.get("message") || null,
+      };
+
+      // Validate required fields
+      if (
+        !invitationData.gym_id ||
+        !invitationData.role ||
+        !invitationData.email
+      ) {
+        notifications.error("Please fill in all required fields");
+        return;
+      }
+
+      const response = await this.api.createInvitation(invitationData);
+      notifications.success("Invitation sent successfully!");
+
+      // Reset form
+      form.reset();
+
+      // Refresh invitation counts
+      await this.loadInvitationCounts();
+
+      // If currently viewing invitations for this gym, refresh the list
+      const activeTab = document.querySelector(".gym-tab.active");
+      if (
+        activeTab &&
+        parseInt(activeTab.dataset.gymId) === invitationData.gym_id
+      ) {
+        const gymName = activeTab.textContent.trim();
+        await this.loadGymInvitations(invitationData.gym_id, gymName);
+      }
+    } catch (error) {
+      console.error("Error sending invitation:", error);
+      notifications.error("Failed to send invitation: " + error.message);
+    }
+  }
+
+  async loadInvitationCounts() {
+    try {
+      const gyms = await this.managers.gym.loadGyms();
+      const safeGyms = Array.isArray(gyms) ? gyms : [];
+
+      let totalInvitations = 0;
+
+      for (const gym of safeGyms) {
+        try {
+          const invitations = await this.api.getGymInvitations(gym.id);
+          const count = Array.isArray(invitations?.data)
+            ? invitations.data.length
+            : 0;
+
+          // Update gym tab count
+          const countElement = document.getElementById(
+            `gym-${gym.id}-invitations-count`
+          );
+          if (countElement) {
+            countElement.textContent = count;
+          }
+
+          totalInvitations += count;
+        } catch (error) {
+          console.error(`Error loading invitations for gym ${gym.id}:`, error);
+          const countElement = document.getElementById(
+            `gym-${gym.id}-invitations-count`
+          );
+          if (countElement) {
+            countElement.textContent = "!";
+          }
+        }
+      }
+
+      // Update navigation badge
+      const navBadge = document.getElementById("invitations-count");
+      if (navBadge) {
+        navBadge.textContent = totalInvitations;
+      }
+    } catch (error) {
+      console.error("Error loading invitation counts:", error);
+    }
+  }
+
+  async loadGymInvitations(gymId, gymName) {
+    try {
+      // Update active tab
+      document
+        .querySelectorAll(".gym-tab")
+        .forEach((tab) => tab.classList.remove("active"));
+      document
+        .querySelector(`[data-gym-id="${gymId}"]`)
+        .classList.add("active");
+
+      const response = await this.api.getGymInvitations(gymId);
+      const invitations = Array.isArray(response?.data) ? response.data : [];
+
+      const content = `
+        <div class="gym-invitations-header">
+          <h4><i class="fas fa-building"></i> ${gymName} Invitations</h4>
+          <span class="invitations-count">${
+            invitations.length
+          } invitation(s)</span>
+        </div>
+        
+        ${
+          invitations.length === 0
+            ? `
+          <div class="empty-state">
+            <i class="fas fa-envelope-open"></i>
+            <h3>No Invitations</h3>
+            <p>This gym has no pending invitations</p>
+          </div>
+        `
+            : `
+          <div class="invitations-table">
+            <table class="table">
+              <thead>
+                <tr>
+                  <th>Email</th>
+                  <th>Role</th>
+                  <th>Status</th>
+                  <th>Created</th>
+                  <th>Expires</th>
+                  <th>Actions</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${invitations
+                  .map(
+                    (invitation) => `
+                  <tr>
+                    <td>
+                      <div class="user-info">
+                        <i class="fas fa-envelope"></i>
+                        <span>${invitation.email}</span>
+                      </div>
+                    </td>
+                    <td>
+                      <span class="role-badge role-${
+                        invitation.role
+                      }">${this.formatRole(invitation.role)}</span>
+                    </td>
+                    <td>
+                      <span class="status-badge status-${invitation.status}">
+                        ${this.formatInvitationStatus(invitation.status)}
+                      </span>
+                    </td>
+                    <td>${this.formatDateTime(invitation.created_at)}</td>
+                    <td>${this.formatDateTime(invitation.expires_at)}</td>
+                    <td>
+                      <div class="action-buttons">
+                        ${
+                          invitation.status === "pending"
+                            ? `
+                          <button class="btn btn-sm btn-outline" onclick="dashboard.resendInvitation(${invitation.id})" title="Resend">
+                            <i class="fas fa-redo"></i>
+                          </button>
+                          <button class="btn btn-sm btn-danger" onclick="dashboard.deleteInvitation(${invitation.id})" title="Delete">
+                            <i class="fas fa-trash"></i>
+                          </button>
+                        `
+                            : `
+                          <button class="btn btn-sm btn-secondary" disabled title="Cannot modify ${invitation.status} invitation">
+                            <i class="fas fa-lock"></i>
+                          </button>
+                        `
+                        }
+                      </div>
+                    </td>
+                  </tr>
+                `
+                  )
+                  .join("")}
+              </tbody>
+            </table>
+          </div>
+        `
+        }
+      `;
+
+      document.getElementById("gym-invitations-content").innerHTML = content;
+    } catch (error) {
+      console.error("Error loading gym invitations:", error);
+      document.getElementById("gym-invitations-content").innerHTML = `
+        <div class="error-state">
+          <i class="fas fa-exclamation-triangle"></i>
+          <h3>Error Loading Invitations</h3>
+          <p>Failed to load invitations for this gym</p>
+        </div>
+      `;
+    }
+  }
+
+  async resendInvitation(invitationId) {
+    if (!confirm("Are you sure you want to resend this invitation?")) return;
+
+    try {
+      await this.api.resendInvitation(invitationId);
+      notifications.success("Invitation resent successfully!");
+
+      // Refresh current gym invitations
+      const activeTab = document.querySelector(".gym-tab.active");
+      if (activeTab) {
+        const gymId = parseInt(activeTab.dataset.gymId);
+        const gymName = activeTab.textContent.trim();
+        await this.loadGymInvitations(gymId, gymName);
+      }
+    } catch (error) {
+      console.error("Error resending invitation:", error);
+      notifications.error("Failed to resend invitation: " + error.message);
+    }
+  }
+
+  async deleteInvitation(invitationId) {
+    if (
+      !confirm(
+        "Are you sure you want to delete this invitation? This action cannot be undone."
+      )
+    )
+      return;
+
+    try {
+      await this.api.deleteInvitation(invitationId);
+      notifications.success("Invitation deleted successfully!");
+
+      // Refresh current gym invitations
+      const activeTab = document.querySelector(".gym-tab.active");
+      if (activeTab) {
+        const gymId = parseInt(activeTab.dataset.gymId);
+        const gymName = activeTab.textContent.trim();
+        await this.loadGymInvitations(gymId, gymName);
+      }
+
+      // Refresh invitation counts
+      await this.loadInvitationCounts();
+    } catch (error) {
+      console.error("Error deleting invitation:", error);
+      notifications.error("Failed to delete invitation: " + error.message);
+    }
+  }
+
+  async refreshInvitations() {
+    await this.loadInvitationCounts();
+
+    // If a gym tab is active, refresh its invitations
+    const activeTab = document.querySelector(".gym-tab.active");
+    if (activeTab) {
+      const gymId = parseInt(activeTab.dataset.gymId);
+      const gymName = activeTab.textContent.trim();
+      await this.loadGymInvitations(gymId, gymName);
+    }
+
+    notifications.success("Invitations refreshed!");
+  }
+
+  formatRole(role) {
+    const roleMap = {
+      gym_admin: "Gym Admin",
+      trainer: "Trainer",
+      member: "Member",
+    };
+    return roleMap[role] || role;
+  }
+
+  formatInvitationStatus(status) {
+    const statusMap = {
+      pending: "Pending",
+      accepted: "Accepted",
+      expired: "Expired",
+      cancelled: "Cancelled",
+    };
+    return statusMap[status] || status;
+  }
+
+  formatDateTime(dateString) {
+    if (!dateString) return "-";
+
+    try {
+      const date = new Date(dateString);
+      return date.toLocaleString();
+    } catch (error) {
+      return "Invalid Date";
     }
   }
 

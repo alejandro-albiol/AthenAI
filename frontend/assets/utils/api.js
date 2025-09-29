@@ -360,6 +360,31 @@ class ApiClient {
     }
     return this.post(`/user/${userId}/active`, { active });
   }
+
+  // Invitation management methods
+  async createInvitation(data) {
+    return this.post("/invitation", data);
+  }
+
+  async getGymInvitations(gymId) {
+    return this.get(`/gym/${gymId}/invitations`);
+  }
+
+  async decodeInvitation(token) {
+    return this.get(`/invitation/decode/${token}`);
+  }
+
+  async acceptInvitation(token, data) {
+    return this.post(`/invitation/accept/${token}`, data);
+  }
+
+  async resendInvitation(invitationId) {
+    return this.post(`/invitation/${invitationId}/resend`);
+  }
+
+  async deleteInvitation(invitationId) {
+    return this.delete(`/invitation/${invitationId}`);
+  }
 }
 
 /**

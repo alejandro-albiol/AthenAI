@@ -145,15 +145,42 @@ class TenantDashboardManager {
         this.currentGym = response.data;
         appState.setState({ currentGym: this.currentGym });
 
-        // Update gym name in header
-        const gymNameEl = document.getElementById("gym-name");
-        if (gymNameEl) {
-          gymNameEl.textContent = this.currentGym.name;
-        }
+        // Update gym branding in header
+        this.updateGymBranding(response.data);
+
+        // Update page title with gym name
+        document.title = `${response.data.name} - AthenAI Dashboard`;
       }
     } catch (error) {
-      console.error("Error loading gym info:", error);
-      // Continue without gym info - user might still be able to use basic features
+      console.error("Failed to load gym info:", error);
+    }
+  }
+
+  updateGymBranding(gymData) {
+    // Update gym name in header
+    const gymNameEl = document.getElementById("gym-name");
+    if (gymNameEl) {
+      gymNameEl.innerHTML = `
+        <div class="gym-brand-info">
+          <span class="gym-name">${gymData.name}</span>
+          ${
+            gymData.description
+              ? `<span class="gym-tagline">${gymData.description}</span>`
+              : ""
+          }
+        </div>
+      `;
+    }
+
+    // Add gym status indicator
+    const navBrand = document.querySelector(".nav-brand");
+    if (navBrand && !navBrand.querySelector(".gym-status")) {
+      const statusIndicator = document.createElement("div");
+      statusIndicator.className = "gym-status";
+      statusIndicator.innerHTML = `
+        <div class="status-dot active" title="Connected to ${gymData.name}"></div>
+      `;
+      navBrand.appendChild(statusIndicator);
     }
   }
 
@@ -175,29 +202,86 @@ class TenantDashboardManager {
     // Setup navigation based on user role
     const navItems = document.querySelectorAll(".nav-item");
 
+    // Define role-based permissions
+    const permissions = {
+      member: {
+        allowed: ["overview", "workouts"],
+        description: "Member Access",
+      },
+      trainer: {
+        allowed: ["overview", "members", "workouts", "equipment"],
+        description: "Trainer Access",
+      },
+      gym_admin: {
+        allowed: [
+          "overview",
+          "members",
+          "trainers",
+          "workouts",
+          "equipment",
+          "analytics",
+        ],
+        description: "Admin Access",
+      },
+    };
+
+    const userPermissions =
+      permissions[this.currentUser.role] || permissions.member;
+
     navItems.forEach((item) => {
       const view = item.dataset.view;
 
-      // Hide certain views based on role
-      if (this.currentUser.role === "member") {
-        // Members can only see overview and workouts
-        if (!["overview", "workouts"].includes(view)) {
-          item.style.display = "none";
-        }
-      } else if (this.currentUser.role === "trainer") {
-        // Trainers can see overview, members, workouts
-        if (!["overview", "members", "workouts", "equipment"].includes(view)) {
-          item.style.display = "none";
+      if (!userPermissions.allowed.includes(view)) {
+        item.style.display = "none";
+      } else {
+        item.style.display = "flex";
+
+        // Add role indicator for restricted features
+        if (
+          this.currentUser.role !== "gym_admin" &&
+          ["analytics", "trainers"].includes(view)
+        ) {
+          const roleIndicator = item.querySelector(".role-indicator");
+          if (!roleIndicator) {
+            const indicator = document.createElement("span");
+            indicator.className = "role-indicator";
+            indicator.innerHTML = '<i class="fas fa-crown"></i>';
+            indicator.title = "Admin Only";
+            item.appendChild(indicator);
+          }
         }
       }
-      // gym_admin can see everything (no restrictions)
     });
+
+    // Add role badge to user info
+    this.addRoleBadge(userPermissions.description);
 
     // Setup logout functionality
     const logoutBtn = document.getElementById("logout-btn");
     if (logoutBtn) {
       logoutBtn.addEventListener("click", () => this.logout());
     }
+  }
+
+  addRoleBadge(roleDescription) {
+    const userRole = document.getElementById("user-role");
+    if (userRole) {
+      userRole.innerHTML = `
+        <span class="role-badge role-${this.currentUser.role}">
+          ${this.formatRole(this.currentUser.role)}
+        </span>
+        <span class="role-description">${roleDescription}</span>
+      `;
+    }
+  }
+
+  formatRole(role) {
+    const roleMap = {
+      gym_admin: "Admin",
+      trainer: "Trainer",
+      member: "Member",
+    };
+    return roleMap[role] || role;
   }
 
   initNavigation() {
@@ -266,6 +350,9 @@ class TenantDashboardManager {
   }
 
   async loadOverview() {
+    // Check if this is a first-time user and show onboarding
+    await this.checkAndShowOnboarding();
+
     const content = `
       <div class="stats-grid">
         <div class="stat-card">
@@ -894,6 +981,92 @@ class TenantDashboardManager {
     } finally {
       this.redirectToLogin();
     }
+  }
+
+  async checkAndShowOnboarding() {
+    // Check if user has seen onboarding
+    const onboardingKey = `onboarding_seen_${this.currentUser.user_id}`;
+    const hasSeenOnboarding = localStorage.getItem(onboardingKey);
+
+    if (!hasSeenOnboarding) {
+      this.showOnboardingWelcome();
+      localStorage.setItem(onboardingKey, "true");
+    }
+  }
+
+  showOnboardingWelcome() {
+    const roleWelcomes = {
+      gym_admin: {
+        title: `Welcome to ${this.currentGym?.name || "your gym"}, Admin!`,
+        message:
+          "You have full access to manage members, trainers, equipment, and analytics.",
+        features: [
+          "Manage gym members and trainers",
+          "View comprehensive analytics",
+          "Configure gym equipment",
+          "Monitor all gym activities",
+        ],
+      },
+      trainer: {
+        title: `Welcome to ${this.currentGym?.name || "your gym"}, Trainer!`,
+        message:
+          "You can manage members, create workouts, and track equipment usage.",
+        features: [
+          "Manage assigned members",
+          "Create custom workouts",
+          "Track equipment usage",
+          "Monitor member progress",
+        ],
+      },
+      member: {
+        title: `Welcome to ${this.currentGym?.name || "your gym"}!`,
+        message:
+          "Track your fitness journey with personalized workouts and progress monitoring.",
+        features: [
+          "Access personalized workouts",
+          "Track your progress",
+          "View available equipment",
+          "Monitor your fitness goals",
+        ],
+      },
+    };
+
+    const welcome = roleWelcomes[this.currentUser.role] || roleWelcomes.member;
+
+    // Show welcome notification
+    notifications.success(`${welcome.title} ${welcome.message}`);
+
+    // Add onboarding overlay to overview (optional)
+    setTimeout(() => {
+      const contentBody = document.getElementById("content-body");
+      if (contentBody) {
+        const onboardingBanner = document.createElement("div");
+        onboardingBanner.className = "onboarding-banner";
+        onboardingBanner.innerHTML = `
+          <div class="onboarding-content">
+            <div class="onboarding-header">
+              <h3>${welcome.title}</h3>
+              <button class="close-onboarding" onclick="this.closest('.onboarding-banner').remove()">
+                <i class="fas fa-times"></i>
+              </button>
+            </div>
+            <p>${welcome.message}</p>
+            <div class="onboarding-features">
+              <h4>What you can do:</h4>
+              <ul>
+                ${welcome.features
+                  .map(
+                    (feature) =>
+                      `<li><i class="fas fa-check"></i> ${feature}</li>`
+                  )
+                  .join("")}
+              </ul>
+            </div>
+          </div>
+        `;
+        contentBody.insertBefore(onboardingBanner, contentBody.firstChild);
+      }
+    }, 2000);
   }
 }
 

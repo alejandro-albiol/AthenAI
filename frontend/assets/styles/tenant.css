@@ -314,3 +314,185 @@
 .empty-state p {
     margin-bottom: 1.5rem;
 }
+
+/* Role-based UI enhancements */
+.role-badge {
+    padding: 0.25rem 0.5rem;
+    border-radius: 12px;
+    font-size: 0.75rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.role-badge.role-gym_admin {
+    background: linear-gradient(135deg, #dc3545, #c82333);
+    color: white;
+}
+
+.role-badge.role-trainer {
+    background: linear-gradient(135deg, #fd7e14, #e55a00);
+    color: white;
+}
+
+.role-badge.role-member {
+    background: linear-gradient(135deg, #20c997, #17a085);
+    color: white;
+}
+
+.role-description {
+    font-size: 0.7rem;
+    color: rgba(255, 255, 255, 0.6);
+    margin-left: 0.5rem;
+}
+
+.role-indicator {
+    position: absolute;
+    top: 0.25rem;
+    right: 0.25rem;
+    background: #ffc107;
+    color: white;
+    border-radius: 50%;
+    width: 1.2rem;
+    height: 1.2rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.6rem;
+}
+
+/* Gym branding enhancements */
+.gym-brand-info {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+}
+
+.gym-name {
+    font-weight: 600;
+    color: white;
+}
+
+.gym-tagline {
+    font-size: 0.8rem;
+    color: rgba(255, 255, 255, 0.7);
+    font-style: italic;
+}
+
+.gym-status {
+    position: relative;
+    margin-left: 0.5rem;
+}
+
+.status-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #10b981;
+    position: relative;
+}
+
+.status-dot.active::before {
+    content: '';
+    position: absolute;
+    top: -2px;
+    left: -2px;
+    right: -2px;
+    bottom: -2px;
+    border-radius: 50%;
+    background: #10b981;
+    opacity: 0.3;
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+    50% {
+        transform: scale(1.2);
+        opacity: 0.1;
+    }
+    100% {
+        transform: scale(0.8);
+        opacity: 0.5;
+    }
+}
+
+/* Onboarding styles */
+.onboarding-banner {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    margin: 1rem 0;
+    border-radius: 12px;
+    overflow: hidden;
+    box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+    animation: slideInFromTop 0.6s ease-out;
+}
+
+.onboarding-content {
+    padding: 1.5rem;
+}
+
+.onboarding-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 1rem;
+}
+
+.onboarding-header h3 {
+    margin: 0;
+    font-size: 1.25rem;
+    font-weight: 600;
+}
+
+.close-onboarding {
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    padding: 0.5rem;
+    border-radius: 6px;
+    transition: background 0.2s;
+}
+
+.close-onboarding:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.onboarding-features h4 {
+    margin: 1rem 0 0.5rem 0;
+    font-size: 1rem;
+}
+
+.onboarding-features ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.onboarding-features li {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 0.5rem;
+    font-size: 0.9rem;
+}
+
+.onboarding-features i {
+    color: #10b981;
+    font-size: 0.8rem;
+}
+
+@keyframes slideInFromTop {
+    0% {
+        transform: translateY(-20px);
+        opacity: 0;
+    }
+    100% {
+        transform: translateY(0);
+        opacity: 1;
+    }
+}

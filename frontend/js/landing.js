@@ -216,6 +216,9 @@ class LandingPageManager {
       heroSubtitle.textContent = "Access your gym management platform.";
     }
 
+    // Add gym branding section if not exists
+    this.addGymBrandingSection(gymInfo);
+
     // Update CTA section
     const ctaTitle = document.querySelector(".cta h2");
     const ctaText = document.querySelector(".cta p");
@@ -226,6 +229,55 @@ class LandingPageManager {
 
     if (ctaText) {
       ctaText.textContent = "Login to access your gym dashboard.";
+    }
+
+    // Update page title
+    document.title = `${gymInfo.name} - AthenAI`;
+  }
+
+  addGymBrandingSection(gymInfo) {
+    // Remove existing gym branding if present
+    const existingBranding = document.querySelector(".gym-branding-section");
+    if (existingBranding) {
+      existingBranding.remove();
+    }
+
+    // Create gym branding section
+    const brandingSection = document.createElement("div");
+    brandingSection.className = "gym-branding-section";
+    brandingSection.innerHTML = `
+      <div class="gym-info-card">
+        <div class="gym-header">
+          <div class="gym-avatar">
+            <i class="fas fa-dumbbell"></i>
+          </div>
+          <div class="gym-details">
+            <h3>${gymInfo.name}</h3>
+            <p class="gym-description">${
+              gymInfo.description || "Welcome to our fitness community!"
+            }</p>
+            ${
+              gymInfo.address
+                ? `<p class="gym-address"><i class="fas fa-map-marker-alt"></i> ${gymInfo.address}</p>`
+                : ""
+            }
+          </div>
+        </div>
+        <div class="gym-features">
+          <span class="feature-badge"><i class="fas fa-users"></i> Member Portal</span>
+          <span class="feature-badge"><i class="fas fa-calendar-alt"></i> Workout Plans</span>
+          <span class="feature-badge"><i class="fas fa-chart-line"></i> Progress Tracking</span>
+        </div>
+      </div>
+    `;
+
+    // Insert after hero section
+    const heroSection = document.querySelector(".hero");
+    if (heroSection && heroSection.nextElementSibling) {
+      heroSection.parentNode.insertBefore(
+        brandingSection,
+        heroSection.nextElementSibling
+      );
     }
   }
 
@@ -458,6 +510,9 @@ class LandingPageManager {
 
         this.loginModal.hide();
 
+        // Show role-specific welcome message
+        this.showWelcomeMessage(response.data.user_info);
+
         // Redirect to appropriate dashboard based on user type
         setTimeout(() => {
           const currentOrigin = window.location.origin;
@@ -495,6 +550,32 @@ class LandingPageManager {
     } finally {
       this.showLoginLoading(false);
     }
+  }
+
+  showWelcomeMessage(userInfo) {
+    let welcomeText = "Login successful! Redirecting...";
+
+    if (userInfo.user_type === "platform_admin") {
+      welcomeText =
+        "Welcome back, Platform Admin! Accessing system dashboard...";
+    } else if (userInfo.user_type === "tenant_user") {
+      const roleMessages = {
+        gym_admin: `Welcome back! Loading ${
+          this.currentGym ? this.currentGym.name + " " : ""
+        }admin dashboard...`,
+        trainer: `Welcome back! Accessing ${
+          this.currentGym ? this.currentGym.name + " " : ""
+        }trainer portal...`,
+        member: `Welcome back! Loading your ${
+          this.currentGym ? this.currentGym.name + " " : ""
+        }member dashboard...`,
+      };
+      welcomeText =
+        roleMessages[userInfo.role] ||
+        `Welcome back! Loading your gym dashboard...`;
+    }
+
+    notifications.success(welcomeText);
   }
 
   showLoginLoading(loading) {
